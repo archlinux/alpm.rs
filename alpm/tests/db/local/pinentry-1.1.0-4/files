@@ -1,0 +1,17 @@
+%FILES%
+usr/
+usr/bin/
+usr/bin/pinentry
+usr/bin/pinentry-curses
+usr/bin/pinentry-emacs
+usr/bin/pinentry-gnome3
+usr/bin/pinentry-gtk-2
+usr/bin/pinentry-qt
+usr/bin/pinentry-tty
+usr/share/
+usr/share/info/
+usr/share/info/pinentry.info.gz
+
+%BACKUP%
+usr/bin/pinentry	(null)
+

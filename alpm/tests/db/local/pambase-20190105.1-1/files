@@ -1,0 +1,18 @@
+%FILES%
+etc/
+etc/pam.d/
+etc/pam.d/other
+etc/pam.d/system-auth
+etc/pam.d/system-local-login
+etc/pam.d/system-login
+etc/pam.d/system-remote-login
+etc/pam.d/system-services
+
+%BACKUP%
+etc/pam.d/system-auth	(null)
+etc/pam.d/system-local-login	(null)
+etc/pam.d/system-login	(null)
+etc/pam.d/system-remote-login	(null)
+etc/pam.d/system-services	(null)
+etc/pam.d/other	(null)
+

@@ -1,0 +1,12 @@
+%FILES%
+usr/
+usr/include/
+usr/include/mpc.h
+usr/lib/
+usr/lib/libmpc.so
+usr/lib/libmpc.so.3
+usr/lib/libmpc.so.3.1.0
+usr/share/
+usr/share/info/
+usr/share/info/libmpc.info.gz
+

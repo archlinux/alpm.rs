@@ -1,0 +1,14 @@
+%FILES%
+usr/
+usr/bin/
+usr/bin/npth-config
+usr/include/
+usr/include/npth.h
+usr/lib/
+usr/lib/libnpth.so
+usr/lib/libnpth.so.0
+usr/lib/libnpth.so.0.1.2
+usr/share/
+usr/share/aclocal/
+usr/share/aclocal/npth.m4
+

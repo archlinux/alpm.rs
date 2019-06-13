@@ -1,0 +1,6 @@
+%FILES%
+usr/
+usr/lib/
+usr/lib/initcpio/
+usr/lib/initcpio/busybox
+

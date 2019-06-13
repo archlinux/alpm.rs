@@ -1,0 +1,18 @@
+#!/bin/sh
+
+bindgen /usr/include/alpm.h \
+    --whitelist-type '(alpm|ALPM).*' \
+    --whitelist-function '(alpm|ALPM).*' \
+    --rustified-enum '_alpm_[a-z_]+_t' \
+    --constified-enum-module '_alpm_siglevel_t' \
+    --constified-enum-module '_alpm_pkgvalidation_t' \
+    --constified-enum-module '_alpm_loglevel_t' \
+    --constified-enum-module '_alpm_question_type_t' \
+    --constified-enum-module '_alpm_transflag_t' \
+    --constified-enum-module '_alpm_db_usage_' \
+    --constified-enum-module '_alpm_db_usage_t' \
+    --constified-enum-module 'alpm_caps' \
+    --opaque-type alpm_handle_t \
+    --opaque-type alpm_db_t \
+    --opaque-type alpm_pkg_t \
+    --opaque-type alpm_trans_t \

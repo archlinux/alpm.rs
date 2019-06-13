@@ -1,0 +1,9 @@
+%FILES%
+usr/
+usr/share/
+usr/share/pacman/
+usr/share/pacman/keyrings/
+usr/share/pacman/keyrings/archlinux-revoked
+usr/share/pacman/keyrings/archlinux-trusted
+usr/share/pacman/keyrings/archlinux.gpg
+

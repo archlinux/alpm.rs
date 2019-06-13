@@ -1,0 +1,12 @@
+%FILES%
+usr/
+usr/include/
+usr/include/libusb-1.0/
+usr/include/libusb-1.0/libusb.h
+usr/lib/
+usr/lib/libusb-1.0.so
+usr/lib/libusb-1.0.so.0
+usr/lib/libusb-1.0.so.0.1.0
+usr/lib/pkgconfig/
+usr/lib/pkgconfig/libusb-1.0.pc
+

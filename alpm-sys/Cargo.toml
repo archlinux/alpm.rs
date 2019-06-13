@@ -1,0 +1,15 @@
+[package]
+name = "alpm-sys"
+version = "0.1.0"
+authors = ["morganamilo <morganamilo@gmail.com>"]
+
+description = "Raw bindings for libalpm"
+homepage = "http://github.com/Morganamilo/alpm.rs"
+repository = "http://github.com/Morganamilo/alpm.rs"
+documentation = "https://docs.rs/alpm_sys"
+license = "GPL-3.0"
+keywords = ["archlinux", "arch", "alpm", "pacman"]
+categories = ["external-ffi-bindings"]
+
+[features]
+git = []

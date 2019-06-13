@@ -1,0 +1,14 @@
+%FILES%
+usr/
+usr/lib/
+usr/lib/libnss_myhostname.so.2
+usr/lib/libnss_mymachines.so.2
+usr/lib/libnss_resolve.so.2
+usr/lib/libnss_systemd.so.2
+usr/lib/libsystemd.so
+usr/lib/libsystemd.so.0
+usr/lib/libsystemd.so.0.25.0
+usr/lib/libudev.so
+usr/lib/libudev.so.1
+usr/lib/libudev.so.1.6.13
+

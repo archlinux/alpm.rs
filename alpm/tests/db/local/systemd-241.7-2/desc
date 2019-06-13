@@ -1,0 +1,85 @@
+%NAME%
+systemd
+
+%VERSION%
+241.7-2
+
+%BASE%
+systemd
+
+%DESC%
+system and service manager
+
+%URL%
+https://www.github.com/systemd/systemd
+
+%ARCH%
+x86_64
+
+%BUILDDATE%
+1550668070
+
+%INSTALLDATE%
+1553684924
+
+%PACKAGER%
+Christian Hesse <arch@eworm.de>
+
+%SIZE%
+21272576
+
+%GROUPS%
+base-devel
+
+%LICENSE%
+GPL2
+LGPL2.1
+
+%VALIDATION%
+pgp
+
+%REPLACES%
+nss-myhostname
+systemd-tools
+udev
+
+%DEPENDS%
+acl
+bash
+cryptsetup
+dbus
+iptables
+kbd
+kmod
+hwids
+libcap
+libgcrypt
+systemd-libs
+libidn2
+libidn2.so=0-64
+lz4
+pam
+libelf
+libseccomp
+util-linux
+xz
+pcre2
+audit
+
+%OPTDEPENDS%
+libmicrohttpd: remote journald capabilities
+quota-tools: kernel-level quota management
+systemd-sysvcompat: symlink package to provide sysvinit binaries
+polkit: allow administration as unprivileged user
+curl: machinectl pull-tar and pull-raw
+
+%CONFLICTS%
+nss-myhostname
+systemd-tools
+udev
+
+%PROVIDES%
+nss-myhostname
+systemd-tools=241.7
+udev=241.7
+

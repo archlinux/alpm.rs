@@ -1,0 +1,9 @@
+%FILES%
+usr/
+usr/bin/
+usr/bin/expac
+usr/share/
+usr/share/man/
+usr/share/man/man1/
+usr/share/man/man1/expac.1.gz
+

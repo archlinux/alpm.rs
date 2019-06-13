@@ -1,0 +1,14 @@
+%FILES%
+usr/
+usr/include/
+usr/include/libnfnetlink/
+usr/include/libnfnetlink/libnfnetlink.h
+usr/include/libnfnetlink/linux_nfnetlink.h
+usr/include/libnfnetlink/linux_nfnetlink_compat.h
+usr/lib/
+usr/lib/libnfnetlink.so
+usr/lib/libnfnetlink.so.0
+usr/lib/libnfnetlink.so.0.2.0
+usr/lib/pkgconfig/
+usr/lib/pkgconfig/libnfnetlink.pc
+

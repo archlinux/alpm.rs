@@ -1,0 +1,17 @@
+%FILES%
+usr/
+usr/include/
+usr/include/nghttp2/
+usr/include/nghttp2/nghttp2.h
+usr/include/nghttp2/nghttp2ver.h
+usr/lib/
+usr/lib/libnghttp2.so
+usr/lib/libnghttp2.so.14
+usr/lib/libnghttp2.so.14.17.1
+usr/lib/pkgconfig/
+usr/lib/pkgconfig/libnghttp2.pc
+usr/share/
+usr/share/licenses/
+usr/share/licenses/libnghttp2/
+usr/share/licenses/libnghttp2/COPYING
+
