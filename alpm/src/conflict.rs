@@ -1,9 +1,11 @@
 use crate::utils::*;
 use crate::{Alpm, AlpmList, Depend, FreeMethod, Package};
 
+use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
 
 use std::marker::PhantomData;
+use std::mem::transmute;
 
 #[derive(Debug)]
 pub struct Conflict {
@@ -41,6 +43,43 @@ impl Conflict {
             inner: self.inner.reason,
             drop: false,
             phantom: PhantomData,
+        }
+    }
+}
+
+#[repr(u32)]
+#[derive(Debug)]
+pub enum FileConflictType {
+    Target = ALPM_FILECONFLICT_TARGET as u32,
+    Filesystem = ALPM_FILECONFLICT_FILESYSTEM as u32,
+}
+
+#[derive(Debug)]
+pub struct FileConflict {
+    pub(crate) inner: *mut alpm_fileconflict_t,
+}
+
+impl FileConflict {
+    pub fn target(&self) -> &str {
+        unsafe { from_cstr((*self.inner).target) }
+    }
+
+    pub fn conflict_type(&self) -> FileConflictType {
+        let t = unsafe { (*self.inner).type_ };
+        unsafe { transmute::<alpm_fileconflicttype_t, FileConflictType>(t) }
+    }
+
+    pub fn file(&self) -> &str {
+        unsafe { from_cstr((*self.inner).file) }
+    }
+
+    pub fn conflicting_target(&self) -> Option<&str> {
+        let s = unsafe { from_cstr((*self.inner).ctarget) };
+
+        if s.is_empty() {
+            None
+        } else {
+            Some(s)
         }
     }
 }

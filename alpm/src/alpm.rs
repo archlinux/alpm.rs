@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Event, FetchCBReturn, LogLevel, Progress, Question, Result};
+use crate::{Error, Event, FetchCBReturn, LogLevel, Progress, Question, Result};
 
 use std::ffi::{c_void, CString};
 use std::os::raw::c_int;
@@ -43,7 +43,7 @@ impl Alpm {
         let handle = unsafe { alpm_initialize(root.as_ptr(), db_path.as_ptr(), &mut err) };
 
         if handle.is_null() {
-            Err(err)?;
+            unsafe { return Err(Error::new(err)) };
         }
 
         Ok(Alpm { handle, drop: true })

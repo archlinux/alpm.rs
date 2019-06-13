@@ -1,4 +1,4 @@
-use crate::{Alpm, AlpmList, FreeMethod, Package, Result};
+use crate::{Alpm, AlpmList, CommitReturn, Error, FreeMethod, Package, PrepareReturn, Result};
 
 use alpm_sys::_alpm_transflag_t::*;
 use alpm_sys::*;
@@ -45,18 +45,68 @@ impl<'a> Trans<'a> {
         TransFlag::from_bits(flags as u32).unwrap()
     }
 
-    pub fn prepare(&mut self) -> Result<()> {
-        //TODO: handle return
+    pub fn prepare(&mut self) -> std::result::Result<(), (PrepareReturn, Error)> {
         let mut list = ptr::null_mut();
         let ret = unsafe { alpm_trans_prepare(self.handle.handle, &mut list) };
-        self.handle.check_ret(ret)
+        let err = self.handle.check_ret(ret);
+
+        if let Err(err) = err {
+            let ret = match err {
+                Error::PkgInvalidArch => PrepareReturn::PkgInvalidArch(AlpmList {
+                    handle: self.handle,
+                    item: list,
+                    free: FreeMethod::FreeInner,
+                    _marker: PhantomData,
+                }),
+                Error::UnsatisfiedDeps => PrepareReturn::UnsatisfiedDeps(AlpmList {
+                    handle: self.handle,
+                    item: list,
+                    free: FreeMethod::FreeDepMissing,
+                    _marker: PhantomData,
+                }),
+                Error::ConflictingDeps => PrepareReturn::ConflictingDeps(AlpmList {
+                    handle: self.handle,
+                    item: list,
+                    free: FreeMethod::FreeConflict,
+                    _marker: PhantomData,
+                }),
+                _ => unreachable!(),
+            };
+
+            Err((ret, err))
+        } else {
+            Ok(())
+        }
     }
 
-    pub fn commit(&mut self) -> Result<()> {
-        //TODO: handle return
+    pub fn commit(&mut self) -> std::result::Result<(), (CommitReturn, Error)> {
         let mut list = ptr::null_mut();
         let ret = unsafe { alpm_trans_commit(self.handle.handle, &mut list) };
-        self.handle.check_ret(ret)
+        let err = self.handle.check_ret(ret);
+
+        if let Err(err) = err {
+            let ret = match err {
+                Error::FileConflicts => CommitReturn::FileConflict(AlpmList {
+                    handle: self.handle,
+                    item: list,
+                    free: FreeMethod::FreeFileConflict,
+                    _marker: PhantomData,
+                }),
+                Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => {
+                    CommitReturn::PkgInvalid(AlpmList {
+                        handle: self.handle,
+                        item: list,
+                        free: FreeMethod::FreeInner,
+                        _marker: PhantomData,
+                    })
+                }
+                _ => unreachable!(),
+            };
+
+            Err((ret, err))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn interrupt(&mut self) -> Result<()> {

@@ -1,5 +1,8 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, Conflict, Db, Depend, Error, FreeMethod, Package, PgpKey};
+use crate::{
+    Alpm, AlpmList, Conflict, Db, DepMissing, Depend, Error, FileConflict, FreeMethod, Package,
+    PgpKey,
+};
 
 use std::ffi::c_void;
 use std::io::{self, Read};
@@ -839,11 +842,7 @@ impl CorruptedQuestion {
     }
 
     pub fn reason(&self) -> Error {
-        unsafe {
-            Error {
-                code: (*self.inner).reason,
-            }
-        }
+        unsafe { Error::new((*self.inner).reason) }
     }
 }
 
@@ -1026,4 +1025,17 @@ pub enum Match {
     No,
     Yes,
     Inverted,
+}
+
+#[derive(Debug)]
+pub enum PrepareReturn<'a> {
+    PkgInvalidArch(AlpmList<'a, Package<'a>>),
+    UnsatisfiedDeps(AlpmList<'a, DepMissing>),
+    ConflictingDeps(AlpmList<'a, Conflict>),
+}
+
+#[derive(Debug)]
+pub enum CommitReturn<'a> {
+    FileConflict(AlpmList<'a, FileConflict>),
+    PkgInvalid(AlpmList<'a, &'a str>),
 }

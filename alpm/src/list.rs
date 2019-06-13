@@ -1,4 +1,4 @@
-use crate::{free, Alpm, Conflict, DepMissing, Depend, Group, Package};
+use crate::{free, Alpm, Conflict, DepMissing, Depend, FileConflict, Group, Package};
 
 use std::ffi::{c_void, CStr};
 use std::iter::Iterator;
@@ -12,6 +12,7 @@ pub(crate) enum FreeMethod {
     FreeList,
     FreeInner,
     FreeConflict,
+    FreeFileConflict,
     FreeDepMissing,
     None,
 }
@@ -100,6 +101,24 @@ impl<'a> Iterator for AlpmList<'a, Depend<'a>> {
     }
 }
 
+impl<'a> Iterator for AlpmList<'a, FileConflict> {
+    type Item = FileConflict;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            if self.item.is_null() {
+                None
+            } else {
+                let data = (*(self.item)).data;
+                let data = data as *mut alpm_fileconflict_t;
+                self.item = alpm_list_next(self.item);
+                let pkg = FileConflict { inner: data };
+                Some(pkg)
+            }
+        }
+    }
+}
+
 impl<'a> Iterator for AlpmList<'a, DepMissing> {
     type Item = DepMissing;
 
@@ -140,6 +159,10 @@ impl<'a> Iterator for AlpmList<'a, Conflict> {
     }
 }
 
+unsafe extern "C" fn fileconflict_free(ptr: *mut c_void) {
+    alpm_fileconflict_free(ptr as *mut alpm_fileconflict_t);
+}
+
 unsafe extern "C" fn depmissing_free(ptr: *mut c_void) {
     alpm_depmissing_free(ptr as *mut alpm_depmissing_t);
 }
@@ -160,11 +183,15 @@ impl<'a, T> Drop for AlpmList<'a, T> {
                 unsafe { alpm_list_free(self.item) };
             }
             FreeMethod::FreeConflict => {
-                unsafe { alpm_list_free_inner(self.item, Some(depmissing_free)) };
+                unsafe { alpm_list_free_inner(self.item, Some(conflict_free)) };
+                unsafe { alpm_list_free(self.item) };
+            }
+            FreeMethod::FreeFileConflict => {
+                unsafe { alpm_list_free_inner(self.item, Some(fileconflict_free)) };
                 unsafe { alpm_list_free(self.item) };
             }
             FreeMethod::FreeDepMissing => {
-                unsafe { alpm_list_free_inner(self.item, Some(conflict_free)) };
+                unsafe { alpm_list_free_inner(self.item, Some(depmissing_free)) };
                 unsafe { alpm_list_free(self.item) };
             }
         }
