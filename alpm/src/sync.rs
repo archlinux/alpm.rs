@@ -7,7 +7,10 @@ use alpm_sys::*;
 
 impl<'a> Package<'a> {
     pub fn sync_new_version(&self, dbs: AlpmList<Db>) -> Option<Package> {
+        #[cfg(not(feature = "git"))]
         let ret = unsafe { alpm_sync_newversion(self.pkg, dbs.item) };
+        #[cfg(feature = "git")]
+        let ret = unsafe { alpm_sync_get_new_version(self.pkg, dbs.item) };
 
         if ret.is_null() {
             None

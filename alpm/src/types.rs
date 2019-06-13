@@ -11,7 +11,10 @@ use std::mem::transmute;
 #[cfg(feature = "mtree")]
 use std::ptr;
 
+#[cfg(not(feature = "git"))]
 use _alpm_db_usage_::*;
+#[cfg(feature = "git")]
+use _alpm_db_usage_t::*;
 use _alpm_event_type_t::*;
 use _alpm_hook_when_t::*;
 use _alpm_loglevel_t::*;
