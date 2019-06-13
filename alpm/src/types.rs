@@ -32,7 +32,7 @@ use libarchive3_sys::ffi::*;
 
 use bitflags::bitflags;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum FetchCBReturn {
     Ok,
     Err,
@@ -76,7 +76,7 @@ bitflags! {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum Progress {
     AddStart = ALPM_PROGRESS_ADD_START as u32,
     UpgradeStart = ALPM_PROGRESS_UPGRADE_START as u32,
@@ -91,7 +91,7 @@ pub enum Progress {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum PackageFrom {
     File = ALPM_PKG_FROM_FILE as u32,
     LocalDb = ALPM_PKG_FROM_LOCALDB as u32,
@@ -99,7 +99,7 @@ pub enum PackageFrom {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum PackageReason {
     Explicit = ALPM_PKG_REASON_EXPLICIT as u32,
     Depend = ALPM_PKG_REASON_DEPEND as u32,
@@ -116,7 +116,7 @@ bitflags! {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum EventType {
     CheckDepsStart = ALPM_EVENT_CHECKDEPS_START as u32,
     CheckDepsDone = ALPM_EVENT_CHECKDEPS_DONE as u32,
@@ -221,7 +221,7 @@ pub struct HookRunEvent {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum HookWhen {
     PreTransaction = ALPM_HOOK_PRE_TRANSACTION as u32,
     PostTransaction = ALPM_HOOK_POST_TRANSACTION as u32,
@@ -604,7 +604,7 @@ pub enum Question {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum QuestionType {
     InstallIgnorepkg = ALPM_QUESTION_INSTALL_IGNOREPKG as u32,
     ReplacePkg = ALPM_QUESTION_REPLACE_PKG as u32,
@@ -1020,7 +1020,7 @@ impl<'a> Read for ChangeLog<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum Match {
     No,
     Yes,

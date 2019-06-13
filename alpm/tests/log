@@ -1266,3 +1266,7 @@
 [2019-06-13 10:18] [ALPM-SCRIPTLET] could not change the root directory (Operation not permitted)
 [2019-06-13 10:18] [ALPM] running 'systemd-update.hook'...
 [2019-06-13 10:18] [ALPM-SCRIPTLET] could not change the root directory (Operation not permitted)
+[2019-06-13 23:41] [me] look i am logging an action :D
+[2019-06-13 23:49] [me] look i am logging an action :D
+[2019-06-13 23:51] [me] look i am logging an action :D
+[2019-06-14 00:00] [me] look i am logging an action :D

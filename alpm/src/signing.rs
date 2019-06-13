@@ -27,6 +27,7 @@ pub fn decode_signature<S: Into<String>>(b64: S) -> std::result::Result<Vec<u8>,
 }
 
 #[repr(u32)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum SigStatus {
     Valid = ALPM_SIGSTATUS_VALID as u32,
     KeyExpired = ALPM_SIGSTATUS_KEY_EXPIRED as u32,
@@ -37,6 +38,7 @@ pub enum SigStatus {
 }
 
 #[repr(u32)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum SigValidity {
     Full = ALPM_SIGVALIDITY_FULL as u32,
     Marginal = ALPM_SIGVALIDITY_MARGINAL as u32,

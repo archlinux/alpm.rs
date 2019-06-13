@@ -11,7 +11,7 @@ use alpm_sys::*;
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[repr(u32)]
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum Error {
     Ok = ALPM_ERR_OK as u32,
     Memory,

@@ -12,6 +12,7 @@ pub fn vercmp<S: Into<String>>(a: S, b: S) -> Result<Vercmp> {
     Ok(ret.into())
 }
 
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum Vercmp {
     Older,
     Equal,

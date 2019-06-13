@@ -70,7 +70,7 @@ impl<'a> Depend<'a> {
 }
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum Depmod {
     Any = ALPM_DEP_MOD_ANY as u32,
     Eq = ALPM_DEP_MOD_EQ as u32,
