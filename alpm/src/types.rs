@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmError, AlpmList, Conflict, Db, Depend, FreeMethod, Package, PgpKey};
+use crate::{Alpm, AlpmList, Conflict, Db, Depend, Error, FreeMethod, Package, PgpKey};
 
 use std::ffi::c_void;
 use std::io::{self, Read};
@@ -838,9 +838,9 @@ impl CorruptedQuestion {
         unsafe { from_cstr((*self.inner).filepath) }
     }
 
-    pub fn reason(&self) -> AlpmError {
+    pub fn reason(&self) -> Error {
         unsafe {
-            AlpmError {
+            Error {
                 code: (*self.inner).reason,
             }
         }

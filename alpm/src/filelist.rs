@@ -36,7 +36,7 @@ impl FileList {
     }
 
     pub fn contains<S: Into<String>>(&self, path: S) -> Result<Option<File>> {
-        let path = CString::new(path.into())?;
+        let path = CString::new(path.into()).unwrap();
         let file = unsafe {
             alpm_filelist_contains(
                 &self.inner as *const alpm_filelist_t as *mut alpm_filelist_t,

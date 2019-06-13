@@ -37,8 +37,8 @@ impl Drop for Alpm {
 impl Alpm {
     pub fn new<S: Into<String>>(root: S, db_path: S) -> Result<Alpm> {
         let mut err = alpm_errno_t::ALPM_ERR_OK;
-        let root = CString::new(root.into())?;
-        let db_path = CString::new(db_path.into())?;
+        let root = CString::new(root.into()).unwrap();
+        let db_path = CString::new(db_path.into()).unwrap();
 
         let handle = unsafe { alpm_initialize(root.as_ptr(), db_path.as_ptr(), &mut err) };
 
@@ -47,10 +47,6 @@ impl Alpm {
         }
 
         Ok(Alpm { handle, drop: true })
-    }
-
-    pub fn release(self) -> Result<()> {
-        self.check_ret(unsafe { alpm_release(self.handle) })
     }
 
     pub(crate) fn check_ret(&self, int: c_int) -> Result<()> {
@@ -111,7 +107,6 @@ mod tests {
     use super::*;
     use crate::{
         log_action, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb, SigLevel,
-        TransFlag,
     };
 
     fn logcb(level: LogLevel, msg: &str) {
@@ -168,7 +163,6 @@ mod tests {
     #[test]
     fn test_cb() {
         let handle = Alpm::new("/", "tests/db").unwrap();
-        let flags = TransFlag::DB_ONLY;
         set_logcb!(handle, logcb);
         set_eventcb!(handle, eventcb);
         set_fetchcb!(handle, fetchcb);
@@ -183,11 +177,6 @@ mod tests {
         let mut db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/core/os/x86_64")
             .unwrap();
-        let pkg = db.pkg("filesystem").unwrap();
-
-        let mut trans = handle.trans(flags).unwrap();
-        trans.add_pkg(pkg).unwrap();
-        trans.prepare().unwrap();
-        trans.commit().unwrap();
+        db.pkg("filesystem").unwrap();
     }
 }

@@ -78,9 +78,13 @@ impl<'a> Package<'a> {
         date as i64
     }
 
-    pub fn install_date(&self) -> i64 {
+    pub fn install_date(&self) -> Option<i64> {
         let date = unsafe { alpm_pkg_get_installdate(self.pkg) };
-        date as i64
+        if date == 0 {
+            None
+        } else {
+            Some(date as i64)
+        }
     }
 
     pub fn packager(&self) -> &'a str {

@@ -128,11 +128,11 @@ mod tests {
         let mut db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/core/os/x86_64")
             .unwrap();
-        //let pkg = db.pkg("filesystem").unwrap();
+        let pkg = db.pkg("filesystem").unwrap();
 
         let mut trans = handle.trans(flags).unwrap();
-        //trans.add_pkg(pkg).unwrap();
+        trans.add_pkg(pkg).unwrap();
         trans.prepare().unwrap();
-        //trans.commit().unwrap();
+        trans.commit().unwrap();
     }
 }

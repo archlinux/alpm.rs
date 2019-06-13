@@ -14,7 +14,7 @@ pub struct Db<'a> {
 
 impl Alpm {
     pub fn register_syncdb<S: Into<String>>(&self, name: S, sig_level: SigLevel) -> Result<Db> {
-        let name = CString::new(name.into())?;
+        let name = CString::new(name.into()).unwrap();
 
         let db =
             unsafe { alpm_register_syncdb(self.handle, name.as_ptr(), sig_level.bits() as i32) };
@@ -39,7 +39,7 @@ impl<'a> Db<'a> {
     }
 
     pub fn add_server<S: Into<String>>(&mut self, server: S) -> Result<()> {
-        let server = CString::new(server.into())?;
+        let server = CString::new(server.into()).unwrap();
         let ret = unsafe { alpm_db_add_server(self.db, server.as_ptr()) };
         self.handle.check_ret(ret)
     }
@@ -66,13 +66,13 @@ impl<'a> Db<'a> {
     }
 
     pub fn remove_server<S: Into<String>>(&mut self, server: S) -> Result<()> {
-        let server = CString::new(server.into())?;
+        let server = CString::new(server.into()).unwrap();
         let ret = unsafe { alpm_db_remove_server(self.db, server.as_ptr()) };
         self.handle.check_ret(ret)
     }
 
     pub fn pkg<S: Into<String>>(&self, name: S) -> Result<Package> {
-        let name = CString::new(name.into())?;
+        let name = CString::new(name.into()).unwrap();
         let pkg = unsafe { alpm_db_get_pkg(self.db, name.as_ptr()) };
         self.handle.check_null(pkg)?;
         Ok(Package {
@@ -97,7 +97,7 @@ impl<'a> Db<'a> {
     }
 
     pub fn group<S: Into<String>>(&self, name: S) -> Result<Group> {
-        let name = CString::new(name.into())?;
+        let name = CString::new(name.into()).unwrap();
         let group = unsafe { alpm_db_get_group(self.db, name.as_ptr()) };
         self.handle.check_null(group)?;
         Ok(Group {

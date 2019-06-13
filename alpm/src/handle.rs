@@ -21,7 +21,7 @@ impl Alpm {
         unsafe { from_cstr(alpm_option_get_dbpath(self.handle)) }
     }
 
-    pub fn hookdirs<'a>(&'a self) -> AlpmList<'a, &'a str> {
+    pub fn hookdirs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_hookdirs(self.handle) };
 
         AlpmList {
@@ -32,7 +32,7 @@ impl Alpm {
         }
     }
 
-    pub fn cachedirs<'a>(&'a self) -> AlpmList<'a, &'a str> {
+    pub fn cachedirs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_cachedirs(self.handle) };
 
         AlpmList {
@@ -55,7 +55,7 @@ impl Alpm {
         unsafe { alpm_option_get_usesyslog(self.handle) != 0 }
     }
 
-    pub fn noupgrades<'a>(&'a self) -> AlpmList<'a, &'a str> {
+    pub fn noupgrades(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_noupgrades(self.handle) };
 
         AlpmList {
@@ -66,7 +66,7 @@ impl Alpm {
         }
     }
 
-    pub fn noextracts<'a>(&'a self) -> AlpmList<'a, &'a str> {
+    pub fn noextracts(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_noextracts(self.handle) };
 
         AlpmList {
@@ -77,7 +77,7 @@ impl Alpm {
         }
     }
 
-    pub fn ignorepkgs<'a>(&'a self) -> AlpmList<'a, &'a str> {
+    pub fn ignorepkgs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_ignorepkgs(self.handle) };
 
         AlpmList {
@@ -88,7 +88,7 @@ impl Alpm {
         }
     }
 
-    pub fn ignoregroups<'a>(&'a self) -> AlpmList<'a, &'a str> {
+    pub fn ignoregroups(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_ignoregroups(self.handle) };
 
         AlpmList {
@@ -99,7 +99,7 @@ impl Alpm {
         }
     }
 
-    pub fn overwrite_files<'a>(&'a self) -> AlpmList<'a, &'a str> {
+    pub fn overwrite_files(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_overwrite_files(self.handle) };
 
         AlpmList {
@@ -110,7 +110,7 @@ impl Alpm {
         }
     }
 
-    pub fn assume_installed<'a>(&'a self) -> AlpmList<'a, Depend> {
+    pub fn assume_installed(&self) -> AlpmList<'_, Depend> {
         let list = unsafe { alpm_option_get_assumeinstalled(self.handle) };
 
         AlpmList {

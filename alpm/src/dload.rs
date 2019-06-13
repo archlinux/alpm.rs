@@ -7,7 +7,7 @@ use std::ffi::{c_void, CString};
 
 impl Alpm {
     pub fn fetch_pkgurl<S: Into<String>>(&self, url: S) -> Result<String> {
-        let url = CString::new(url.into())?;
+        let url = CString::new(url.into()).unwrap();
         let path = unsafe { alpm_fetch_pkgurl(self.handle, url.as_ptr()) };
         self.check_null(path)?;
         let path_str = unsafe { from_cstr(path) };

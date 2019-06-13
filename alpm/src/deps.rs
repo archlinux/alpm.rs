@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, Db, FreeMethod, Package, Result};
+use crate::{free, Alpm, AlpmList, Db, FreeMethod, Package};
 
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
@@ -37,17 +37,15 @@ impl<'a> fmt::Display for Depend<'a> {
 }
 
 impl<'a> Depend<'a> {
-    pub fn new<S: Into<String>>(s: S) -> Result<Depend<'static>> {
-        let s = CString::new(s.into())?;
+    pub fn new<S: Into<String>>(s: S) -> Depend<'static> {
+        let s = CString::new(s.into()).unwrap();
         let dep = unsafe { alpm_dep_from_string(s.as_ptr()) };
 
-        let dep = Depend {
+        Depend {
             inner: dep,
             drop: true,
             phantom: PhantomData,
-        };
-
-        Ok(dep)
+        }
     }
 
     pub fn name(&self) -> &str {
@@ -103,56 +101,51 @@ impl DepMissing {
         }
     }
 
-    pub fn causing_pkg<'a>(&self) -> Result<Option<&'a str>> {
+    pub fn causing_pkg<'a>(&self) -> Option<&'a str> {
         let causing_pkg = unsafe { (*self.inner).causingpkg };
         if causing_pkg.is_null() {
-            return Ok(None);
+            None
+        } else {
+            unsafe { Some(from_cstr(causing_pkg)) }
         }
+    }
+}
 
-        let ret = unsafe { from_cstr(causing_pkg) };
-        Ok(Some(ret))
+impl<'a> AlpmList<'a, Db<'a>> {
+    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package> {
+        let dep = CString::new(dep.into()).unwrap();
+
+        let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.handle, self.item, dep.as_ptr()) };
+        self.handle.check_null(pkg).ok()?;
+
+        let pkg = Package {
+            handle: self.handle,
+            pkg,
+            drop: false,
+        };
+
+        Some(pkg)
+    }
+}
+
+impl<'a> AlpmList<'a, Package<'a>> {
+    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package> {
+        let dep = CString::new(dep.into()).unwrap();
+
+        let pkg = unsafe { alpm_find_satisfier(self.item, dep.as_ptr()) };
+        self.handle.check_null(pkg).ok()?;
+
+        let pkg = Package {
+            handle: self.handle,
+            pkg,
+            drop: false,
+        };
+
+        Some(pkg)
     }
 }
 
 impl Alpm {
-    pub fn find_dbs_satisfier<S: Into<String>>(
-        &self,
-        dbs: AlpmList<Db>,
-        dep: S,
-    ) -> Result<Package> {
-        let dep = CString::new(dep.into()).unwrap();
-
-        let pkg = unsafe { alpm_find_dbs_satisfier(self.handle, dbs.item, dep.as_ptr()) };
-        self.check_null(pkg)?;
-
-        let pkg = Package {
-            handle: self,
-            pkg,
-            drop: false,
-        };
-
-        Ok(pkg)
-    }
-
-    pub fn find_satisfier<S: Into<String>>(
-        &self,
-        pkgs: AlpmList<Package>,
-        dep: S,
-    ) -> Result<Package> {
-        let dep = CString::new(dep.into()).unwrap();
-
-        let pkg = unsafe { alpm_find_satisfier(pkgs.item, dep.as_ptr()) };
-        self.check_null(pkg)?;
-
-        let pkg = Package {
-            handle: self,
-            pkg,
-            drop: false,
-        };
-
-        Ok(pkg)
-    }
-
     pub fn check_deps(
         &self,
         pkgs: AlpmList<Package>,

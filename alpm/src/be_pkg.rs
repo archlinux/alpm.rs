@@ -13,7 +13,7 @@ impl Alpm {
         full: bool,
         level: SigLevel,
     ) -> Result<Package> {
-        let filename = CString::new(filename.into())?;
+        let filename = CString::new(filename.into()).unwrap();
         let mut pkg = Package {
             pkg: ptr::null_mut(),
             handle: self,
