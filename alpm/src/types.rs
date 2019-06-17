@@ -36,7 +36,7 @@ use libarchive3_sys::ffi::*;
 use bitflags::bitflags;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
-pub enum FetchCBReturn {
+pub enum FetchCbReturn {
     Ok,
     Err,
     FileExists,

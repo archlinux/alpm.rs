@@ -53,7 +53,7 @@ macro_rules! set_totaldlcb {
 #[macro_export]
 macro_rules! set_fetchcb {
     ( $handle:ident, $f:ident ) => {{
-        use crate::FetchCBReturn;
+        use crate::FetchCbReturn;
         use std::ffi::CStr;
         use std::os::raw::{c_char, c_int};
 
@@ -67,9 +67,9 @@ macro_rules! set_fetchcb {
             let ret = $f(url, localpath, force != 0);
 
             match ret {
-                FetchCBReturn::Ok => 0,
-                FetchCBReturn::Err => -1,
-                FetchCBReturn::FileExists => 1,
+                FetchCbReturn::Ok => 0,
+                FetchCbReturn::Err => -1,
+                FetchCbReturn::FileExists => 1,
             }
         }
 

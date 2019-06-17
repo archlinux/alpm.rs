@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Error, Event, FetchCBReturn, LogLevel, Progress, Question, Result};
+use crate::{Error, Event, FetchCbReturn, LogLevel, Progress, Question, Result};
 
 use std::ffi::{c_void, CString};
 use std::os::raw::c_int;
@@ -7,13 +7,13 @@ use std::os::raw::c_int;
 use alpm_sys::*;
 use bitflags::bitflags;
 
-pub type LogCB = fn(level: LogLevel, s: &str);
-pub type DownloadCB = fn(filename: &str, xfered: u64, total: u64);
-pub type FetchCB = fn(url: &str, filename: &str, force: bool) -> FetchCBReturn;
-pub type TotalDownloadCB = fn(total: u64);
-pub type EventCB = fn(event: Event);
-pub type QuestionCB = fn(question: Question);
-pub type ProgressCB =
+pub type LogCb = fn(level: LogLevel, s: &str);
+pub type DownloadCb = fn(filename: &str, xfered: u64, total: u64);
+pub type FetchCb = fn(url: &str, filename: &str, force: bool) -> FetchCbReturn;
+pub type TotalDownloadCb = fn(total: u64);
+pub type EventCb = fn(event: Event);
+pub type QuestionCb = fn(question: Question);
+pub type ProgressCb =
     fn(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize);
 
 extern "C" {
@@ -122,8 +122,8 @@ mod tests {
         }
     }
 
-    fn fetchcb(_url: &str, _path: &str, _force: bool) -> FetchCBReturn {
-        FetchCBReturn::Ok
+    fn fetchcb(_url: &str, _path: &str, _force: bool) -> FetchCbReturn {
+        FetchCbReturn::Ok
     }
 
     fn questioncb(question: Question) {
