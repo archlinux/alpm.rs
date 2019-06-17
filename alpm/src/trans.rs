@@ -108,16 +108,14 @@ impl<'a> Trans<'a> {
         self.handle.check_ret(ret)
     }
 
-    pub fn add(&self) -> Result<AlpmList<Package>> {
+    pub fn add(&self) -> AlpmList<Package> {
         let list = unsafe { alpm_trans_get_add(self.handle.handle) };
-        self.handle.check_null(list)?;
-        Ok(AlpmList::new(self.handle, list, FreeMethod::None))
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn remove(&self) -> Result<AlpmList<Package>> {
+    pub fn remove(&self) -> AlpmList<Package> {
         let list = unsafe { alpm_trans_get_remove(self.handle.handle) };
-        self.handle.check_null(list)?;
-        Ok(AlpmList::new(self.handle, list, FreeMethod::None))
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 }
 
