@@ -6,7 +6,6 @@ use alpm_sys::_alpm_sigvalidity_t::*;
 use alpm_sys::*;
 
 use std::ffi::{c_void, CString};
-use std::marker::PhantomData;
 use std::mem::transmute;
 use std::{ptr, slice};
 
@@ -190,15 +189,8 @@ impl Alpm {
                 &mut keys,
             )
         };
+
         self.check_ret(ret)?;;
-
-        let list = AlpmList {
-            handle: self,
-            item: keys,
-            free: FreeMethod::FreeInner,
-            _marker: PhantomData,
-        };
-
-        Ok(list)
+        Ok(AlpmList::new(self, keys, FreeMethod::FreeInner))
     }
 }

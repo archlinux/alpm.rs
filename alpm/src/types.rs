@@ -870,13 +870,7 @@ impl RemovePkgsQuestion {
 
     pub fn packages<'a>(&'a self) -> AlpmList<'a, Package> {
         let list = unsafe { (*self.inner).packages };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(&self.handle, list, FreeMethod::None)
     }
 }
 
@@ -897,12 +891,7 @@ impl SelectProviderQuestion {
 
     pub fn providers(&self) -> AlpmList<Package> {
         let list = unsafe { (*self.inner).providers };
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(&self.handle, list, FreeMethod::None)
     }
 
     pub fn depend(&self) -> Depend {
@@ -953,12 +942,8 @@ impl<'a> Group<'a> {
     }
 
     pub fn packages(&self) -> AlpmList<Package> {
-        AlpmList {
-            handle: self.handle,
-            item: unsafe { (*self.inner).packages },
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        let pkgs = unsafe { (*self.inner).packages };
+        AlpmList::new(self.handle, pkgs, FreeMethod::None)
     }
 }
 

@@ -2,7 +2,6 @@ use crate::utils::*;
 use crate::{Alpm, AlpmList, Db, Depend, FreeMethod, Match, Result, SigLevel};
 
 use std::ffi::{c_void, CString};
-use std::marker::PhantomData;
 use std::ptr;
 
 use alpm_sys::*;
@@ -23,24 +22,12 @@ impl Alpm {
 
     pub fn hookdirs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_hookdirs(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
     pub fn cachedirs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_cachedirs(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
     pub fn lockfile(&self) -> &str {
@@ -57,68 +44,32 @@ impl Alpm {
 
     pub fn noupgrades(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_noupgrades(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
     pub fn noextracts(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_noextracts(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
     pub fn ignorepkgs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_ignorepkgs(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
     pub fn ignoregroups(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_ignoregroups(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
     pub fn overwrite_files(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_overwrite_files(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
     pub fn assume_installed(&self) -> AlpmList<'_, Depend> {
         let list = unsafe { alpm_option_get_assumeinstalled(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
     pub fn arch(&self) -> &str {
@@ -391,13 +342,7 @@ impl Alpm {
 
     pub fn syncdbs(&self) -> AlpmList<Db> {
         let dbs = unsafe { alpm_get_syncdbs(self.handle) };
-
-        AlpmList {
-            handle: self,
-            item: dbs,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, dbs, FreeMethod::None)
     }
 
     pub fn set_check_space(&self, b: bool) {

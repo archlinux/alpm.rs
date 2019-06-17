@@ -115,7 +115,7 @@ impl<'a> AlpmList<'a, Db<'a>> {
     pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package> {
         let dep = CString::new(dep.into()).unwrap();
 
-        let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.handle, self.item, dep.as_ptr()) };
+        let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.handle, self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;
 
         let pkg = Package {
@@ -132,7 +132,7 @@ impl<'a> AlpmList<'a, Package<'a>> {
     pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package> {
         let dep = CString::new(dep.into()).unwrap();
 
-        let pkg = unsafe { alpm_find_satisfier(self.item, dep.as_ptr()) };
+        let pkg = unsafe { alpm_find_satisfier(self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;
 
         let pkg = Package {
@@ -155,13 +155,8 @@ impl Alpm {
     ) -> AlpmList<DepMissing> {
         let reverse_deps = if reverse_deps { 1 } else { 0 };
         let list =
-            unsafe { alpm_checkdeps(self.handle, pkgs.item, rem.item, upgrade.item, reverse_deps) };
+            unsafe { alpm_checkdeps(self.handle, pkgs.list, rem.list, upgrade.list, reverse_deps) };
 
-        AlpmList {
-            handle: self,
-            item: list,
-            free: FreeMethod::FreeDepMissing,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self, list, FreeMethod::FreeDepMissing)
     }
 }

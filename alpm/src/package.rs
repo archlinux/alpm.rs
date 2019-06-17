@@ -7,7 +7,6 @@ use crate::{
 #[cfg(feature = "mtree")]
 use crate::MTree;
 
-use std::marker::PhantomData;
 use std::mem::transmute;
 
 use alpm_sys::*;
@@ -129,101 +128,47 @@ impl<'a> Package<'a> {
 
     pub fn licenses(&self) -> AlpmList<'a, &'a str> {
         let list = unsafe { alpm_pkg_get_licenses(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn groups(&self) -> AlpmList<'a, &'a str> {
         let list = unsafe { alpm_pkg_get_groups(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn depends(&self) -> AlpmList<'a, Depend> {
         let list = unsafe { alpm_pkg_get_depends(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn optdepends(&self) -> AlpmList<'a, Depend> {
         let list = unsafe { alpm_pkg_get_optdepends(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn checkdepends(&self) -> AlpmList<'a, Depend> {
         let list = unsafe { alpm_pkg_get_checkdepends(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn makedepends(&self) -> AlpmList<'a, Depend> {
         let list = unsafe { alpm_pkg_get_makedepends(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn conflicts(&self) -> AlpmList<'a, Depend> {
         let list = unsafe { alpm_pkg_get_conflicts(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn provides(&self) -> AlpmList<'a, Depend> {
         let list = unsafe { alpm_pkg_get_provides(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn replaces(&self) -> AlpmList<'a, Depend> {
         let list = unsafe { alpm_pkg_get_replaces(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn files(&self) -> FileList {
@@ -233,13 +178,7 @@ impl<'a> Package<'a> {
 
     pub fn backup(&self) -> AlpmList<'a, &'a str> {
         let list = unsafe { alpm_pkg_get_backup(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn db(&self) -> Result<Db> {
@@ -275,24 +214,12 @@ impl<'a> Package<'a> {
 
     pub fn required_by(&self) -> AlpmList<'a, &'a str> {
         let list = unsafe { alpm_pkg_compute_requiredby(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::FreeInner,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::FreeInner)
     }
 
     pub fn optional_for(&self) -> AlpmList<'a, &'a str> {
         let list = unsafe { alpm_pkg_compute_optionalfor(self.pkg) };
-
-        AlpmList {
-            handle: &self.handle,
-            item: list,
-            free: FreeMethod::FreeInner,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::FreeInner)
     }
 
     pub fn base64_sig(&self) -> &'a str {

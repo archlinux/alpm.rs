@@ -86,13 +86,7 @@ impl FileConflict {
 
 impl Alpm {
     pub fn check_conflicts(&self, pkgs: AlpmList<Package>) -> AlpmList<Conflict> {
-        let ret = unsafe { alpm_checkconflicts(self.handle, pkgs.item) };
-
-        AlpmList {
-            handle: self,
-            item: ret,
-            free: FreeMethod::FreeConflict,
-            _marker: PhantomData,
-        }
+        let ret = unsafe { alpm_checkconflicts(self.handle, pkgs.list) };
+        AlpmList::new(self, ret, FreeMethod::FreeConflict)
     }
 }

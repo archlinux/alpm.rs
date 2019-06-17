@@ -1,8 +1,7 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, FreeMethod, Group, Package, Result, SigLevel, Usage};
+use crate::{Alpm, AlpmList, FreeMethod, Group, Package, Result, SigLevel, Usage, free};
 
 use std::ffi::CString;
-use std::marker::PhantomData;
 
 use alpm_sys::*;
 
@@ -45,15 +44,8 @@ impl<'a> Db<'a> {
     }
 
     pub fn servers(&self) -> AlpmList<&str> {
-        //TODO: list stuff
         let list = unsafe { alpm_db_get_servers(self.db) };
-
-        AlpmList {
-            handle: self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        }
+        AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
     pub fn set_servers<S: Into<String>, I: IntoIterator<Item = S>>(
@@ -85,15 +77,7 @@ impl<'a> Db<'a> {
     pub fn pkgs(&self) -> Result<AlpmList<Package>> {
         let pkgs = unsafe { alpm_db_get_pkgcache(self.db) };
         self.handle.check_null(pkgs)?;
-
-        let list = AlpmList {
-            handle: &self.handle,
-            item: pkgs,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        };
-
-        Ok(list)
+        Ok(AlpmList::new(self.handle, pkgs, FreeMethod::None))
     }
 
     pub fn group<S: Into<String>>(&self, name: S) -> Result<Group> {
@@ -112,31 +96,16 @@ impl<'a> Db<'a> {
     ) -> Result<AlpmList<Package<'a>>> {
         let list = to_strlist(list.into_iter());
         let pkgs = unsafe { alpm_db_search(self.db, list) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
         unsafe { alpm_list_free(list) };
         self.handle.check_null(pkgs)?;
-
-        let list = AlpmList {
-            handle: &self.handle,
-            item: pkgs,
-            free: FreeMethod::FreeList,
-            _marker: PhantomData,
-        };
-
-        Ok(list)
+        Ok(AlpmList::new(self.handle, pkgs, FreeMethod::FreeList))
     }
 
     pub fn groups(&self) -> Result<AlpmList<Group>> {
         let groups = unsafe { alpm_db_get_pkgcache(self.db) };
         self.handle.check_null(groups)?;
-
-        let list = AlpmList {
-            handle: &self.handle,
-            item: groups,
-            free: FreeMethod::FreeList,
-            _marker: PhantomData,
-        };
-
-        Ok(list)
+        Ok(AlpmList::new(self.handle, groups, FreeMethod::FreeList))
     }
 
     pub fn siglevel(&self) -> SigLevel {

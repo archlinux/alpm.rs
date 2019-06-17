@@ -3,7 +3,6 @@ use crate::{Alpm, AlpmList, CommitReturn, Error, FreeMethod, Package, PrepareRet
 use alpm_sys::_alpm_transflag_t::*;
 use alpm_sys::*;
 
-use std::marker::PhantomData;
 use std::ptr;
 
 use bitflags::bitflags;
@@ -52,24 +51,21 @@ impl<'a> Trans<'a> {
 
         if let Err(err) = err {
             let ret = match err {
-                Error::PkgInvalidArch => PrepareReturn::PkgInvalidArch(AlpmList {
-                    handle: self.handle,
-                    item: list,
-                    free: FreeMethod::FreeInner,
-                    _marker: PhantomData,
-                }),
-                Error::UnsatisfiedDeps => PrepareReturn::UnsatisfiedDeps(AlpmList {
-                    handle: self.handle,
-                    item: list,
-                    free: FreeMethod::FreeDepMissing,
-                    _marker: PhantomData,
-                }),
-                Error::ConflictingDeps => PrepareReturn::ConflictingDeps(AlpmList {
-                    handle: self.handle,
-                    item: list,
-                    free: FreeMethod::FreeConflict,
-                    _marker: PhantomData,
-                }),
+                Error::PkgInvalidArch => PrepareReturn::PkgInvalidArch(AlpmList::new(
+                    self.handle,
+                    list,
+                    FreeMethod::FreeInner,
+                )),
+                Error::UnsatisfiedDeps => PrepareReturn::UnsatisfiedDeps(AlpmList::new(
+                    self.handle,
+                    list,
+                    FreeMethod::FreeDepMissing,
+                )),
+                Error::ConflictingDeps => PrepareReturn::ConflictingDeps(AlpmList::new(
+                    self.handle,
+                    list,
+                    FreeMethod::FreeConflict,
+                )),
                 _ => unreachable!(),
             };
 
@@ -86,19 +82,17 @@ impl<'a> Trans<'a> {
 
         if let Err(err) = err {
             let ret = match err {
-                Error::FileConflicts => CommitReturn::FileConflict(AlpmList {
-                    handle: self.handle,
-                    item: list,
-                    free: FreeMethod::FreeFileConflict,
-                    _marker: PhantomData,
-                }),
+                Error::FileConflicts => CommitReturn::FileConflict(AlpmList::new(
+                    self.handle,
+                    list,
+                    FreeMethod::FreeFileConflict,
+                )),
                 Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => {
-                    CommitReturn::PkgInvalid(AlpmList {
-                        handle: self.handle,
-                        item: list,
-                        free: FreeMethod::FreeInner,
-                        _marker: PhantomData,
-                    })
+                    CommitReturn::PkgInvalid(AlpmList::new(
+                        self.handle,
+                        list,
+                        FreeMethod::FreeInner,
+                    ))
                 }
                 _ => unreachable!(),
             };
@@ -117,29 +111,13 @@ impl<'a> Trans<'a> {
     pub fn add(&self) -> Result<AlpmList<Package>> {
         let list = unsafe { alpm_trans_get_add(self.handle.handle) };
         self.handle.check_null(list)?;
-
-        let list = AlpmList {
-            handle: self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        };
-
-        Ok(list)
+        Ok(AlpmList::new(self.handle, list, FreeMethod::None))
     }
 
     pub fn remove(&self) -> Result<AlpmList<Package>> {
         let list = unsafe { alpm_trans_get_remove(self.handle.handle) };
         self.handle.check_null(list)?;
-
-        let list = AlpmList {
-            handle: self.handle,
-            item: list,
-            free: FreeMethod::None,
-            _marker: PhantomData,
-        };
-
-        Ok(list)
+        Ok(AlpmList::new(self.handle, list, FreeMethod::None))
     }
 }
 

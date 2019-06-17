@@ -1,16 +1,15 @@
 use crate::{Alpm, AlpmList, Db, FreeMethod, Package, Result, Trans};
 
 use std::ffi::CString;
-use std::marker::PhantomData;
 
 use alpm_sys::*;
 
 impl<'a> Package<'a> {
     pub fn sync_new_version(&self, dbs: AlpmList<Db>) -> Option<Package> {
         #[cfg(not(feature = "git"))]
-        let ret = unsafe { alpm_sync_newversion(self.pkg, dbs.item) };
+        let ret = unsafe { alpm_sync_newversion(self.pkg, dbs.list) };
         #[cfg(feature = "git")]
-        let ret = unsafe { alpm_sync_get_new_version(self.pkg, dbs.item) };
+        let ret = unsafe { alpm_sync_get_new_version(self.pkg, dbs.list) };
 
         if ret.is_null() {
             None
@@ -36,14 +35,8 @@ impl Alpm {
         s: S,
     ) -> AlpmList<'a, Package<'a>> {
         let name = CString::new(s.into()).unwrap();
-        let ret = unsafe { alpm_find_group_pkgs(dbs.item, name.as_ptr()) };
-
-        AlpmList {
-            handle: self,
-            item: ret,
-            free: FreeMethod::FreeList,
-            _marker: PhantomData,
-        }
+        let ret = unsafe { alpm_find_group_pkgs(dbs.list, name.as_ptr()) };
+        AlpmList::new(self, ret, FreeMethod::FreeList)
     }
 }
 
