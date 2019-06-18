@@ -7,6 +7,10 @@ use std::ptr;
 use alpm_sys::*;
 
 impl Alpm {
+    pub fn as_alpm_handle_t(&self) -> *mut alpm_handle_t {
+        self.handle
+    }
+
     pub fn unlock(&self) -> Result<()> {
         let ret = unsafe { alpm_unlock(self.handle) };
         self.check_ret(ret)
