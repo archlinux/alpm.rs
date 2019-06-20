@@ -24,3 +24,10 @@ libarchive3-sys = { version = "0.1.2", optional = true }
 [dependencies.alpm-sys]
 path = "../alpm-sys"
 features = ["git"]
+
+[dev-dependencies]
+criterion = "0.2.11"
+
+[[bench]]
+name = "list"
+harness = false
