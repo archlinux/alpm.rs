@@ -1,4 +1,4 @@
-use crate::{free, Alpm, Conflict, Db, DepMissing, Depend, FileConflict, Group, Package};
+use crate::{free, Alpm, Conflict, Db, DepMissing, Depend, FileConflict, Group, Package, Backup};
 
 use std::ffi::{c_void, CStr};
 use std::iter::ExactSizeIterator;
@@ -107,6 +107,15 @@ unsafe impl<'a> AsAlpmListItem<'a> for Depend<'a> {
         }
     }
 }
+
+unsafe impl<'a> AsAlpmListItem<'a> for Backup {
+    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        Backup {
+            inner: ptr as *mut alpm_backup_t,
+        }
+    }
+}
+
 
 unsafe impl<'a> AsAlpmListItem<'a> for FileConflict {
     fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {

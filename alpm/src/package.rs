@@ -1,7 +1,7 @@
 use crate::utils::*;
 use crate::{
     Alpm, AlpmList, ChangeLog, Db, Depend, FileList, FreeMethod, PackageFrom, PackageReason,
-    PackageValidation, Result,
+    PackageValidation, Result, Backup,
 };
 
 #[cfg(feature = "mtree")]
@@ -176,7 +176,7 @@ impl<'a> Package<'a> {
         FileList { inner: files }
     }
 
-    pub fn backup(&self) -> AlpmList<'a, &'a str> {
+    pub fn backup(&self) -> AlpmList<'a, Backup> {
         let list = unsafe { alpm_pkg_get_backup(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
@@ -273,6 +273,16 @@ mod tests {
 
         assert_eq!(&groups.collect::<Vec<_>>(), &["base"],)
     }
+
+    #[test]
+    fn test_backup() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.localdb();
+        let pkg = db.pkg("pacman").unwrap();
+        let mut backup = pkg.backup();
+        assert_eq!(backup.next().unwrap().name(), "etc/pacman.conf");
+    }
+
 
     #[test]
     fn test_rquired_by() {

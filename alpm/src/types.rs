@@ -1033,3 +1033,18 @@ impl Drop for FileConflict {
         unsafe { alpm_fileconflict_free(self.inner) }
     }
 }
+
+#[derive(Debug)]
+pub struct Backup {
+    pub(crate) inner: *mut alpm_backup_t,
+}
+
+impl Backup {
+    pub fn hash(&self) -> u64 {
+        unsafe { (*self.inner).name as u64 }
+    }
+
+    pub fn name(&self) -> &str {
+        unsafe { from_cstr((*self.inner).name) }
+    }
+}
