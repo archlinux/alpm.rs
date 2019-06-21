@@ -61,7 +61,7 @@ pub enum Error {
     #[cfg(not(feature = "git"))]
     DltInvalid = ALPM_ERR_DLT_INVALID as u32,
     #[cfg(not(feature = "git"))]
-    DltPatchFailed = ALPM_ERR_DLT_PATCH_FAILED as u32,
+    DltPatchFailed = ALPM_ERR_DLT_PATCHFAILED as u32,
     UnsatisfiedDeps = ALPM_ERR_UNSATISFIED_DEPS as u32,
     ConflictingDeps = ALPM_ERR_CONFLICTING_DEPS as u32,
     FileConflicts = ALPM_ERR_FILE_CONFLICTS as u32,
@@ -71,6 +71,7 @@ pub enum Error {
     Libcurl = ALPM_ERR_LIBCURL as u32,
     ExternalDownload = ALPM_ERR_EXTERNAL_DOWNLOAD as u32,
     Gpgme = ALPM_ERR_GPGME as u32,
+    #[cfg(feature = "git")]
     MissingCapabilitySignatures = ALPM_ERR_MISSING_CAPABILITY_SIGNATURES as u32,
 }
 

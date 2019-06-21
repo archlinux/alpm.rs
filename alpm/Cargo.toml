@@ -14,7 +14,7 @@ categories = ["api-bindings"]
 
 [features]
 mtree = ["libarchive", "libarchive3-sys"]
-git = []
+git = ["alpm-sys/git"]
 
 [dependencies]
 bitflags = "1.0.4"
@@ -23,7 +23,6 @@ libarchive3-sys = { version = "0.1.2", optional = true }
 
 [dependencies.alpm-sys]
 path = "../alpm-sys"
-features = ["git"]
 
 [dev-dependencies]
 criterion = "0.2.11"
