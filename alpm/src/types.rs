@@ -814,7 +814,7 @@ impl ConflictQuestion {
     pub fn conflict(&self) -> Conflict {
         unsafe {
             Conflict {
-                inner: *(*self.inner).conflict,
+                inner: (*self.inner).conflict,
                 drop: false,
             }
         }
@@ -1025,5 +1025,11 @@ pub enum PrepareReturn<'a> {
 #[derive(Debug)]
 pub enum CommitReturn<'a> {
     FileConflict(AlpmList<'a, FileConflict>),
-    PkgInvalid(AlpmList<'a, &'a str>),
+    PkgInvalid(AlpmList<'a, String>),
+}
+
+impl Drop for FileConflict {
+    fn drop(&mut self) {
+        unsafe { alpm_fileconflict_free(self.inner) }
+    }
 }

@@ -9,38 +9,38 @@ use std::mem::transmute;
 
 #[derive(Debug)]
 pub struct Conflict {
-    pub(crate) inner: alpm_conflict_t,
+    pub(crate) inner: *mut alpm_conflict_t,
     pub(crate) drop: bool,
 }
 
 impl Drop for Conflict {
     fn drop(&mut self) {
         if self.drop {
-            unsafe { alpm_conflict_free(&mut self.inner) }
+            unsafe { alpm_conflict_free(self.inner) }
         }
     }
 }
 
 impl Conflict {
     pub fn package1_hash(&self) -> u64 {
-        self.inner.package1_hash
+        unsafe { (*self.inner).package1_hash }
     }
 
     pub fn package2_hash(&self) -> u64 {
-        self.inner.package2_hash
+        unsafe { (*self.inner).package2_hash }
     }
 
     pub fn package1(&self) -> &str {
-        unsafe { from_cstr(self.inner.package1) }
+        unsafe { from_cstr((*self.inner).package1) }
     }
 
     pub fn package2(&self) -> &str {
-        unsafe { from_cstr(self.inner.package2) }
+        unsafe { from_cstr((*self.inner).package2) }
     }
 
-    pub fn reason(&self) -> Depend<'_> {
+    pub fn reason(&self) -> Depend {
         Depend {
-            inner: self.inner.reason,
+            inner: unsafe { (*self.inner).reason },
             drop: false,
             phantom: PhantomData,
         }

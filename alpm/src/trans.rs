@@ -157,7 +157,7 @@ mod tests {
         let pkg = db.pkg("filesystem").unwrap();
 
         let mut trans = handle.trans(flags).unwrap();
-        trans.add_pkg(pkg).unwrap();
+        trans.add_pkg(&pkg).unwrap();
         trans.prepare().unwrap();
         trans.commit().unwrap();
     }

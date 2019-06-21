@@ -136,37 +136,37 @@ impl<'a> Package<'a> {
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn depends(&self) -> AlpmList<'a, Depend> {
+    pub fn depends(&self) -> AlpmList<'a, Depend<'a>> {
         let list = unsafe { alpm_pkg_get_depends(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn optdepends(&self) -> AlpmList<'a, Depend> {
+    pub fn optdepends(&self) -> AlpmList<'a, Depend<'a>> {
         let list = unsafe { alpm_pkg_get_optdepends(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn checkdepends(&self) -> AlpmList<'a, Depend> {
+    pub fn checkdepends(&self) -> AlpmList<'a, Depend<'a>> {
         let list = unsafe { alpm_pkg_get_checkdepends(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn makedepends(&self) -> AlpmList<'a, Depend> {
+    pub fn makedepends(&self) -> AlpmList<'a, Depend<'a>> {
         let list = unsafe { alpm_pkg_get_makedepends(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn conflicts(&self) -> AlpmList<'a, Depend> {
+    pub fn conflicts(&self) -> AlpmList<'a, Depend<'a>> {
         let list = unsafe { alpm_pkg_get_conflicts(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn provides(&self) -> AlpmList<'a, Depend> {
+    pub fn provides(&self) -> AlpmList<'a, Depend<'a>> {
         let list = unsafe { alpm_pkg_get_provides(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn replaces(&self) -> AlpmList<'a, Depend> {
+    pub fn replaces(&self) -> AlpmList<'a, Depend<'a>> {
         let list = unsafe { alpm_pkg_get_replaces(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
@@ -212,12 +212,12 @@ impl<'a> Package<'a> {
         Ok(archive)
     }
 
-    pub fn required_by(&self) -> AlpmList<'a, &'a str> {
+    pub fn required_by(&self) -> AlpmList<'a, String> {
         let list = unsafe { alpm_pkg_compute_requiredby(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::FreeInner)
     }
 
-    pub fn optional_for(&self) -> AlpmList<'a, &'a str> {
+    pub fn optional_for(&self) -> AlpmList<'a, String> {
         let list = unsafe { alpm_pkg_compute_optionalfor(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::FreeInner)
     }

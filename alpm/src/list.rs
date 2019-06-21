@@ -1,29 +1,37 @@
-use crate::{free, Alpm, Conflict, DepMissing, Depend, FileConflict, Group, Package};
+use crate::{free, Alpm, Conflict, Db, DepMissing, Depend, FileConflict, Group, Package};
 
 use std::ffi::{c_void, CStr};
+use std::iter::ExactSizeIterator;
 use std::iter::Iterator;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
 
 use alpm_sys::*;
 
-#[derive(Debug)]
-pub(crate) enum FreeMethod {
-    FreeList,
-    FreeInner,
-    FreeConflict,
-    FreeFileConflict,
-    FreeDepMissing,
-    None,
+pub unsafe trait AsAlpmListItem<'a> {
+    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self;
 }
 
-#[derive(Debug)]
-pub struct AlpmList<'a, T: 'a> {
-    pub(crate) handle: &'a Alpm,
-    pub(crate) list: *mut alpm_list_t,
-    pub(crate) current: *mut alpm_list_t,
-    pub(crate) free: FreeMethod,
-    pub(crate) _marker: PhantomData<T>,
+impl<'a, T> ExactSizeIterator for AlpmList<'a, T> where T: AsAlpmListItem<'a> {}
+
+impl<'a, T> Iterator for AlpmList<'a, T>
+where
+    T: AsAlpmListItem<'a>,
+{
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        let data = self.next_data();
+
+        match data {
+            Some(data) => Some(T::as_alpm_list_item(self.handle, data, self.free)),
+            None => None,
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let size = unsafe { alpm_list_count(self.current) };
+        (size, Some(size))
+    }
 }
 
 impl<'a, T> AlpmList<'a, T> {
@@ -41,137 +49,112 @@ impl<'a, T> AlpmList<'a, T> {
         }
     }
 
-    pub fn iter(&'a self) -> AlpmList<'a, T> {
-        AlpmList {
-            handle: self.handle,
-            list: self.list,
-            current: self.current,
-            free: FreeMethod::None,
-            _marker: self._marker,
+    fn next_data(&mut self) -> Option<*mut c_void> {
+        if self.current.is_null() {
+            None
+        } else {
+            let data = unsafe { (*(self.current)).data };
+            self.current = unsafe { alpm_list_next(self.current) };
+            Some(data)
         }
     }
 }
 
-impl<'a> Iterator for AlpmList<'a, Package<'a>> {
-    type Item = Package<'a>;
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum FreeMethod {
+    FreeList,
+    FreeInner,
+    FreeConflict,
+    FreeFileConflict,
+    FreeDepMissing,
+    None,
+}
 
-    fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            if self.current.is_null() {
-                None
-            } else {
-                let data = (*(self.current)).data;
-                let data = data as *mut alpm_pkg_t;
-                self.current = alpm_list_next(self.current);
-                let pkg = Package {
-                    pkg: data,
-                    handle: self.handle,
-                    drop: false,
-                };
-                Some(pkg)
-            }
+#[derive(Debug)]
+pub struct AlpmList<'a, T> {
+    pub(crate) handle: &'a Alpm,
+    pub(crate) list: *mut alpm_list_t,
+    pub(crate) current: *mut alpm_list_t,
+    pub(crate) free: FreeMethod,
+    pub(crate) _marker: PhantomData<T>,
+}
+
+unsafe impl<'a> AsAlpmListItem<'a> for Package<'a> {
+    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        Package {
+            pkg: ptr as *mut alpm_pkg_t,
+            handle,
+            drop: false,
         }
     }
 }
 
-impl<'a> Iterator for AlpmList<'a, Group<'a>> {
-    type Item = Group<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            if self.current.is_null() {
-                None
-            } else {
-                let data = (*(self.current)).data;
-                let data = data as *mut alpm_group_t;
-                self.current = alpm_list_next(self.current);
-                let group = Group {
-                    handle: self.handle,
-                    inner: data,
-                };
-                Some(group)
-            }
+unsafe impl<'a> AsAlpmListItem<'a> for Group<'a> {
+    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        Group {
+            inner: ptr as *mut alpm_group_t,
+            handle,
         }
     }
 }
 
-impl<'a> Iterator for AlpmList<'a, Depend<'a>> {
-    type Item = Depend<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            if self.current.is_null() {
-                None
-            } else {
-                let data = (*(self.current)).data;
-                let data = data as *mut alpm_depend_t;
-                self.current = alpm_list_next(self.current);
-                let pkg = Depend {
-                    inner: data,
-                    drop: false,
-                    phantom: PhantomData,
-                };
-                Some(pkg)
-            }
+unsafe impl<'a> AsAlpmListItem<'a> for Depend<'a> {
+    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        Depend {
+            inner: ptr as *mut alpm_depend_t,
+            drop: false,
+            phantom: PhantomData,
         }
     }
 }
 
-impl<'a> Iterator for AlpmList<'a, FileConflict> {
-    type Item = FileConflict;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            if self.current.is_null() {
-                None
-            } else {
-                let data = (*(self.current)).data;
-                let data = data as *mut alpm_fileconflict_t;
-                self.current = alpm_list_next(self.current);
-                let pkg = FileConflict { inner: data };
-                Some(pkg)
-            }
+unsafe impl<'a> AsAlpmListItem<'a> for FileConflict {
+    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        FileConflict {
+            inner: ptr as *mut alpm_fileconflict_t,
         }
     }
 }
 
-impl<'a> Iterator for AlpmList<'a, DepMissing> {
-    type Item = DepMissing;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            if self.current.is_null() {
-                None
-            } else {
-                let data = (*(self.current)).data;
-                let data = data as *mut alpm_depmissing_t;
-                self.current = alpm_list_next(self.current);
-                let pkg = DepMissing { inner: data };
-                Some(pkg)
-            }
+unsafe impl<'a> AsAlpmListItem<'a> for DepMissing {
+    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        DepMissing {
+            inner: ptr as *mut alpm_depmissing_t,
         }
     }
 }
 
-impl<'a> Iterator for AlpmList<'a, Conflict> {
-    type Item = Depend<'a>;
+unsafe impl<'a> AsAlpmListItem<'a> for Conflict {
+    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, free: FreeMethod) -> Self {
+        let drop = free != FreeMethod::FreeList && free != FreeMethod::None;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            if self.current.is_null() {
-                None
-            } else {
-                let data = (*(self.current)).data;
-                let data = data as *mut alpm_depend_t;
-                self.current = alpm_list_next(self.current);
-                let pkg = Depend {
-                    inner: data,
-                    drop: false,
-                    phantom: PhantomData,
-                };
-                Some(pkg)
-            }
+        Conflict {
+            inner: ptr as *mut alpm_conflict_t,
+            drop,
         }
+    }
+}
+
+unsafe impl<'a> AsAlpmListItem<'a> for Db<'a> {
+    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        Db {
+            db: ptr as *mut alpm_db_t,
+            handle,
+        }
+    }
+}
+
+unsafe impl<'a> AsAlpmListItem<'a> for &'a str {
+    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        let s = unsafe { CStr::from_ptr(ptr as *mut c_char) };
+        s.to_str().unwrap()
+    }
+}
+
+unsafe impl<'a> AsAlpmListItem<'a> for String {
+    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        let s = unsafe { CStr::from_ptr(ptr as *mut c_char) };
+        s.to_str().unwrap().to_string()
     }
 }
 
@@ -200,43 +183,53 @@ impl<'a, T> Drop for AlpmList<'a, T> {
             }
             FreeMethod::FreeConflict => {
                 unsafe { alpm_list_free_inner(self.list, Some(conflict_free)) };
-                unsafe { alpm_list_free(self.list) };
+                unsafe { alpm_list_free(self.current) };
             }
             FreeMethod::FreeFileConflict => {
                 unsafe { alpm_list_free_inner(self.list, Some(fileconflict_free)) };
-                unsafe { alpm_list_free(self.list) };
+                unsafe { alpm_list_free(self.current) };
             }
             FreeMethod::FreeDepMissing => {
                 unsafe { alpm_list_free_inner(self.list, Some(depmissing_free)) };
-                unsafe { alpm_list_free(self.list) };
+                unsafe { alpm_list_free(self.current) };
             }
         }
     }
 }
 
-impl<'a> Iterator for AlpmList<'a, &'a str> {
-    type Item = &'a str;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::SigLevel;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            if self.current.is_null() {
-                None
-            } else {
-                let data = (*(self.current)).data;
-                let data = data as *const c_char;
-                self.current = alpm_list_next(self.current);
-                let s = CStr::from_ptr(data);
-                Some(s.to_str().unwrap())
-            }
-        }
+    #[test]
+    fn test_depends_list_free() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        let pkg = db.pkg("linux").unwrap();
+        let mut depends = pkg.depends();
+        assert_eq!(depends.next().unwrap().to_string(), "coreutils");
     }
-}
 
-impl<'a> IntoIterator for &'a AlpmList<'a, Package<'a>> {
-    type Item = Package<'a>;
-    type IntoIter = AlpmList<'a, Package<'a>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
+    #[test]
+    fn test_string_list_free() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        handle.register_syncdb("community", SigLevel::NONE).unwrap();
+        handle.register_syncdb("extra", SigLevel::NONE).unwrap();
+        let pkg = db.pkg("linux").unwrap();
+        let mut required_by = pkg.required_by();
+        assert_eq!("acpi_call", required_by.next().unwrap());
     }
+
+    #[test]
+    fn test_str_list_free() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        let pkg = db.pkg("pacman").unwrap();
+        let mut groups = pkg.groups();
+        assert_eq!("base", groups.next().unwrap());
+    }
+
+
 }

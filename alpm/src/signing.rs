@@ -176,7 +176,7 @@ impl Alpm {
         &'a self,
         ident: S,
         sig: &[u8],
-    ) -> Result<AlpmList<'a, &'a str>> {
+    ) -> Result<AlpmList<'a, String>> {
         let ident = CString::new(ident.into()).unwrap();
         let mut keys = ptr::null_mut();
 
