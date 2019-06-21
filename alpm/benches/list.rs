@@ -7,7 +7,9 @@ fn benchmark_list(c: &mut Criterion) {
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
 
-        b.iter(|| { black_box(&pkg.depends().collect::<Vec<_>>()); });
+        b.iter(|| {
+            black_box(&pkg.depends().collect::<Vec<_>>());
+        });
     });
 }
 

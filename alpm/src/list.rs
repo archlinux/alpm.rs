@@ -1,4 +1,4 @@
-use crate::{free, Alpm, Conflict, Db, DepMissing, Depend, FileConflict, Group, Package, Backup};
+use crate::{free, Alpm, Backup, Conflict, Db, DepMissing, Depend, FileConflict, Group, Package};
 
 use std::ffi::{c_void, CStr};
 use std::iter::ExactSizeIterator;
@@ -115,7 +115,6 @@ unsafe impl<'a> AsAlpmListItem<'a> for Backup {
         }
     }
 }
-
 
 unsafe impl<'a> AsAlpmListItem<'a> for FileConflict {
     fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
@@ -239,6 +238,5 @@ mod tests {
         let mut groups = pkg.groups();
         assert_eq!("base", groups.next().unwrap());
     }
-
 
 }

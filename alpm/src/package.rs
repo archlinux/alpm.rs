@@ -1,7 +1,7 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, ChangeLog, Db, Depend, FileList, FreeMethod, PackageFrom, PackageReason,
-    PackageValidation, Result, Backup,
+    Alpm, AlpmList, Backup, ChangeLog, Db, Depend, FileList, FreeMethod, PackageFrom,
+    PackageReason, PackageValidation, Result,
 };
 
 #[cfg(feature = "mtree")]
@@ -282,7 +282,6 @@ mod tests {
         let mut backup = pkg.backup();
         assert_eq!(backup.next().unwrap().name(), "etc/pacman.conf");
     }
-
 
     #[test]
     fn test_rquired_by() {
