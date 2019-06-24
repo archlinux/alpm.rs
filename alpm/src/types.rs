@@ -137,6 +137,20 @@ pub enum EventType {
     IntegrityDone = ALPM_EVENT_INTEGRITY_DONE as u32,
     LoadStart = ALPM_EVENT_LOAD_START as u32,
     LoadDone = ALPM_EVENT_LOAD_DONE as u32,
+    #[cfg(not(feature = "git"))]
+    DeltaIntegrityStart = ALPM_EVENT_DELTA_INTEGRITY_START as u32,
+    #[cfg(not(feature = "git"))]
+    DeltaIntegrityDone = ALPM_EVENT_DELTA_INTEGRITY_DONE as u32,
+    #[cfg(not(feature = "git"))]
+    DeltaPatchesStart = ALPM_EVENT_DELTA_PATCHES_START as u32,
+    #[cfg(not(feature = "git"))]
+    DeltaPatchesDone = ALPM_EVENT_DELTA_PATCHES_DONE as u32,
+    #[cfg(not(feature = "git"))]
+    DeltaPatchStart = ALPM_EVENT_DELTA_PATCH_START as u32,
+    #[cfg(not(feature = "git"))]
+    DeltaPatchDone = ALPM_EVENT_DELTA_PATCH_DONE as u32,
+    #[cfg(not(feature = "git"))]
+    DeltaPatchFailed = ALPM_EVENT_DELTA_PATCH_FAILED as u32,
     ScriptletInfo = ALPM_EVENT_SCRIPTLET_INFO as u32,
     RetrieveStart = ALPM_EVENT_RETRIEVE_START as u32,
     RetrieveDone = ALPM_EVENT_RETRIEVE_DONE as u32,
@@ -278,6 +292,20 @@ impl Event {
             EventType::IntegrityDone => Event::Other(event_type),
             EventType::LoadStart => Event::Other(event_type),
             EventType::LoadDone => Event::Other(event_type),
+            #[cfg(not(feature = "git"))]
+            EventType::DeltaIntegrityStart => Event::Other(event_type),
+            #[cfg(not(feature = "git"))]
+            EventType::DeltaIntegrityDone => Event::Other(event_type),
+            #[cfg(not(feature = "git"))]
+            EventType::DeltaPatchesStart => Event::Other(event_type),
+            #[cfg(not(feature = "git"))]
+            EventType::DeltaPatchesDone => Event::Other(event_type),
+            #[cfg(not(feature = "git"))]
+            EventType::DeltaPatchStart => Event::Other(event_type),
+            #[cfg(not(feature = "git"))]
+            EventType::DeltaPatchDone => Event::Other(event_type),
+            #[cfg(not(feature = "git"))]
+            EventType::DeltaPatchFailed => Event::Other(event_type),
             EventType::ScriptletInfo => Event::ScriptletInfo(ScriptletInfoEvent {
                 inner: (*event).scriptlet_info,
             }),
