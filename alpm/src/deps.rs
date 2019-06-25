@@ -70,14 +70,14 @@ impl<'a> Depend<'a> {
         unsafe { (*self.inner).name_hash as u64 }
     }
 
-    pub fn depmod(&self) -> Depmod {
-        unsafe { transmute::<alpm_depmod_t, Depmod>((*self.inner).mod_) }
+    pub fn depmod(&self) -> DepMod {
+        unsafe { transmute::<alpm_depmod_t, DepMod>((*self.inner).mod_) }
     }
 }
 
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
-pub enum Depmod {
+pub enum DepMod {
     Any = ALPM_DEP_MOD_ANY as u32,
     Eq = ALPM_DEP_MOD_EQ as u32,
     Ge = ALPM_DEP_MOD_GE as u32,
