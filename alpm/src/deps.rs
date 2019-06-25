@@ -36,6 +36,12 @@ impl<'a> fmt::Display for Depend<'a> {
     }
 }
 
+impl<S: Into<String>> From<S> for Depend<'static> {
+    fn from(s: S) -> Depend<'static> {
+        Depend::new(s)
+    }
+}
+
 impl<'a> Depend<'a> {
     pub fn new<S: Into<String>>(s: S) -> Depend<'static> {
         let s = CString::new(s.into()).unwrap();
