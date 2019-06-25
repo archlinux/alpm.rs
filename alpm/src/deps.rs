@@ -118,7 +118,7 @@ impl DepMissing {
 }
 
 impl<'a> AlpmList<'a, Db<'a>> {
-    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package> {
+    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package<'a>> {
         let dep = CString::new(dep.into()).unwrap();
 
         let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.handle, self.list, dep.as_ptr()) };
@@ -135,7 +135,7 @@ impl<'a> AlpmList<'a, Db<'a>> {
 }
 
 impl<'a> AlpmList<'a, Package<'a>> {
-    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package> {
+    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package<'a>> {
         let dep = CString::new(dep.into()).unwrap();
 
         let pkg = unsafe { alpm_find_satisfier(self.list, dep.as_ptr()) };
