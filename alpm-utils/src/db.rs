@@ -3,13 +3,13 @@ use alpm::{AlpmList, Db, Package, Result};
 use crate::Target;
 
 /// Extention for AlpmList<Db>
-pub trait DbListExt {
+pub trait DbListExt<'a> {
     /// Similar to find_satisfier but expects a Target instead of a &str.
-    fn find_target<'a, T: Into<Target<'a>>>(&mut self, target: T) -> Result<Option<Package>>;
+    fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Result<Option<Package<'a>>>;
 }
 
-impl<'a> DbListExt for AlpmList<'a, Db<'a>> {
-    fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Result<Option<Package>> {
+impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
+    fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Result<Option<Package<'a>>> {
         let target = target.into();
 
         if let Some(repo) = target.repo {

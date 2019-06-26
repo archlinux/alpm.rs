@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// A packge to find, optionally from a specific repository.
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, Debug)]
 pub struct Target<'a> {
@@ -23,6 +25,16 @@ impl<'a> From<&'a str> for Target<'a> {
         }
 
         Target { repo, pkg }
+    }
+}
+
+impl<'a> fmt::Display for Target<'a> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(repo) = self.repo {
+            write!(fmt, "{}/{}", repo, self.pkg)
+        } else {
+            write!(fmt, "{}", self.pkg)
+        }
     }
 }
 
