@@ -1,4 +1,4 @@
-use alpm::{Depend, DepMod, vercmp};
+use alpm::{vercmp, DepMod, Depend};
 
 use std::cmp::Ordering;
 

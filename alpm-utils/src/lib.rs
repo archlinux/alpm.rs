@@ -4,5 +4,10 @@
 
 #![warn(missing_docs)]
 
+mod db;
 /// Utils for dependency checking.
 pub mod depends;
+mod target;
+
+pub use crate::db::*;
+pub use crate::target::*;
