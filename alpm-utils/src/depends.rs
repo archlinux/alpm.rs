@@ -3,8 +3,7 @@ use alpm::{vercmp, DepMod, Depend};
 use std::cmp::Ordering;
 
 /// Checks if a dependency is satisfied by a package (name + version).
-pub fn satisfies_dep<'a, D: Into<Depend<'a>>, S: AsRef<str>>(dep: D, name: S, version: S) -> bool {
-    let dep = dep.into();
+pub fn satisfies_dep<'a, S: AsRef<str>>(dep: &Depend, name: S, version: S) -> bool {
     let name = name.as_ref();
     let version = version.as_ref();
 
@@ -16,10 +15,7 @@ pub fn satisfies_dep<'a, D: Into<Depend<'a>>, S: AsRef<str>>(dep: D, name: S, ve
 }
 
 /// Checks if a dependency is satisdied by a provide.
-pub fn satisfies_provide<'a, D: Into<Depend<'a>>>(dep: D, provide: D) -> bool {
-    let dep = dep.into();
-    let provide = provide.into();
-
+pub fn satisfies_provide<'a>(dep: &Depend<'a>, provide: &Depend<'a>) -> bool {
     if dep.name() != provide.name() {
         return false;
     }
@@ -31,8 +27,7 @@ pub fn satisfies_provide<'a, D: Into<Depend<'a>>>(dep: D, provide: D) -> bool {
     satisfies_ver(dep, provide.version())
 }
 
-fn satisfies_ver<'a, D: Into<Depend<'a>>, S: AsRef<str>>(dep: D, version: S) -> bool {
-    let dep = dep.into();
+fn satisfies_ver<'a, S: AsRef<str>>(dep: &Depend<'a>, version: S) -> bool {
     let version = version.as_ref();
 
     if dep.depmod() == DepMod::Any {
