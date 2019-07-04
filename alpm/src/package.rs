@@ -181,10 +181,10 @@ impl<'a> Package<'a> {
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn db(&self) -> Result<Db> {
+    pub fn db(&self) -> Option<Db> {
         let db = unsafe { alpm_pkg_get_db(self.pkg) };
-        self.handle.check_null(db)?;
-        Ok(Db {
+        self.handle.check_null(db).ok()?;
+        Some(Db {
             handle: self.handle,
             db,
         })
