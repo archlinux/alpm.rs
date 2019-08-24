@@ -44,3 +44,4 @@ pub use crate::trans::*;
 pub use crate::types::*;
 pub use crate::util::*;
 pub use crate::version::*;
+pub use alpm_sys;

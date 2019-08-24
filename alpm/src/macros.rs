@@ -1,10 +1,11 @@
 #[macro_export]
 macro_rules! set_logcb {
-    ( $handle:ident, $f:ident ) => {{
-        use alpm_sys::*;
-        use std::ffi::{c_void, CStr};
-        use std::os::raw::{c_char, c_int};
-        use std::ptr;
+    ( $handle:tt, $f:tt ) => {{
+        use $crate::alpm_sys::*;
+        use $crate::LogLevel;
+        use ::std::ffi::{c_void, CStr};
+        use ::std::os::raw::{c_char, c_int};
+        use ::std::ptr;
 
         extern "C" {
             fn vasprintf(
@@ -36,8 +37,9 @@ macro_rules! set_logcb {
 
 #[macro_export]
 macro_rules! set_totaldlcb {
-    ( $handle:ident, $f:ident ) => {{
-        use alpm_sys::*;
+    ( $handle:tt, $f:tt ) => {{
+        use $crate::alpm_sys::*;
+        use ::std::ffi::CStr;
 
         unsafe extern "C" fn c_dlcb(
             filename: *const,
@@ -55,11 +57,11 @@ macro_rules! set_totaldlcb {
 
 #[macro_export]
 macro_rules! set_fetchcb {
-    ( $handle:ident, $f:ident ) => {{
-        use crate::FetchCbReturn;
-        use alpm_sys::*;
-        use std::ffi::CStr;
-        use std::os::raw::{c_char, c_int};
+    ( $handle:tt, $f:tt ) => {{
+        use $crate::FetchCbReturn;
+        use $crate::alpm_sys::*;
+        use ::std::ffi::CStr;
+        use ::std::os::raw::{c_char, c_int};
 
         unsafe extern "C" fn c_fetchcb(
             url: *const c_char,
@@ -83,8 +85,8 @@ macro_rules! set_fetchcb {
 
 #[macro_export]
 macro_rules! set_dlcb {
-    ( $handle:ident, $f:ident ) => {{
-        use alpm_sys::*;
+    ( $handle:tt, $f:tt ) => {{
+        use $crate::alpm_sys::*;
 
         unsafe extern "C" fn c_totaldlcb(total: off_t) {
             $f(total as u64);
@@ -96,9 +98,10 @@ macro_rules! set_dlcb {
 
 #[macro_export]
 macro_rules! set_eventcb {
-    ( $handle:ident, $f:ident ) => {{
-        use alpm_sys::*;
-        use std::ptr;
+    ( $handle:tt, $f:tt ) => {{
+        use $crate::alpm_sys::*;
+        use ::std::ptr;
+        use $crate::Event;
 
         static mut C_ALPM_HANDLE: *mut alpm_handle_t = ptr::null_mut();
         unsafe {
@@ -116,9 +119,10 @@ macro_rules! set_eventcb {
 
 #[macro_export]
 macro_rules! set_questioncb {
-    ( $handle:ident, $f:ident ) => {{
-        use alpm_sys::*;
-        use std::ptr;
+    ( $handle:tt, $f:tt ) => {{
+        use $crate::alpm_sys::*;
+        use ::std::ptr;
+        use $crate::Question;
 
         static mut C_ALPM_HANDLE: *mut alpm_handle_t = ptr::null_mut();
         unsafe {
@@ -136,11 +140,11 @@ macro_rules! set_questioncb {
 
 #[macro_export]
 macro_rules! set_progresscb {
-    ( $handle:ident, $f:ident ) => {{
-        use alpm_sys::*;
-        use std::ffi::CStr;
-        use std::mem::transmute;
-        use std::os::raw::c_char;
+    ( $handle:tt, $f:tt ) => {{
+        use $crate::alpm_sys::*;
+        use ::std::ffi::CStr;
+        use ::std::mem::transmute;
+        use ::std::os::raw::c_char;
 
         unsafe extern "C" fn c_progresscb(
             progress: alpm_progress_t,
@@ -161,8 +165,9 @@ macro_rules! set_progresscb {
 
 #[macro_export]
 macro_rules! log_action {
-    ($handle:ident, $prefix:tt, $($arg:tt)*) => ({
-        use alpm_sys::*;
+    ($handle:tt, $prefix:tt, $($arg:tt)*) => ({
+        use $crate::alpm_sys::*;
+        use ::std::ffi::CString;
 
         let mut s = format!($($arg)*);
         s.push('\n');
@@ -170,6 +175,10 @@ macro_rules! log_action {
         let p = CString::new($prefix).unwrap();
 
         let ret = unsafe { alpm_logaction($handle.as_alpm_handle_t(), p.as_ptr(), s.as_ptr()) };
-        $handle.check_ret(ret)
+        if ret != 0 {
+            Err($handle.last_error())
+        } else {
+            Ok(())
+        }
     })
 }
