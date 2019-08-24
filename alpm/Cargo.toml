@@ -1,6 +1,6 @@
 [package]
 name = "alpm"
-version = "0.1.0"
+version = "0.5.0"
 authors = ["morganamilo <morganamilo@gmail.com>"]
 edition = "2018"
 
@@ -11,6 +11,7 @@ documentation = "https://docs.rs/alpm"
 license = "GPL-3.0"
 keywords = ["archlinux", "arch", "alpm", "pacman"]
 categories = ["api-bindings"]
+exclude = ["tests"]
 
 [features]
 mtree = ["libarchive", "libarchive3-sys"]
@@ -20,9 +21,7 @@ git = ["alpm-sys/git"]
 bitflags = "1.0.4"
 libarchive = { version = "0.1.1", optional = true }
 libarchive3-sys = { version = "0.1.2", optional = true }
-
-[dependencies.alpm-sys]
-path = "../alpm-sys"
+alpm-sys = { package = "alpm-sys-fork", version = "0.2.0" }
 
 [dev-dependencies]
 criterion = "0.2.11"
