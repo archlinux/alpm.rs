@@ -13,6 +13,6 @@ pub fn vercmp<S: Into<String>>(a: S, b: S) -> Ordering {
     } else if ret > 0 {
         Ordering::Greater
     } else {
-        Ordering::Greater
+        Ordering::Equal
     }
 }
