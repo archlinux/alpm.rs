@@ -9,7 +9,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::mem::transmute;
 
-#[derive(Debug)]
+#[derive(Debug, Hash)]
 pub struct Depend<'a> {
     pub(crate) inner: *mut alpm_depend_t,
     pub(crate) drop: bool,
@@ -23,6 +23,17 @@ impl<'a> Drop for Depend<'a> {
         }
     }
 }
+
+impl<'a> PartialEq for Depend<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.name() == other.name()
+            && self.depmod() == other.depmod()
+            && self.version() == other.version()
+            && self.desc() == other.desc()
+    }
+}
+
+impl<'a> Eq for Depend<'a> {}
 
 impl<'a> fmt::Display for Depend<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
