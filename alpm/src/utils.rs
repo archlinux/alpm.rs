@@ -5,9 +5,12 @@ use std::os::raw::c_char;
 use std::ptr;
 
 pub unsafe fn from_cstr<'a>(s: *const c_char) -> &'a str {
-    assert!(!s.is_null());
-    let s = CStr::from_ptr(s);
-    s.to_str().unwrap()
+    if s.is_null() {
+        ""
+    } else {
+        let s = CStr::from_ptr(s);
+        s.to_str().unwrap()
+    }
 }
 
 pub fn to_strlist<S: Into<String>, I: IntoIterator<Item = S>>(list: I) -> *mut alpm_list_t {

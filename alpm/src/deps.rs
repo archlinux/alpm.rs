@@ -6,10 +6,11 @@ use alpm_sys::*;
 
 use std::ffi::{c_void, CString};
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::mem::transmute;
 
-#[derive(Debug, Hash)]
+#[derive(Debug)]
 pub struct Depend<'a> {
     pub(crate) inner: *mut alpm_depend_t,
     pub(crate) drop: bool,
@@ -21,6 +22,14 @@ impl<'a> Drop for Depend<'a> {
         if self.drop {
             unsafe { alpm_dep_free(self.inner) }
         }
+    }
+}
+
+impl<'a> Hash for Depend<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name().hash(state);
+        self.depmod().hash(state);
+        self.version().hash(state);
     }
 }
 
@@ -199,6 +208,12 @@ mod tests {
         drop(pkg);
         drop(db);
         println!("{:?}", vec);
+    }
+
+    #[test]
+    fn test_eq() {
+        assert_eq!(Depend::new("foo=1"), Depend::new("foo=1"));
+        assert!(Depend::new("foo=2") != Depend::new("foo=1"));
     }
 
 }
