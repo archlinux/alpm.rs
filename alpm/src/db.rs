@@ -203,7 +203,7 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
-        assert_eq!(pkg.version(), "5.1.8.arch1-1");
+        assert!(pkg.version() == "5.1.8.arch1-1");
     }
 
     #[test]
