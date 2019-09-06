@@ -34,7 +34,7 @@ fn satisfies_ver<'a, S: AsRef<str>>(dep: &Depend<'a>, version: S) -> bool {
         return true;
     }
 
-    let cmp = vercmp(dep.version(), version);
+    let cmp = vercmp(version, dep.version());
 
     match dep.depmod() {
         DepMod::Eq => cmp == Ordering::Equal,
@@ -43,5 +43,26 @@ fn satisfies_ver<'a, S: AsRef<str>>(dep: &Depend<'a>, version: S) -> bool {
         DepMod::Gt => cmp == Ordering::Greater,
         DepMod::Lt => cmp == Ordering::Less,
         DepMod::Any => true,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_satisfies_ver() {
+        assert!(satisfies_ver(&Depend::new("foo>0"), "9.0.0"));
+        assert!(satisfies_ver(&Depend::new("foo<10"), "9.0.0"));
+        assert!(satisfies_ver(&Depend::new("foo<=10"), "9.0.0"));
+        assert!(satisfies_ver(&Depend::new("foo>=9"), "9.0.0"));
+        assert!(satisfies_ver(&Depend::new("foo=9.0.0"), "9.0.0"));
+
+        assert!(!satisfies_ver(&Depend::new("foo>=10"), "9.0.0"));
+        assert!(!satisfies_ver(&Depend::new("foo<=8"), "9.0.0"));
+        assert!(!satisfies_ver(&Depend::new("foo=8"), "9.0.0"));
+
+        assert!(satisfies_ver(&Depend::new("foo"), "1"));
+        assert!(satisfies_ver(&Depend::new("foo"), "1.0.0"));
     }
 }

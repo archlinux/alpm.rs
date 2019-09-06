@@ -9,9 +9,16 @@ pub struct Target<'a> {
     pub pkg: &'a str,
 }
 
-impl<'a> From<&'a str> for Target<'a> {
-    fn from(s: &'a str) -> Self {
-        let mut split = s.split('/');
+impl<'a> Target<'a> {
+    /// Create a new Target.
+    pub fn new<S: AsRef<str>>(repo: Option<&'a S>, pkg: &'a S) -> Target<'a> {
+        Target { repo: repo.map(AsRef::as_ref), pkg: pkg.as_ref() }
+    }
+}
+
+impl<'a, S: AsRef<str>> From<&'a S> for Target<'a> {
+    fn from(s: &'a S) -> Self {
+        let mut split = s.as_ref().split('/');
         let first = split.next().unwrap();
         let repo;
         let pkg;
