@@ -12,7 +12,10 @@ pub struct Target<'a> {
 impl<'a> Target<'a> {
     /// Create a new Target.
     pub fn new<S: AsRef<str>>(repo: Option<&'a S>, pkg: &'a S) -> Target<'a> {
-        Target { repo: repo.map(AsRef::as_ref), pkg: pkg.as_ref() }
+        Target {
+            repo: repo.map(AsRef::as_ref),
+            pkg: pkg.as_ref(),
+        }
     }
 }
 

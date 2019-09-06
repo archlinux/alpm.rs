@@ -5,13 +5,19 @@ use crate::Target;
 /// Extention for AlpmList<Db>
 pub trait DbListExt<'a> {
     /// Similar to find_satisfier() but expects a Target instead of a &str.
-    fn find_target_satisfier<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Result<Option<Package<'a>>>;
+    fn find_target_satisfier<'b, T: Into<Target<'b>>>(
+        &mut self,
+        target: T,
+    ) -> Result<Option<Package<'a>>>;
     /// Similar to pkg() but expects a Target instead of a &str.
     fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Option<Package<'a>>;
 }
 
 impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
-    fn find_target_satisfier<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Result<Option<Package<'a>>> {
+    fn find_target_satisfier<'b, T: Into<Target<'b>>>(
+        &mut self,
+        target: T,
+    ) -> Result<Option<Package<'a>>> {
         let target = target.into();
 
         if let Some(repo) = target.repo {
@@ -25,7 +31,7 @@ impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
         Ok(None)
     }
 
-     fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Option<Package<'a>> {
+    fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Option<Package<'a>> {
         let target = target.into();
 
         if let Some(repo) = target.repo {
