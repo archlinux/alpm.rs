@@ -1,11 +1,10 @@
-use alpm::{vercmp, DepMod, Depend};
+use alpm::{DepMod, Depend, Ver, Version};
 
 use std::cmp::Ordering;
 
 /// Checks if a dependency is satisfied by a package (name + version).
-pub fn satisfies_dep<'a, S: AsRef<str>>(dep: &Depend, name: S, version: S) -> bool {
+pub fn satisfies_dep<'a, S: AsRef<str>, V: AsRef<Ver>>(dep: &Depend, name: S, version: V) -> bool {
     let name = name.as_ref();
-    let version = version.as_ref();
 
     if dep.name() != name {
         return false;
@@ -27,14 +26,14 @@ pub fn satisfies_provide<'a>(dep: &Depend<'a>, provide: &Depend<'a>) -> bool {
     satisfies_ver(dep, provide.version())
 }
 
-fn satisfies_ver<'a, S: AsRef<str>>(dep: &Depend<'a>, version: S) -> bool {
+fn satisfies_ver<'a, V: AsRef<Ver>>(dep: &Depend<'a>, version: V) -> bool {
     let version = version.as_ref();
 
     if dep.depmod() == DepMod::Any {
         return true;
     }
 
-    let cmp = vercmp(version, dep.version());
+    let cmp = version.cmp(dep.version());
 
     match dep.depmod() {
         DepMod::Eq => cmp == Ordering::Equal,
@@ -46,23 +45,24 @@ fn satisfies_ver<'a, S: AsRef<str>>(dep: &Depend<'a>, version: S) -> bool {
     }
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_satisfies_ver() {
-        assert!(satisfies_ver(&Depend::new("foo>0"), "9.0.0"));
-        assert!(satisfies_ver(&Depend::new("foo<10"), "9.0.0"));
-        assert!(satisfies_ver(&Depend::new("foo<=10"), "9.0.0"));
-        assert!(satisfies_ver(&Depend::new("foo>=9"), "9.0.0"));
-        assert!(satisfies_ver(&Depend::new("foo=9.0.0"), "9.0.0"));
+        assert!(satisfies_ver(&Depend::new("foo>0"), Version::new("9.0.0")));
+        assert!(satisfies_ver(&Depend::new("foo<10"), Version::new("9.0.0")));
+        assert!(satisfies_ver(&Depend::new("foo<=10"), Version::new("9.0.0")));
+        assert!(satisfies_ver(&Depend::new("foo>=9"), Version::new("9.0.0")));
+        assert!(satisfies_ver(&Depend::new("foo=9.0.0"), Version::new("9.0.0")));
 
-        assert!(!satisfies_ver(&Depend::new("foo>=10"), "9.0.0"));
-        assert!(!satisfies_ver(&Depend::new("foo<=8"), "9.0.0"));
-        assert!(!satisfies_ver(&Depend::new("foo=8"), "9.0.0"));
+        assert!(!satisfies_ver(&Depend::new("foo>=10"), Version::new("9.0.0")));
+        assert!(!satisfies_ver(&Depend::new("foo<=8"), Version::new("9.0.0")));
+        assert!(!satisfies_ver(&Depend::new("foo=8"), Version::new("9.0.0")));
 
-        assert!(satisfies_ver(&Depend::new("foo"), "1"));
-        assert!(satisfies_ver(&Depend::new("foo"), "1.0.0"));
+        assert!(satisfies_ver(&Depend::new("foo"), Version::new("1")));
+        assert!(satisfies_ver(&Depend::new("foo"), Version::new("1.0.0")));
     }
 }

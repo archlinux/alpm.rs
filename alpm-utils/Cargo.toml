@@ -8,4 +8,4 @@ edition = "2018"
 git = ["alpm/git"]
 
 [dependencies]
-alpm = "0.5.0"
+alpm = { path = "../alpm" }

@@ -16,7 +16,7 @@ impl<'a> Target<'a> {
     }
 }
 
-impl<'a, S: AsRef<str>> From<&'a S> for Target<'a> {
+impl<'a, S: AsRef<str> + ?Sized> From<&'a S> for Target<'a> {
     fn from(s: &'a S) -> Self {
         let mut split = s.as_ref().split('/');
         let first = split.next().unwrap();

@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, Db, FreeMethod, Package, Version};
+use crate::{free, Alpm, AlpmList, Db, FreeMethod, Package, Version, Ver};
 
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
@@ -78,8 +78,8 @@ impl<'a> Depend<'a> {
         unsafe { from_cstr((*self.inner).name) }
     }
 
-    pub fn version(&self) -> &Version {
-        unsafe { Version::new(from_cstr((*self.inner).version)) }
+    pub fn version(&self) -> &Ver {
+        unsafe { Ver::from_ptr((*self.inner).version) }
     }
 
     pub fn desc(&self) -> &str {
