@@ -1,7 +1,7 @@
 use crate::utils::*;
 use crate::{
     Alpm, AlpmList, Backup, ChangeLog, Db, Depend, FileList, FreeMethod, PackageFrom,
-    PackageReason, PackageValidation, Result, Version, Ver
+    PackageReason, PackageValidation, Result, Ver,
 };
 
 #[cfg(feature = "mtree")]

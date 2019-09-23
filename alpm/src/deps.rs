@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, Db, FreeMethod, Package, Version, Ver};
+use crate::{free, Alpm, AlpmList, Db, FreeMethod, Package, Ver};
 
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
