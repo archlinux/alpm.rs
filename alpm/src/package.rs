@@ -47,9 +47,13 @@ impl<'a> Package<'a> {
         unsafe { from_cstr(name) }
     }
 
-    pub fn base(&self) -> &'a str {
+    pub fn base(&self) -> Option<&'a str> {
         let base = unsafe { alpm_pkg_get_base(self.pkg) };
-        unsafe { from_cstr(base) }
+        if base.is_null() {
+            None
+        } else {
+            unsafe { Some(from_cstr(base)) }
+        }
     }
 
     pub fn version(&self) -> &'a Ver {
