@@ -1,7 +1,7 @@
 use crate::utils::*;
 use crate::{
     Alpm, AlpmList, Backup, ChangeLog, Db, Depend, FileList, FreeMethod, PackageFrom,
-    PackageReason, PackageValidation, Result, Ver,
+    PackageReason, PackageValidation, Result, Ver
 };
 
 #[cfg(feature = "mtree")]
@@ -47,13 +47,9 @@ impl<'a> Package<'a> {
         unsafe { from_cstr(name) }
     }
 
-    pub fn base(&self) -> Option<&'a str> {
+    pub fn base(&self) -> &'a str {
         let base = unsafe { alpm_pkg_get_base(self.pkg) };
-        if base.is_null() {
-            None
-        } else {
-            unsafe { Some(from_cstr(base)) }
-        }
+        unsafe { from_cstr(base) }
     }
 
     pub fn version(&self) -> &'a Ver {

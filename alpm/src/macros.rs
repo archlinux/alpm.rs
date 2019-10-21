@@ -36,13 +36,14 @@ macro_rules! set_logcb {
 }
 
 #[macro_export]
-macro_rules! set_totaldlcb {
+macro_rules! set_dlcb {
     ( $handle:tt, $f:tt ) => {{
         use $crate::alpm_sys::*;
         use ::std::ffi::CStr;
+        use ::std::os::raw::c_char;
 
         unsafe extern "C" fn c_dlcb(
-            filename: *const,
+            filename: *const c_char,
             xfered: off_t,
             total: off_t,
         ) {
@@ -51,7 +52,7 @@ macro_rules! set_totaldlcb {
                 $f(&filename, xfered as u64, total as u64);
         }
 
-        unsafe { alpm_option_set_logcb($handle.as_alpm_handle_t(), Some(c_dlcb)) };
+        unsafe { alpm_option_set_dlcb($handle.as_alpm_handle_t(), Some(c_dlcb)) };
     }};
 }
 
@@ -84,7 +85,7 @@ macro_rules! set_fetchcb {
 }
 
 #[macro_export]
-macro_rules! set_dlcb {
+macro_rules! set_totaldlcb {
     ( $handle:tt, $f:tt ) => {{
         use $crate::alpm_sys::*;
 
@@ -92,7 +93,7 @@ macro_rules! set_dlcb {
             $f(total as u64);
         }
 
-        unsafe { alpm_option_set_logcb($handle.as_alpm_handle_t(), Some(c_totaldlcb)) };
+        unsafe { alpm_option_set_totaldlcb($handle.as_alpm_handle_t(), Some(c_totaldlcb)) };
     }};
 }
 
@@ -143,7 +144,7 @@ macro_rules! set_progresscb {
     ( $handle:tt, $f:tt ) => {{
         use ::std::ffi::CStr;
         use ::std::mem::transmute;
-        use ::std::os::raw::c_char;
+        use ::std::os::raw::{c_char, c_int};
         use $crate::alpm_sys::*;
 
         unsafe extern "C" fn c_progresscb(

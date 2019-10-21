@@ -1,6 +1,6 @@
 [package]
 name = "alpm"
-version = "0.5.3"
+version = "0.6.1"
 authors = ["morganamilo <morganamilo@gmail.com>"]
 edition = "2018"
 
@@ -21,7 +21,7 @@ git = ["alpm-sys/git"]
 bitflags = "1.0.4"
 libarchive = { version = "0.1.1", optional = true }
 libarchive3-sys = { version = "0.1.2", optional = true }
-alpm-sys = { package = "alpm-sys-fork", version = "0.2.0" }
+alpm-sys = { package = "alpm-sys-fork", version = "0.2.1" }
 
 [dev-dependencies]
 criterion = "0.2.11"

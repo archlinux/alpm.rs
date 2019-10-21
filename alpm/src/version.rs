@@ -1,9 +1,9 @@
 use std::cmp::Ordering;
-use std::ffi::CStr;
 use std::ffi::CString;
-use std::fmt;
 use std::ops::Deref;
+use std::fmt;
 use std::os::raw::c_char;
+use std::ffi::CStr;
 
 use alpm_sys::*;
 
@@ -52,13 +52,13 @@ impl fmt::Display for Ver {
 
 impl PartialOrd for Ver {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
+        unsafe {alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0)}
     }
 }
 
 impl Ord for Ver {
     fn cmp(&self, other: &Self) -> Ordering {
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).cmp(&0) }
+        unsafe {alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).cmp(&0)}
     }
 }
 
@@ -139,7 +139,7 @@ impl PartialEq<&str> for Version {
 
 impl PartialEq<&Ver> for Version {
     fn eq(&self, other: &&Ver) -> bool {
-        self.0.as_c_str() == &other.0
+        self.0.as_c_str()  == &other.0
     }
 }
 
@@ -154,6 +154,7 @@ impl AsRef<Ver> for Version {
         self.as_ver()
     }
 }
+
 
 #[cfg(test)]
 mod tests {
