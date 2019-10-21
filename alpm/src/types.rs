@@ -1048,12 +1048,14 @@ pub enum PrepareReturn<'a> {
     PkgInvalidArch(AlpmList<'a, Package<'a>>),
     UnsatisfiedDeps(AlpmList<'a, DepMissing>),
     ConflictingDeps(AlpmList<'a, Conflict>),
+    None,
 }
 
 #[derive(Debug)]
 pub enum CommitReturn<'a> {
     FileConflict(AlpmList<'a, FileConflict>),
     PkgInvalid(AlpmList<'a, String>),
+    None,
 }
 
 impl Drop for FileConflict {

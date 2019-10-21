@@ -66,7 +66,7 @@ impl<'a> Trans<'a> {
                     list,
                     FreeMethod::FreeConflict,
                 )),
-                _ => unreachable!(),
+                _ => PrepareReturn::None,
             };
 
             Err((ret, err))
@@ -94,7 +94,7 @@ impl<'a> Trans<'a> {
                         FreeMethod::FreeInner,
                     ))
                 }
-                _ => unreachable!(),
+                _ => CommitReturn::None,
             };
 
             Err((ret, err))
