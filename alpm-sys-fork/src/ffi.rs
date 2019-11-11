@@ -270,17 +270,16 @@ pub enum _alpm_errno_t {
     ALPM_ERR_PKG_REPO_NOT_FOUND = 42,
     ALPM_ERR_SIG_MISSING = 43,
     ALPM_ERR_SIG_INVALID = 44,
-    ALPM_ERR_DLT_INVALID = 45,
-    ALPM_ERR_DLT_PATCHFAILED = 46,
-    ALPM_ERR_UNSATISFIED_DEPS = 47,
-    ALPM_ERR_CONFLICTING_DEPS = 48,
-    ALPM_ERR_FILE_CONFLICTS = 49,
-    ALPM_ERR_RETRIEVE = 50,
-    ALPM_ERR_INVALID_REGEX = 51,
-    ALPM_ERR_LIBARCHIVE = 52,
-    ALPM_ERR_LIBCURL = 53,
-    ALPM_ERR_EXTERNAL_DOWNLOAD = 54,
-    ALPM_ERR_GPGME = 55,
+    ALPM_ERR_UNSATISFIED_DEPS = 45,
+    ALPM_ERR_CONFLICTING_DEPS = 46,
+    ALPM_ERR_FILE_CONFLICTS = 47,
+    ALPM_ERR_RETRIEVE = 48,
+    ALPM_ERR_INVALID_REGEX = 49,
+    ALPM_ERR_LIBARCHIVE = 50,
+    ALPM_ERR_LIBCURL = 51,
+    ALPM_ERR_EXTERNAL_DOWNLOAD = 52,
+    ALPM_ERR_GPGME = 53,
+    ALPM_ERR_MISSING_CAPABILITY_SIGNATURES = 54,
 }
 pub use self::_alpm_errno_t as alpm_errno_t;
 extern "C" {
@@ -694,97 +693,6 @@ fn bindgen_test_layout__alpm_group_t() {
     );
 }
 pub type alpm_group_t = _alpm_group_t;
-#[doc = " Package upgrade delta"]
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct _alpm_delta_t {
-    #[doc = " filename of the delta patch"]
-    pub delta: *mut ::std::os::raw::c_char,
-    #[doc = " md5sum of the delta file"]
-    pub delta_md5: *mut ::std::os::raw::c_char,
-    #[doc = " filename of the \'before\' file"]
-    pub from: *mut ::std::os::raw::c_char,
-    #[doc = " filename of the \'after\' file"]
-    pub to: *mut ::std::os::raw::c_char,
-    #[doc = " filesize of the delta file"]
-    pub delta_size: off_t,
-    #[doc = " download filesize of the delta file"]
-    pub download_size: off_t,
-}
-#[test]
-fn bindgen_test_layout__alpm_delta_t() {
-    assert_eq!(
-        ::std::mem::size_of::<_alpm_delta_t>(),
-        48usize,
-        concat!("Size of: ", stringify!(_alpm_delta_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<_alpm_delta_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(_alpm_delta_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_delta_t>())).delta as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_delta_t),
-            "::",
-            stringify!(delta)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_delta_t>())).delta_md5 as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_delta_t),
-            "::",
-            stringify!(delta_md5)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_delta_t>())).from as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_delta_t),
-            "::",
-            stringify!(from)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_delta_t>())).to as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_delta_t),
-            "::",
-            stringify!(to)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_delta_t>())).delta_size as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_delta_t),
-            "::",
-            stringify!(delta_size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_delta_t>())).download_size as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_delta_t),
-            "::",
-            stringify!(download_size)
-        )
-    );
-}
-pub type alpm_delta_t = _alpm_delta_t;
 #[doc = " File in a package"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1203,78 +1111,63 @@ pub enum _alpm_event_type_t {
     #[doc = " Package was installed/upgraded/downgraded/re-installed/removed; See"]
     #[doc = " alpm_event_package_operation_t for arguments."]
     ALPM_EVENT_PACKAGE_OPERATION_DONE = 12,
-    #[doc = " Target package\'s integrity will be checked."]
+    #[doc = " Target package's integrity will be checked."]
     ALPM_EVENT_INTEGRITY_START = 13,
-    #[doc = " Target package\'s integrity was checked."]
+    #[doc = " Target package's integrity was checked."]
     ALPM_EVENT_INTEGRITY_DONE = 14,
     #[doc = " Target package will be loaded."]
     ALPM_EVENT_LOAD_START = 15,
     #[doc = " Target package is finished loading."]
     ALPM_EVENT_LOAD_DONE = 16,
-    #[doc = " Target delta\'s integrity will be checked."]
-    ALPM_EVENT_DELTA_INTEGRITY_START = 17,
-    #[doc = " Target delta\'s integrity was checked."]
-    ALPM_EVENT_DELTA_INTEGRITY_DONE = 18,
-    #[doc = " Deltas will be applied to packages."]
-    ALPM_EVENT_DELTA_PATCHES_START = 19,
-    #[doc = " Deltas were applied to packages."]
-    ALPM_EVENT_DELTA_PATCHES_DONE = 20,
-    #[doc = " Delta patch will be applied to target package; See"]
-    #[doc = " alpm_event_delta_patch_t for arguments.."]
-    ALPM_EVENT_DELTA_PATCH_START = 21,
-    #[doc = " Delta patch was applied to target package."]
-    ALPM_EVENT_DELTA_PATCH_DONE = 22,
-    #[doc = " Delta patch failed to apply to target package."]
-    ALPM_EVENT_DELTA_PATCH_FAILED = 23,
     #[doc = " Scriptlet has printed information; See alpm_event_scriptlet_info_t for"]
     #[doc = " arguments."]
-    ALPM_EVENT_SCRIPTLET_INFO = 24,
+    ALPM_EVENT_SCRIPTLET_INFO = 17,
     #[doc = " Files will be downloaded from a repository."]
-    ALPM_EVENT_RETRIEVE_START = 25,
+    ALPM_EVENT_RETRIEVE_START = 18,
     #[doc = " Files were downloaded from a repository."]
-    ALPM_EVENT_RETRIEVE_DONE = 26,
+    ALPM_EVENT_RETRIEVE_DONE = 19,
     #[doc = " Not all files were successfully downloaded from a repository."]
-    ALPM_EVENT_RETRIEVE_FAILED = 27,
+    ALPM_EVENT_RETRIEVE_FAILED = 20,
     #[doc = " A file will be downloaded from a repository; See alpm_event_pkgdownload_t"]
     #[doc = " for arguments"]
-    ALPM_EVENT_PKGDOWNLOAD_START = 28,
+    ALPM_EVENT_PKGDOWNLOAD_START = 21,
     #[doc = " A file was downloaded from a repository; See alpm_event_pkgdownload_t"]
     #[doc = " for arguments"]
-    ALPM_EVENT_PKGDOWNLOAD_DONE = 29,
+    ALPM_EVENT_PKGDOWNLOAD_DONE = 22,
     #[doc = " A file failed to be downloaded from a repository; See"]
     #[doc = " alpm_event_pkgdownload_t for arguments"]
-    ALPM_EVENT_PKGDOWNLOAD_FAILED = 30,
+    ALPM_EVENT_PKGDOWNLOAD_FAILED = 23,
     #[doc = " Disk space usage will be computed for a package."]
-    ALPM_EVENT_DISKSPACE_START = 31,
+    ALPM_EVENT_DISKSPACE_START = 24,
     #[doc = " Disk space usage was computed for a package."]
-    ALPM_EVENT_DISKSPACE_DONE = 32,
+    ALPM_EVENT_DISKSPACE_DONE = 25,
     #[doc = " An optdepend for another package is being removed; See"]
     #[doc = " alpm_event_optdep_removal_t for arguments."]
-    ALPM_EVENT_OPTDEP_REMOVAL = 33,
+    ALPM_EVENT_OPTDEP_REMOVAL = 26,
     #[doc = " A configured repository database is missing; See"]
     #[doc = " alpm_event_database_missing_t for arguments."]
-    ALPM_EVENT_DATABASE_MISSING = 34,
+    ALPM_EVENT_DATABASE_MISSING = 27,
     #[doc = " Checking keys used to create signatures are in keyring."]
-    ALPM_EVENT_KEYRING_START = 35,
+    ALPM_EVENT_KEYRING_START = 28,
     #[doc = " Keyring checking is finished."]
-    ALPM_EVENT_KEYRING_DONE = 36,
+    ALPM_EVENT_KEYRING_DONE = 29,
     #[doc = " Downloading missing keys into keyring."]
-    ALPM_EVENT_KEY_DOWNLOAD_START = 37,
+    ALPM_EVENT_KEY_DOWNLOAD_START = 30,
     #[doc = " Key downloading is finished."]
-    ALPM_EVENT_KEY_DOWNLOAD_DONE = 38,
+    ALPM_EVENT_KEY_DOWNLOAD_DONE = 31,
     #[doc = " A .pacnew file was created; See alpm_event_pacnew_created_t for arguments."]
-    ALPM_EVENT_PACNEW_CREATED = 39,
+    ALPM_EVENT_PACNEW_CREATED = 32,
     #[doc = " A .pacsave file was created; See alpm_event_pacsave_created_t for"]
     #[doc = " arguments"]
-    ALPM_EVENT_PACSAVE_CREATED = 40,
+    ALPM_EVENT_PACSAVE_CREATED = 33,
     #[doc = " Processing hooks will be started."]
-    ALPM_EVENT_HOOK_START = 41,
+    ALPM_EVENT_HOOK_START = 34,
     #[doc = " Processing hooks is finished."]
-    ALPM_EVENT_HOOK_DONE = 42,
+    ALPM_EVENT_HOOK_DONE = 35,
     #[doc = " A hook is starting"]
-    ALPM_EVENT_HOOK_RUN_START = 43,
+    ALPM_EVENT_HOOK_RUN_START = 36,
     #[doc = " A hook has finished running"]
-    ALPM_EVENT_HOOK_RUN_DONE = 44,
+    ALPM_EVENT_HOOK_RUN_DONE = 37,
 }
 pub use self::_alpm_event_type_t as alpm_event_type_t;
 #[repr(C)]
@@ -1457,48 +1350,6 @@ fn bindgen_test_layout__alpm_event_optdep_removal_t() {
     );
 }
 pub type alpm_event_optdep_removal_t = _alpm_event_optdep_removal_t;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct _alpm_event_delta_patch_t {
-    #[doc = " Type of event."]
-    pub type_: alpm_event_type_t,
-    #[doc = " Delta info"]
-    pub delta: *mut alpm_delta_t,
-}
-#[test]
-fn bindgen_test_layout__alpm_event_delta_patch_t() {
-    assert_eq!(
-        ::std::mem::size_of::<_alpm_event_delta_patch_t>(),
-        16usize,
-        concat!("Size of: ", stringify!(_alpm_event_delta_patch_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<_alpm_event_delta_patch_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(_alpm_event_delta_patch_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_event_delta_patch_t>())).type_ as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_event_delta_patch_t),
-            "::",
-            stringify!(type_)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_event_delta_patch_t>())).delta as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_event_delta_patch_t),
-            "::",
-            stringify!(delta)
-        )
-    );
-}
-pub type alpm_event_delta_patch_t = _alpm_event_delta_patch_t;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _alpm_event_scriptlet_info_t {
@@ -1914,7 +1765,6 @@ pub union _alpm_event_t {
     pub any: alpm_event_any_t,
     pub package_operation: alpm_event_package_operation_t,
     pub optdep_removal: alpm_event_optdep_removal_t,
-    pub delta_patch: alpm_event_delta_patch_t,
     pub scriptlet_info: alpm_event_scriptlet_info_t,
     pub database_missing: alpm_event_database_missing_t,
     pub pkgdownload: alpm_event_pkgdownload_t,
@@ -1974,16 +1824,6 @@ fn bindgen_test_layout__alpm_event_t() {
             stringify!(_alpm_event_t),
             "::",
             stringify!(optdep_removal)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_alpm_event_t>())).delta_patch as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_alpm_event_t),
-            "::",
-            stringify!(delta_patch)
         )
     );
     assert_eq!(
@@ -2942,11 +2782,11 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[doc = " Returns the path to libalpm\'s GnuPG home directory."]
+    #[doc = " Returns the path to libalpm's GnuPG home directory."]
     pub fn alpm_option_get_gpgdir(handle: *mut alpm_handle_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    #[doc = " Sets the path to libalpm\'s GnuPG home directory."]
+    #[doc = " Sets the path to libalpm's GnuPG home directory."]
     pub fn alpm_option_set_gpgdir(
         handle: *mut alpm_handle_t,
         gpgdir: *const ::std::os::raw::c_char,
@@ -3113,15 +2953,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn alpm_option_get_deltaratio(handle: *mut alpm_handle_t) -> f64;
-}
-extern "C" {
-    pub fn alpm_option_set_deltaratio(
-        handle: *mut alpm_handle_t,
-        ratio: f64,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
     pub fn alpm_option_get_checkspace(handle: *mut alpm_handle_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -3196,7 +3027,7 @@ extern "C" {
     #[doc = " @param handle the context handle"]
     #[doc = " @param treename the name of the sync repository"]
     #[doc = " @param level what level of signature checking to perform on the"]
-    #[doc = " database; note that this must be a \'.sig\' file type verification"]
+    #[doc = " database; note that this must be a '.sig' file type verification"]
     #[doc = " @return an alpm_db_t* on success (the value), NULL on error"]
     pub fn alpm_register_syncdb(
         handle: *mut alpm_handle_t,
@@ -3307,7 +3138,7 @@ extern "C" {
     #[doc = " @return the list of packages matching all regular expressions on success, NULL on error"]
     pub fn alpm_db_search(db: *mut alpm_db_t, needles: *const alpm_list_t) -> *mut alpm_list_t;
 }
-pub mod _alpm_db_usage_ {
+pub mod _alpm_db_usage_t {
     pub type Type = u32;
     pub const ALPM_DB_USAGE_SYNC: Type = 1;
     pub const ALPM_DB_USAGE_SEARCH: Type = 2;
@@ -3315,7 +3146,7 @@ pub mod _alpm_db_usage_ {
     pub const ALPM_DB_USAGE_UPGRADE: Type = 8;
     pub const ALPM_DB_USAGE_ALL: Type = 15;
 }
-pub use self::_alpm_db_usage_::Type as alpm_db_usage_t;
+pub use self::_alpm_db_usage_t::Type as alpm_db_usage_t;
 extern "C" {
     #[doc = " Sets the usage of a database."]
     #[doc = " @param db pointer to the package database to set the status for"]
@@ -3329,7 +3160,7 @@ extern "C" {
 extern "C" {
     #[doc = " Gets the usage of a database."]
     #[doc = " @param db pointer to the package database to get the status of"]
-    #[doc = " @param usage pointer to an alpm_db_usage_t to store db\'s status"]
+    #[doc = " @param usage pointer to an alpm_db_usage_t to store db's status"]
     #[doc = " @return 0 on success, or -1 on error"]
     pub fn alpm_db_get_usage(
         db: *mut alpm_db_t,
@@ -3347,7 +3178,7 @@ extern "C" {
     #[doc = " @param full whether to stop the load after metadata is read or continue"]
     #[doc = " through the full archive"]
     #[doc = " @param level what level of package signature checking to perform on the"]
-    #[doc = " package; note that this must be a \'.sig\' file type verification"]
+    #[doc = " package; note that this must be a '.sig' file type verification"]
     #[doc = " @param pkg address of the package pointer"]
     #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_pkg_load(
@@ -3381,7 +3212,7 @@ extern "C" {
     pub fn alpm_pkg_checkmd5sum(pkg: *mut alpm_pkg_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[doc = " Compare two version strings and determine which one is \'newer\'."]
+    #[doc = " Compare two version strings and determine which one is 'newer'."]
     pub fn alpm_pkg_vercmp(
         a: *const ::std::os::raw::c_char,
         b: *const ::std::os::raw::c_char,
@@ -3471,20 +3302,20 @@ extern "C" {
     pub fn alpm_pkg_get_installdate(pkg: *mut alpm_pkg_t) -> alpm_time_t;
 }
 extern "C" {
-    #[doc = " Returns the packager\'s name."]
+    #[doc = " Returns the packager's name."]
     #[doc = " @param pkg a pointer to package"]
     #[doc = " @return a reference to an internal string"]
     pub fn alpm_pkg_get_packager(pkg: *mut alpm_pkg_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    #[doc = " Returns the package\'s MD5 checksum as a string."]
+    #[doc = " Returns the package's MD5 checksum as a string."]
     #[doc = " The returned string is a sequence of 32 lowercase hexadecimal digits."]
     #[doc = " @param pkg a pointer to package"]
     #[doc = " @return a reference to an internal string"]
     pub fn alpm_pkg_get_md5sum(pkg: *mut alpm_pkg_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    #[doc = " Returns the package\'s SHA256 checksum as a string."]
+    #[doc = " Returns the package's SHA256 checksum as a string."]
     #[doc = " The returned string is a sequence of 64 lowercase hexadecimal digits."]
     #[doc = " @param pkg a pointer to package"]
     #[doc = " @return a reference to an internal string"]
@@ -3564,12 +3395,6 @@ extern "C" {
     pub fn alpm_pkg_get_provides(pkg: *mut alpm_pkg_t) -> *mut alpm_list_t;
 }
 extern "C" {
-    #[doc = " Returns the list of available deltas for pkg."]
-    #[doc = " @param pkg a pointer to package"]
-    #[doc = " @return a reference to an internal list of strings."]
-    pub fn alpm_pkg_get_deltas(pkg: *mut alpm_pkg_t) -> *mut alpm_list_t;
-}
-extern "C" {
     #[doc = " Returns the list of packages to be replaced by pkg."]
     #[doc = " @param pkg a pointer to package"]
     #[doc = " @return a reference to an internal list of alpm_depend_t structures."]
@@ -3612,20 +3437,20 @@ extern "C" {
 }
 extern "C" {
     #[doc = " Open a package changelog for reading."]
-    #[doc = " Similar to fopen in functionality, except that the returned \'file"]
-    #[doc = " stream\' could really be from an archive as well as from the database."]
+    #[doc = " Similar to fopen in functionality, except that the returned 'file"]
+    #[doc = " stream' could really be from an archive as well as from the database."]
     #[doc = " @param pkg the package to read the changelog of (either file or db)"]
-    #[doc = " @return a \'file stream\' to the package changelog"]
+    #[doc = " @return a 'file stream' to the package changelog"]
     pub fn alpm_pkg_changelog_open(pkg: *mut alpm_pkg_t) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    #[doc = " Read data from an open changelog \'file stream\'."]
+    #[doc = " Read data from an open changelog 'file stream'."]
     #[doc = " Similar to fread in functionality, this function takes a buffer and"]
     #[doc = " amount of data to read. If an error occurs pm_errno will be set."]
     #[doc = " @param ptr a buffer to fill with raw changelog data"]
     #[doc = " @param size the size of the buffer"]
     #[doc = " @param pkg the package that the changelog is being read from"]
-    #[doc = " @param fp a \'file stream\' to the package changelog"]
+    #[doc = " @param fp a 'file stream' to the package changelog"]
     #[doc = " @return the number of characters read, or 0 if there is no more data or an"]
     #[doc = " error occurred."]
     pub fn alpm_pkg_changelog_read(
@@ -3677,9 +3502,6 @@ extern "C" {
     #[doc = " @param newpkg the new package to upgrade to"]
     #[doc = " @return the size of the download"]
     pub fn alpm_pkg_download_size(newpkg: *mut alpm_pkg_t) -> off_t;
-}
-extern "C" {
-    pub fn alpm_pkg_unused_deltas(pkg: *mut alpm_pkg_t) -> *mut alpm_list_t;
 }
 extern "C" {
     #[doc = " Set install reason for a package in the local database."]
@@ -3744,7 +3566,7 @@ extern "C" {
     ) -> *mut alpm_list_t;
 }
 extern "C" {
-    pub fn alpm_sync_newversion(
+    pub fn alpm_sync_get_new_version(
         pkg: *mut alpm_pkg_t,
         dbs_sync: *mut alpm_list_t,
     ) -> *mut alpm_pkg_t;
@@ -3754,8 +3576,6 @@ pub mod _alpm_transflag_t {
     pub type Type = u32;
     #[doc = " Ignore dependency checks."]
     pub const ALPM_TRANS_FLAG_NODEPS: Type = 1;
-    #[doc = " Ignore file conflicts and overwrite files."]
-    pub const ALPM_TRANS_FLAG_FORCE: Type = 2;
     #[doc = " Delete files even if they are tagged as backup."]
     pub const ALPM_TRANS_FLAG_NOSAVE: Type = 4;
     #[doc = " Ignore version numbers when checking dependencies."]
