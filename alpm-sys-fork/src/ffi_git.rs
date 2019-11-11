@@ -1111,9 +1111,9 @@ pub enum _alpm_event_type_t {
     #[doc = " Package was installed/upgraded/downgraded/re-installed/removed; See"]
     #[doc = " alpm_event_package_operation_t for arguments."]
     ALPM_EVENT_PACKAGE_OPERATION_DONE = 12,
-    #[doc = " Target package\'s integrity will be checked."]
+    #[doc = " Target package's integrity will be checked."]
     ALPM_EVENT_INTEGRITY_START = 13,
-    #[doc = " Target package\'s integrity was checked."]
+    #[doc = " Target package's integrity was checked."]
     ALPM_EVENT_INTEGRITY_DONE = 14,
     #[doc = " Target package will be loaded."]
     ALPM_EVENT_LOAD_START = 15,
@@ -2782,11 +2782,11 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[doc = " Returns the path to libalpm\'s GnuPG home directory."]
+    #[doc = " Returns the path to libalpm's GnuPG home directory."]
     pub fn alpm_option_get_gpgdir(handle: *mut alpm_handle_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    #[doc = " Sets the path to libalpm\'s GnuPG home directory."]
+    #[doc = " Sets the path to libalpm's GnuPG home directory."]
     pub fn alpm_option_set_gpgdir(
         handle: *mut alpm_handle_t,
         gpgdir: *const ::std::os::raw::c_char,
@@ -3027,7 +3027,7 @@ extern "C" {
     #[doc = " @param handle the context handle"]
     #[doc = " @param treename the name of the sync repository"]
     #[doc = " @param level what level of signature checking to perform on the"]
-    #[doc = " database; note that this must be a \'.sig\' file type verification"]
+    #[doc = " database; note that this must be a '.sig' file type verification"]
     #[doc = " @return an alpm_db_t* on success (the value), NULL on error"]
     pub fn alpm_register_syncdb(
         handle: *mut alpm_handle_t,
@@ -3135,8 +3135,13 @@ extern "C" {
     #[doc = " Searches a database with regular expressions."]
     #[doc = " @param db pointer to the package database to search in"]
     #[doc = " @param needles a list of regular expressions to search for"]
-    #[doc = " @return the list of packages matching all regular expressions on success, NULL on error"]
-    pub fn alpm_db_search(db: *mut alpm_db_t, needles: *const alpm_list_t) -> *mut alpm_list_t;
+    #[doc = " @param ret the list of packages matching all regular expressions"]
+    #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
+    pub fn alpm_db_search(
+        db: *mut alpm_db_t,
+        needles: *const alpm_list_t,
+        ret: *mut *mut alpm_list_t,
+    ) -> ::std::os::raw::c_int;
 }
 pub mod _alpm_db_usage_t {
     pub type Type = u32;
@@ -3160,7 +3165,7 @@ extern "C" {
 extern "C" {
     #[doc = " Gets the usage of a database."]
     #[doc = " @param db pointer to the package database to get the status of"]
-    #[doc = " @param usage pointer to an alpm_db_usage_t to store db\'s status"]
+    #[doc = " @param usage pointer to an alpm_db_usage_t to store db's status"]
     #[doc = " @return 0 on success, or -1 on error"]
     pub fn alpm_db_get_usage(
         db: *mut alpm_db_t,
@@ -3178,7 +3183,7 @@ extern "C" {
     #[doc = " @param full whether to stop the load after metadata is read or continue"]
     #[doc = " through the full archive"]
     #[doc = " @param level what level of package signature checking to perform on the"]
-    #[doc = " package; note that this must be a \'.sig\' file type verification"]
+    #[doc = " package; note that this must be a '.sig' file type verification"]
     #[doc = " @param pkg address of the package pointer"]
     #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_pkg_load(
@@ -3212,7 +3217,7 @@ extern "C" {
     pub fn alpm_pkg_checkmd5sum(pkg: *mut alpm_pkg_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[doc = " Compare two version strings and determine which one is \'newer\'."]
+    #[doc = " Compare two version strings and determine which one is 'newer'."]
     pub fn alpm_pkg_vercmp(
         a: *const ::std::os::raw::c_char,
         b: *const ::std::os::raw::c_char,
@@ -3302,20 +3307,20 @@ extern "C" {
     pub fn alpm_pkg_get_installdate(pkg: *mut alpm_pkg_t) -> alpm_time_t;
 }
 extern "C" {
-    #[doc = " Returns the packager\'s name."]
+    #[doc = " Returns the packager's name."]
     #[doc = " @param pkg a pointer to package"]
     #[doc = " @return a reference to an internal string"]
     pub fn alpm_pkg_get_packager(pkg: *mut alpm_pkg_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    #[doc = " Returns the package\'s MD5 checksum as a string."]
+    #[doc = " Returns the package's MD5 checksum as a string."]
     #[doc = " The returned string is a sequence of 32 lowercase hexadecimal digits."]
     #[doc = " @param pkg a pointer to package"]
     #[doc = " @return a reference to an internal string"]
     pub fn alpm_pkg_get_md5sum(pkg: *mut alpm_pkg_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    #[doc = " Returns the package\'s SHA256 checksum as a string."]
+    #[doc = " Returns the package's SHA256 checksum as a string."]
     #[doc = " The returned string is a sequence of 64 lowercase hexadecimal digits."]
     #[doc = " @param pkg a pointer to package"]
     #[doc = " @return a reference to an internal string"]
@@ -3437,20 +3442,20 @@ extern "C" {
 }
 extern "C" {
     #[doc = " Open a package changelog for reading."]
-    #[doc = " Similar to fopen in functionality, except that the returned \'file"]
-    #[doc = " stream\' could really be from an archive as well as from the database."]
+    #[doc = " Similar to fopen in functionality, except that the returned 'file"]
+    #[doc = " stream' could really be from an archive as well as from the database."]
     #[doc = " @param pkg the package to read the changelog of (either file or db)"]
-    #[doc = " @return a \'file stream\' to the package changelog"]
+    #[doc = " @return a 'file stream' to the package changelog"]
     pub fn alpm_pkg_changelog_open(pkg: *mut alpm_pkg_t) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    #[doc = " Read data from an open changelog \'file stream\'."]
+    #[doc = " Read data from an open changelog 'file stream'."]
     #[doc = " Similar to fread in functionality, this function takes a buffer and"]
     #[doc = " amount of data to read. If an error occurs pm_errno will be set."]
     #[doc = " @param ptr a buffer to fill with raw changelog data"]
     #[doc = " @param size the size of the buffer"]
     #[doc = " @param pkg the package that the changelog is being read from"]
-    #[doc = " @param fp a \'file stream\' to the package changelog"]
+    #[doc = " @param fp a 'file stream' to the package changelog"]
     #[doc = " @return the number of characters read, or 0 if there is no more data or an"]
     #[doc = " error occurred."]
     pub fn alpm_pkg_changelog_read(
