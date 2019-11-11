@@ -104,7 +104,6 @@ impl<'a> Db<'a> {
         Ok(AlpmList::new(self.handle, pkgs, FreeMethod::FreeList))
     }
 
-
     #[cfg(feature = "git")]
     pub fn search<S: Into<String>, I: IntoIterator<Item = S>>(
         &self,
@@ -238,9 +237,7 @@ mod tests {
         assert_eq!(res.len(), 1);
         assert_eq!(res[0].name(), "mkinitcpio-nfs-utils");
 
-        let res = db
-            .search(["["].iter().cloned())
-            .unwrap_err();
+        let res = db.search(["["].iter().cloned()).unwrap_err();
     }
 
     #[test]
