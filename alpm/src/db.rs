@@ -2,6 +2,7 @@ use crate::utils::*;
 use crate::{free, Alpm, AlpmList, FreeMethod, Group, Package, Result, SigLevel, Usage};
 
 use std::ffi::CString;
+use std::ptr;
 
 use alpm_sys::*;
 
@@ -90,6 +91,7 @@ impl<'a> Db<'a> {
         })
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn search<S: Into<String>, I: IntoIterator<Item = S>>(
         &self,
         list: I,
@@ -100,6 +102,21 @@ impl<'a> Db<'a> {
         unsafe { alpm_list_free(list) };
         self.handle.check_null(pkgs)?;
         Ok(AlpmList::new(self.handle, pkgs, FreeMethod::FreeList))
+    }
+
+
+    #[cfg(feature = "git")]
+    pub fn search<S: Into<String>, I: IntoIterator<Item = S>>(
+        &self,
+        list: I,
+    ) -> Result<AlpmList<'a, Package<'a>>> {
+        let list = to_strlist(list.into_iter());
+        let mut ret = ptr::null_mut();
+        let ok = unsafe { alpm_db_search(self.db, list, &mut ret) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
+        unsafe { alpm_list_free(list) };
+        self.handle.check_ret(ok)?;
+        Ok(AlpmList::new(self.handle, ret, FreeMethod::FreeList))
     }
 
     pub fn groups(&self) -> Result<AlpmList<'a, Group>> {
@@ -220,6 +237,10 @@ mod tests {
 
         assert_eq!(res.len(), 1);
         assert_eq!(res[0].name(), "mkinitcpio-nfs-utils");
+
+        let res = db
+            .search(["["].iter().cloned())
+            .unwrap_err();
     }
 
     #[test]
