@@ -2,7 +2,6 @@ use crate::utils::*;
 use crate::{free, Alpm, AlpmList, FreeMethod, Group, Package, Result, SigLevel, Usage};
 
 use std::ffi::CString;
-use std::ptr;
 
 use alpm_sys::*;
 
@@ -110,7 +109,7 @@ impl<'a> Db<'a> {
         list: I,
     ) -> Result<AlpmList<'a, Package<'a>>> {
         let list = to_strlist(list.into_iter());
-        let mut ret = ptr::null_mut();
+        let mut ret = std::ptr::null_mut();
         let ok = unsafe { alpm_db_search(self.db, list, &mut ret) };
         unsafe { alpm_list_free_inner(list, Some(free)) };
         unsafe { alpm_list_free(list) };

@@ -102,7 +102,7 @@ impl Version {
     }
 
     pub fn as_ver(&self) -> &Ver {
-        *&self
+        self
     }
 }
 
