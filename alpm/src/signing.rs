@@ -86,7 +86,7 @@ impl PgpKey {
     }
 
     pub fn pubkey_algo(&self) -> i8 {
-        self.inner.pubkey_algo
+        self.inner.pubkey_algo as i8
     }
 }
 
@@ -190,7 +190,7 @@ impl Alpm {
             )
         };
 
-        self.check_ret(ret)?;;
+        self.check_ret(ret)?;
         Ok(AlpmList::new(self, keys, FreeMethod::FreeInner))
     }
 }
