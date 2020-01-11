@@ -23,11 +23,11 @@ impl Drop for Conflict {
 
 impl Conflict {
     pub fn package1_hash(&self) -> u64 {
-        unsafe { (*self.inner).package1_hash }
+        unsafe { (*self.inner).package1_hash.into() }
     }
 
     pub fn package2_hash(&self) -> u64 {
-        unsafe { (*self.inner).package2_hash }
+        unsafe { (*self.inner).package2_hash.into() }
     }
 
     pub fn package1(&self) -> &str {
