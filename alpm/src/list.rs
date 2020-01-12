@@ -238,5 +238,4 @@ mod tests {
         let mut groups = pkg.groups();
         assert_eq!("base", groups.next().unwrap());
     }
-
 }

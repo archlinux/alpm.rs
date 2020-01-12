@@ -50,5 +50,4 @@ mod tests {
             .unwrap();
         assert_eq!(pkg.name(), "pacman");
     }
-
 }

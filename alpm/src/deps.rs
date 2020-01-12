@@ -215,5 +215,4 @@ mod tests {
         assert_eq!(Depend::new("foo=1"), Depend::new("foo=1"));
         assert!(Depend::new("foo=2") != Depend::new("foo=1"));
     }
-
 }

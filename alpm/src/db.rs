@@ -248,5 +248,4 @@ mod tests {
         assert!(base.packages().len() > 10);
         assert!(base.packages().len() < 100);
     }
-
 }
