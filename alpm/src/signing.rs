@@ -85,8 +85,8 @@ impl PgpKey {
         self.inner.revoked
     }
 
-    pub fn pubkey_algo(&self) -> i8 {
-        self.inner.pubkey_algo as i8
+    pub fn pubkey_algo(&self) -> u8 {
+        self.inner.pubkey_algo as u8
     }
 }
 

@@ -17,7 +17,7 @@ impl File {
     }
 
     pub fn size(&self) -> i64 {
-        self.inner.size
+        self.inner.size.into()
     }
 
     pub fn mode(&self) -> u32 {
