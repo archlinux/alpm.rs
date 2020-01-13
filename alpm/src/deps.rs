@@ -78,8 +78,8 @@ impl<'a> Depend<'a> {
         unsafe { from_cstr((*self.inner).name) }
     }
 
-    pub fn version(&self) -> &Ver {
-        unsafe { Ver::from_ptr((*self.inner).version) }
+    pub fn version(&self) -> Option<&Ver> {
+        unsafe { (*self.inner).version.as_ref().map(|p| Ver::from_ptr(p)) }
     }
 
     pub fn desc(&self) -> &str {

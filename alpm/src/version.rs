@@ -23,11 +23,7 @@ impl Ver {
     }
 
     pub unsafe fn from_ptr<'a>(s: *const c_char) -> &'a Ver {
-        if s.is_null() {
-            Ver::new(CStr::from_bytes_with_nul_unchecked(&[0]))
-        } else {
-            Ver::new(CStr::from_ptr(s))
-        }
+        Ver::new(CStr::from_ptr(s))
     }
 }
 
@@ -177,9 +173,9 @@ mod tests {
 
         assert!(dep1.version() != dep2.version());
         assert!(dep1.version() < dep2.version());
-        assert!(Version::new("34") == dep2.version());
-        assert!(Version::new("34") >= dep2.version());
-        assert!(dep2.version() == Version::new("34"));
-        assert!(dep2.version() >= Version::new("34"));
+        assert!(Version::new("34") == dep2.version().unwrap());
+        assert!(Version::new("34") >= dep2.version().unwrap());
+        assert!(dep2.version().unwrap() == Version::new("34"));
+        assert!(dep2.version().unwrap() >= Version::new("34"));
     }
 }
