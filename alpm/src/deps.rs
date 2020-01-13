@@ -82,6 +82,10 @@ impl<'a> Depend<'a> {
         unsafe { (*self.inner).version.as_ref().map(|p| Ver::from_ptr(p)) }
     }
 
+    unsafe fn version_unchecked(&self) -> &Ver {
+        Ver::from_ptr((*self.inner).version)
+    }
+
     pub fn desc(&self) -> &str {
         unsafe { from_cstr((*self.inner).desc) }
     }
@@ -92,6 +96,48 @@ impl<'a> Depend<'a> {
 
     pub fn depmod(&self) -> DepMod {
         unsafe { transmute::<alpm_depmod_t, DepMod>((*self.inner).mod_) }
+    }
+
+    pub fn depmodver(&self) -> DepModVer {
+        unsafe {
+            match self.depmod() {
+                DepMod::Any => DepModVer::Any,
+                DepMod::Eq => DepModVer::Eq(self.version_unchecked()),
+                DepMod::Ge => DepModVer::Ge(self.version_unchecked()),
+                DepMod::Le => DepModVer::Le(self.version_unchecked()),
+                DepMod::Gt => DepModVer::Gt(self.version_unchecked()),
+                DepMod::Lt => DepModVer::Lt(self.version_unchecked()),
+            }
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub enum DepModVer<'a> {
+    Any,
+    Eq(&'a Ver),
+    Ge(&'a Ver),
+    Le(&'a Ver),
+    Gt(&'a Ver),
+    Lt(&'a Ver),
+}
+
+impl From<DepModVer<'_>> for DepMod {
+    fn from(d: DepModVer) -> Self {
+        match d {
+            DepModVer::Any => DepMod::Any,
+            DepModVer::Eq(_) => DepMod::Eq,
+            DepModVer::Ge(_) => DepMod::Ge,
+            DepModVer::Le(_) => DepMod::Le,
+            DepModVer::Gt(_) => DepMod::Gt,
+            DepModVer::Lt(_) => DepMod::Lt,
+        }
+    }
+}
+
+impl DepModVer<'_> {
+    pub fn depmod(self) -> DepMod {
+        self.into()
     }
 }
 

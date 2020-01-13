@@ -22,7 +22,7 @@ impl Ver {
         unsafe { &*(s as *const CStr as *const Ver) }
     }
 
-    pub unsafe fn from_ptr<'a>(s: *const c_char) -> &'a Ver {
+    pub(crate) unsafe fn from_ptr<'a>(s: *const c_char) -> &'a Ver {
         Ver::new(CStr::from_ptr(s))
     }
 }
