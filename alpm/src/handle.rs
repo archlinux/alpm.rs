@@ -1,6 +1,7 @@
 use crate::utils::*;
 use crate::{Alpm, AlpmList, Db, Depend, FreeMethod, Match, Result, SigLevel};
 
+use std::cmp::Ordering;
 use std::ffi::{c_void, CString};
 use std::ptr;
 
@@ -184,12 +185,10 @@ impl Alpm {
         let s = CString::new(s.into()).unwrap();
         let ret = unsafe { alpm_option_match_noupgrade(self.handle, s.as_ptr()) };
 
-        if ret == 0 {
-            Match::Yes
-        } else if ret > 0 {
-            Match::Inverted
-        } else {
-            Match::No
+        match ret.cmp(&0) {
+            Ordering::Equal => Match::Yes,
+            Ordering::Greater => Match::Inverted,
+            Ordering::Less => Match::No,
         }
     }
 
@@ -222,12 +221,10 @@ impl Alpm {
         let s = CString::new(s.into()).unwrap();
         let ret = unsafe { alpm_option_match_noextract(self.handle, s.as_ptr()) };
 
-        if ret == 0 {
-            Match::Yes
-        } else if ret > 0 {
-            Match::Inverted
-        } else {
-            Match::No
+        match ret.cmp(&0) {
+            Ordering::Equal => Match::Yes,
+            Ordering::Greater => Match::Inverted,
+            Ordering::Less => Match::No,
         }
     }
 
