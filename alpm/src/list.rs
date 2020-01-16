@@ -58,6 +58,10 @@ impl<'a, T> AlpmList<'a, T> {
             Some(data)
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.current.is_null()
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -217,6 +221,19 @@ mod tests {
         let pkg = db.pkg("linux").unwrap();
         let mut depends = pkg.depends();
         assert_eq!(depends.next().unwrap().to_string(), "coreutils");
+    }
+
+    #[test]
+    fn test_is_empty() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        let pkg = db.pkg("linux").unwrap();
+        let depends = pkg.depends();
+        assert!(!depends.is_empty());
+
+        let pkg = db.pkg("tzdata").unwrap();
+        let depends = pkg.depends();
+        assert!(depends.is_empty());
     }
 
     #[test]
