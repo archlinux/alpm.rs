@@ -2,6 +2,7 @@ use crate::utils::*;
 use crate::{free, Alpm, AlpmList, FreeMethod, Group, Package, Result, SigLevel, Usage};
 
 use std::ffi::CString;
+use std::ops::Deref;
 
 use alpm_sys::*;
 
@@ -9,6 +10,32 @@ use alpm_sys::*;
 pub struct Db<'a> {
     pub(crate) db: *mut alpm_db_t,
     pub(crate) handle: &'a Alpm,
+}
+
+#[derive(Debug)]
+pub struct DbMut<'a> {
+    pub(crate) inner: Db<'a>,
+}
+
+impl<'a> Deref for DbMut<'a> {
+    type Target = Db<'a>;
+
+    fn deref(&self) -> &Db<'a> {
+        &self.inner
+    }
+}
+
+impl<'a> Into<Db<'a>> for DbMut<'a> {
+    fn into(self) -> Db<'a> {
+        self.inner
+    }
+}
+
+
+#[derive(Debug)]
+pub struct DbBuilder {
+    handle: Alpm,
+    pub(crate) db: *mut alpm_db_t,
 }
 
 impl Alpm {
@@ -22,8 +49,48 @@ impl Alpm {
         Ok(Db { db, handle: self })
     }
 
+    pub fn register_syncdb_mut<S: Into<String>>(
+        &mut self,
+        name: S,
+        sig_level: SigLevel,
+    ) -> Result<DbMut> {
+        let name = CString::new(name.into()).unwrap();
+
+        let db =
+            unsafe { alpm_register_syncdb(self.handle, name.as_ptr(), sig_level.bits() as i32) };
+
+        self.check_null(db)?;
+        Ok(DbMut {
+            inner: Db { db, handle: self },
+        })
+    }
+
     pub fn unregister_all_syncdbs(&mut self) -> Result<()> {
         self.check_ret(unsafe { alpm_unregister_all_syncdbs(self.handle) })
+    }
+}
+
+impl<'a> DbMut<'a> {
+    pub fn unregister(self) {
+        unsafe { alpm_db_unregister(self.db) };
+    }
+
+    pub fn add_server<S: Into<String>>(&self, server: S) -> Result<()> {
+        let server = CString::new(server.into()).unwrap();
+        let ret = unsafe { alpm_db_add_server(self.db, server.as_ptr()) };
+        self.handle.check_ret(ret)
+    }
+
+    pub fn set_servers<S: Into<String>, I: IntoIterator<Item = S>>(&self, list: I) -> Result<()> {
+        let list = to_strlist(list);
+        let ret = unsafe { alpm_db_set_servers(self.db, list) };
+        self.handle.check_ret(ret)
+    }
+
+    pub fn remove_server<S: Into<String>>(&self, server: S) -> Result<()> {
+        let server = CString::new(server.into()).unwrap();
+        let ret = unsafe { alpm_db_remove_server(self.db, server.as_ptr()) };
+        self.handle.check_ret(ret)
     }
 }
 
@@ -33,34 +100,9 @@ impl<'a> Db<'a> {
         unsafe { from_cstr(name) }
     }
 
-    pub fn unregister(self) {
-        unsafe { alpm_db_unregister(self.db) };
-    }
-
-    pub fn add_server<S: Into<String>>(&mut self, server: S) -> Result<()> {
-        let server = CString::new(server.into()).unwrap();
-        let ret = unsafe { alpm_db_add_server(self.db, server.as_ptr()) };
-        self.handle.check_ret(ret)
-    }
-
     pub fn servers(&self) -> AlpmList<&str> {
         let list = unsafe { alpm_db_get_servers(self.db) };
         AlpmList::new(self.handle, list, FreeMethod::None)
-    }
-
-    pub fn set_servers<S: Into<String>, I: IntoIterator<Item = S>>(
-        &mut self,
-        list: I,
-    ) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_db_set_servers(self.db, list) };
-        self.handle.check_ret(ret)
-    }
-
-    pub fn remove_server<S: Into<String>>(&mut self, server: S) -> Result<()> {
-        let server = CString::new(server.into()).unwrap();
-        let ret = unsafe { alpm_db_remove_server(self.db, server.as_ptr()) };
-        self.handle.check_ret(ret)
     }
 
     pub fn pkg<S: Into<String>>(&self, name: S) -> Result<Package<'a>> {
@@ -88,6 +130,11 @@ impl<'a> Db<'a> {
             handle: self.handle,
             inner: group,
         })
+    }
+
+    pub fn set_usage(&self, usage: Usage) -> Result<()> {
+        let ret = unsafe { alpm_db_set_usage(self.db, usage.bits() as i32) };
+        self.handle.check_ret(ret)
     }
 
     #[cfg(not(feature = "git"))]
@@ -133,11 +180,6 @@ impl<'a> Db<'a> {
         self.handle.check_ret(ret)
     }
 
-    pub fn set_usage(&mut self, usage: Usage) -> Result<()> {
-        let ret = unsafe { alpm_db_set_usage(self.db, usage.bits() as i32) };
-        self.handle.check_ret(ret)
-    }
-
     pub fn usage(&self) -> Result<Usage> {
         let mut usage = 0;
 
@@ -164,8 +206,8 @@ mod tests {
 
     #[test]
     fn test_servers() {
-        let handle = Alpm::new("/", "tests/db").unwrap();
-        let mut db = handle.register_syncdb("foo", SigLevel::NONE).unwrap();
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb_mut("foo", SigLevel::NONE).unwrap();
         assert_eq!(db.name(), "foo");
         let servers = vec!["a", "bb", "ccc"];
 
@@ -203,14 +245,39 @@ mod tests {
 
     #[test]
     fn test_set_servers() {
-        let handle = Alpm::new("/", "tests/db").unwrap();
-        let mut db = handle.register_syncdb("foo", SigLevel::NONE).unwrap();
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb_mut("foo", SigLevel::NONE).unwrap();
         assert_eq!(db.name(), "foo");
         let servers = vec!["a", "bb", "ccc"];
 
         db.set_servers(servers.iter().cloned()).unwrap();
 
         assert_eq!(servers, db.servers().collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn test_mut() {
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
+        handle.register_syncdb_mut("foo", SigLevel::NONE).unwrap();
+        handle.register_syncdb_mut("bar", SigLevel::NONE).unwrap();
+
+        for db in handle.syncdbs_mut() {
+            db.add_server("foo").unwrap();
+        }
+
+        for db in handle.syncdbs_mut() {
+            db.add_server("bar").unwrap();
+        }
+
+        for db in handle.syncdbs() {
+            assert_eq!(db.servers().collect::<Vec<_>>(), vec!["foo", "bar"]);
+        }
+
+        for db in handle.syncdbs_mut() {
+            db.unregister();
+        }
+
+        assert!(handle.syncdbs().is_empty());
     }
 
     #[test]

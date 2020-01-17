@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, Db, Depend, FreeMethod, Match, Result, SigLevel};
+use crate::{Alpm, AlpmList, Db, DbMut, Depend, FreeMethod, Match, Result, SigLevel};
 
 use std::cmp::Ordering;
 use std::ffi::{c_void, CString};
@@ -342,6 +342,11 @@ impl Alpm {
     }
 
     pub fn syncdbs(&self) -> AlpmList<Db> {
+        let dbs = unsafe { alpm_get_syncdbs(self.handle) };
+        AlpmList::new(self, dbs, FreeMethod::None)
+    }
+
+    pub fn syncdbs_mut(&mut self) -> AlpmList<DbMut> {
         let dbs = unsafe { alpm_get_syncdbs(self.handle) };
         AlpmList::new(self, dbs, FreeMethod::None)
     }

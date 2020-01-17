@@ -1,4 +1,6 @@
-use crate::{free, Alpm, Backup, Conflict, Db, DepMissing, Depend, FileConflict, Group, Package};
+use crate::{
+    free, Alpm, Backup, Conflict, Db, DbMut, DepMissing, Depend, FileConflict, Group, Package,
+};
 
 use std::ffi::{c_void, CStr};
 use std::iter::ExactSizeIterator;
@@ -156,6 +158,17 @@ unsafe impl<'a> AsAlpmListItem<'a> for Db<'a> {
     }
 }
 
+unsafe impl<'a> AsAlpmListItem<'a> for DbMut<'a> {
+    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        DbMut {
+            inner: Db {
+                db: ptr as *mut alpm_db_t,
+                handle,
+            },
+        }
+    }
+}
+
 unsafe impl<'a> AsAlpmListItem<'a> for &'a str {
     fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         let s = unsafe { CStr::from_ptr(ptr as *mut c_char) };
@@ -239,9 +252,9 @@ mod tests {
     #[test]
     fn test_string_list_free() {
         let handle = Alpm::new("/", "tests/db").unwrap();
-        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         handle.register_syncdb("community", SigLevel::NONE).unwrap();
         handle.register_syncdb("extra", SigLevel::NONE).unwrap();
+        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
         let mut required_by = pkg.required_by();
         assert_eq!("acpi_call", required_by.next().unwrap());

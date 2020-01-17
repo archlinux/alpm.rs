@@ -1,7 +1,7 @@
-use crate::{Db, Result};
+use crate::{DbMut, Result};
 use alpm_sys::*;
 
-impl<'a> Db<'a> {
+impl<'a> DbMut<'a> {
     pub fn update(&mut self, force: bool) -> Result<bool> {
         let force = if force { 1 } else { 0 };
         let ret = unsafe { alpm_db_update(force, self.db) };

@@ -145,15 +145,16 @@ mod tests {
 
     #[test]
     fn test_trans() {
-        let handle = Alpm::new("/", "tests/db").unwrap();
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
         let flags = TransFlag::DB_ONLY;
 
         set_logcb!(handle, logcb);
         set_eventcb!(handle, eventcb);
 
-        let mut db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        let db = handle.register_syncdb_mut("core", SigLevel::NONE).unwrap();
         db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/core/os/x86_64")
             .unwrap();
+        let db = handle.syncdbs().find(|db| db.name() == "core").unwrap();
         let pkg = db.pkg("filesystem").unwrap();
 
         let mut trans = handle.trans(flags).unwrap();
