@@ -47,9 +47,9 @@ impl<'a> Package<'a> {
         unsafe { from_cstr(name) }
     }
 
-    pub fn base(&self) -> &'a str {
+    pub fn base(&self) -> Option<&'a str> {
         let base = unsafe { alpm_pkg_get_base(self.pkg) };
-        unsafe { from_cstr(base) }
+        unsafe { from_cstr_optional(base) }
     }
 
     pub fn version(&self) -> &'a Ver {
@@ -62,14 +62,14 @@ impl<'a> Package<'a> {
         unsafe { transmute::<_alpm_pkgfrom_t, PackageFrom>(origin) }
     }
 
-    pub fn desc(&self) -> &'a str {
+    pub fn desc(&self) -> Option<&'a str> {
         let desc = unsafe { alpm_pkg_get_desc(self.pkg) };
-        unsafe { from_cstr(desc) }
+        unsafe { from_cstr_optional(desc) }
     }
 
-    pub fn url(&self) -> &'a str {
+    pub fn url(&self) -> Option<&'a str> {
         let url = unsafe { alpm_pkg_get_url(self.pkg) };
-        unsafe { from_cstr(url) }
+        unsafe { from_cstr_optional(url) }
     }
 
     pub fn build_date(&self) -> i64 {
@@ -86,24 +86,24 @@ impl<'a> Package<'a> {
         }
     }
 
-    pub fn packager(&self) -> &'a str {
+    pub fn packager(&self) -> Option<&'a str> {
         let packager = unsafe { alpm_pkg_get_packager(self.pkg) };
-        unsafe { from_cstr(packager) }
+        unsafe { from_cstr_optional(packager) }
     }
 
-    pub fn md5sum(&self) -> &'a str {
+    pub fn md5sum(&self) -> Option<&'a str> {
         let md5sum = unsafe { alpm_pkg_get_md5sum(self.pkg) };
-        unsafe { from_cstr(md5sum) }
+        unsafe { from_cstr_optional(md5sum) }
     }
 
-    pub fn sha256sum(&self) -> &'a str {
+    pub fn sha256sum(&self) -> Option<&'a str> {
         let sha256sum = unsafe { alpm_pkg_get_sha256sum(self.pkg) };
-        unsafe { from_cstr(sha256sum) }
+        unsafe { from_cstr_optional(sha256sum) }
     }
 
-    pub fn arch(&self) -> &'a str {
+    pub fn arch(&self) -> Option<&'a str> {
         let arch = unsafe { alpm_pkg_get_arch(self.pkg) };
-        unsafe { from_cstr(arch) }
+        unsafe { from_cstr_optional(arch) }
     }
 
     pub fn size(&self) -> i64 {
@@ -222,9 +222,9 @@ impl<'a> Package<'a> {
         AlpmList::new(self.handle, list, FreeMethod::FreeInner)
     }
 
-    pub fn base64_sig(&self) -> &'a str {
+    pub fn base64_sig(&self) -> Option<&'a str> {
         let base64_sig = unsafe { alpm_pkg_get_base64_sig(self.pkg) };
-        unsafe { from_cstr(base64_sig) }
+        unsafe { from_cstr_optional(base64_sig) }
     }
 
     pub fn has_scriptlet(&self) -> bool {

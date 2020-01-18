@@ -13,6 +13,12 @@ pub unsafe fn from_cstr<'a>(s: *const c_char) -> &'a str {
     }
 }
 
+pub unsafe fn from_cstr_optional<'a>(s: *const c_char) -> Option<&'a str> {
+    s.as_ref()
+        .map(|s| CStr::from_ptr(s).to_str().unwrap())
+        .filter(|s| !s.is_empty())
+}
+
 pub fn to_strlist<S: Into<String>, I: IntoIterator<Item = S>>(list: I) -> *mut alpm_list_t {
     let mut alpmlist = ptr::null_mut();
 
