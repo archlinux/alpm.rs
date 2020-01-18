@@ -1,6 +1,6 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, Conflict, Db, DepMissing, Depend, Error, FileConflict, FreeMethod, Package,
+    Alpm, AlpmList, Conflict, Db, DepMissing, Depend, Error, FileConflict, FreeMethod, Package, Pkg,
     PgpKey,
 };
 
@@ -372,16 +372,9 @@ impl PackageOperationEvent {
     }
 
     pub fn operation(&self) -> PackageOperation {
-        let oldpkg = Package {
-            pkg: self.inner.oldpkg,
-            handle: &self.handle,
-            drop: false,
-        };
-        let newpkg = Package {
-            pkg: self.inner.newpkg,
-            handle: &self.handle,
-            drop: false,
-        };
+
+        let oldpkg = unsafe{ Package::new(&self.handle, self.inner.oldpkg) };
+        let newpkg = unsafe { Package::new(&self.handle, self.inner.newpkg) };
 
         match self.inner.operation {
             alpm_package_operation_t::ALPM_PACKAGE_INSTALL => PackageOperation::Install(newpkg),
@@ -405,11 +398,7 @@ impl OptDepRemovalEvent {
     }
 
     pub fn pkg(&self) -> Package {
-        Package {
-            pkg: self.inner.pkg,
-            handle: &self.handle,
-            drop: false,
-        }
+        unsafe { Package::new(&self.handle, self.inner.pkg) }
     }
 
     pub fn optdep(&self) -> Depend {
@@ -466,11 +455,7 @@ impl PacnewCreatedEvent {
         if self.inner.oldpkg.is_null() {
             None
         } else {
-            Some(Package {
-                pkg: self.inner.oldpkg,
-                handle: &self.handle,
-                drop: false,
-            })
+            unsafe { Some(Package::new(&self.handle, self.inner.oldpkg)) }
         }
     }
 
@@ -478,11 +463,7 @@ impl PacnewCreatedEvent {
         if self.inner.newpkg.is_null() {
             None
         } else {
-            Some(Package {
-                pkg: self.inner.newpkg,
-                handle: &self.handle,
-                drop: false,
-            })
+            unsafe { Some(Package::new(&self.handle, self.inner.newpkg)) }
         }
     }
 
@@ -500,11 +481,7 @@ impl PacsaveCreatedEvent {
         if self.inner.oldpkg.is_null() {
             None
         } else {
-            Some(Package {
-                pkg: self.inner.oldpkg,
-                handle: &self.handle,
-                drop: false,
-            })
+            unsafe { Some(Package::new(&self.handle, self.inner.oldpkg)) }
         }
     }
 
@@ -730,13 +707,7 @@ impl InstallIgnorepkgQuestion {
     }
 
     pub fn pkg(&self) -> Package {
-        unsafe {
-            Package {
-                pkg: (*self.inner).pkg,
-                handle: &self.handle,
-                drop: false,
-            }
-        }
+        unsafe { Package::new(&self.handle, (*self.inner).pkg) }
     }
 }
 
@@ -760,23 +731,11 @@ impl ReplaceQuestion {
     }
 
     pub fn newpkg(&self) -> Package {
-        unsafe {
-            Package {
-                pkg: (*self.inner).newpkg,
-                handle: &self.handle,
-                drop: false,
-            }
-        }
+        unsafe { Package::new(&self.handle, (*self.inner).newpkg) }
     }
 
     pub fn oldpkg(&self) -> Package {
-        unsafe {
-            Package {
-                pkg: (*self.inner).oldpkg,
-                handle: &self.handle,
-                drop: false,
-            }
-        }
+        unsafe { Package::new(&self.handle, (*self.inner).oldpkg) }
     }
 
     pub fn newdb(&self) -> Db {
@@ -981,7 +940,7 @@ impl<'a> Iterator for MTree<'a> {
 }
 
 pub struct ChangeLog<'a> {
-    pub(crate) pkg: &'a Package<'a>,
+    pub(crate) pkg: &'a Pkg<'a>,
     pub(crate) stream: *mut c_void,
 }
 

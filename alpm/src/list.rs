@@ -87,11 +87,7 @@ pub struct AlpmList<'a, T> {
 
 unsafe impl<'a> AsAlpmListItem<'a> for Package<'a> {
     fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
-        Package {
-            pkg: ptr as *mut alpm_pkg_t,
-            handle,
-            drop: false,
-        }
+        unsafe { Package::new(handle, ptr as *mut alpm_pkg_t) }
     }
 }
 

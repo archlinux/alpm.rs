@@ -108,11 +108,7 @@ impl<'a> Db<'a> {
         let name = CString::new(name.into()).unwrap();
         let pkg = unsafe { alpm_db_get_pkg(self.db, name.as_ptr()) };
         self.handle.check_null(pkg)?;
-        Ok(Package {
-            handle: self.handle,
-            pkg,
-            drop: false,
-        })
+        unsafe { Ok(Package::new(self.handle, pkg)) }
     }
 
     pub fn pkgs(&self) -> Result<AlpmList<'a, Package<'a>>> {
@@ -302,6 +298,7 @@ mod tests {
         assert_eq!(res.len(), 1);
         assert_eq!(res[0].name(), "mkinitcpio-nfs-utils");
 
+        //db.search(["["].iter().cloned()).unwrap_err();
         db.search(["["].iter().cloned()).unwrap_err();
     }
 

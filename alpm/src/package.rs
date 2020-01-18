@@ -11,22 +11,50 @@ use std::mem::transmute;
 
 use alpm_sys::*;
 
-#[derive(Debug)]
-pub struct Package<'a> {
-    pub(crate) handle: &'a Alpm,
-    pub(crate) pkg: *mut alpm_pkg_t,
-    pub(crate) drop: bool,
+pub trait AsPkg {
+    fn as_package(&self) -> Pkg;
 }
 
-impl<'a> Drop for Package<'a> {
-    fn drop(&mut self) {
-        if self.drop {
-            unsafe { alpm_pkg_free(self.pkg) };
-        }
+impl<'a> AsPkg for Pkg<'a> {
+    fn as_package(&self) -> Pkg {
+        *self
+    }
+}
+
+#[derive(Debug)]
+pub struct Package<'a> {
+    pkg: Pkg<'a>
+}
+
+impl<'a> AsPkg for Package<'a> {
+    fn as_package(&self) -> Pkg {
+        self.pkg
+    }
+}
+
+impl<'a>  std::ops::Deref for Package<'a> {
+    type Target = Pkg<'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pkg
     }
 }
 
 impl<'a> Package<'a> {
+    pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Package {
+        Package { pkg: Pkg { handle, pkg } }
+    }
+}
+
+
+
+#[derive(Debug, Copy, Clone)]
+pub struct Pkg<'a> {
+    pub(crate) handle: &'a Alpm,
+    pub(crate) pkg: *mut alpm_pkg_t,
+}
+
+impl<'a> Pkg<'a> {
     pub fn name(&self) -> &'a str {
         let name = unsafe { alpm_pkg_get_name(self.pkg) };
         unsafe { from_cstr(name) }

@@ -1,4 +1,4 @@
-use crate::{Alpm, Package, Result, SigLevel};
+use crate::{Alpm, AsPkg, Pkg, Result, SigLevel};
 
 use alpm_sys::*;
 
@@ -6,18 +6,41 @@ use std::ffi::CString;
 use std::os::raw::c_int;
 use std::ptr;
 
+pub struct LoadedPackage<'a> {
+    pub(crate) pkg: Pkg<'a>,
+}
+
+impl<'a> Drop for LoadedPackage<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            alpm_pkg_free(self.pkg.pkg);
+        }
+    }
+}
+
+impl<'a> AsPkg for LoadedPackage<'a> {
+    fn as_package(&self) -> Pkg {
+        self.pkg
+    }
+}
+
+impl<'a> LoadedPackage<'a> {
+    pub fn pkg(&'a self) -> &'a Pkg<'a> {
+        &self.pkg
+    }
+}
+
 impl Alpm {
-    pub fn pkg_load<S: Into<String>>(
-        &self,
+    pub fn pkg_load<'a, S: Into<String>>(
+        &'a self,
         filename: S,
         full: bool,
         level: SigLevel,
-    ) -> Result<Package> {
+    ) -> Result<LoadedPackage<'a>> {
         let filename = CString::new(filename.into()).unwrap();
-        let mut pkg = Package {
+        let mut pkg = Pkg {
             pkg: ptr::null_mut(),
             handle: self,
-            drop: true,
         };
 
         let ret = unsafe {
@@ -30,7 +53,7 @@ impl Alpm {
             )
         };
         self.check_ret(ret)?;
-        Ok(pkg)
+        Ok(LoadedPackage { pkg })
     }
 }
 
@@ -48,6 +71,7 @@ mod tests {
                 SigLevel::NONE,
             )
             .unwrap();
+        let pkg = pkg.pkg();
         assert_eq!(pkg.name(), "pacman");
         assert_eq!(pkg.version(), "5.1.3-1");
         assert_eq!(pkg.base(), Some("pacman"));
@@ -73,6 +97,7 @@ mod tests {
                 SigLevel::NONE,
             )
             .unwrap();
+        let pkg = pkg.pkg();
         assert_eq!(pkg.name(), "pacman");
         assert_eq!(pkg.version(), "5.1.3-1");
         assert_eq!(pkg.base(), None);

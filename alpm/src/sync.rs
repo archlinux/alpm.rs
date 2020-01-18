@@ -11,11 +11,7 @@ impl<'a> Package<'a> {
         if ret.is_null() {
             None
         } else {
-            Some(Package {
-                handle: self.handle,
-                pkg: ret,
-                drop: false,
-            })
+            unsafe { Some(Package::new(self.handle, ret)) }
         }
     }
 

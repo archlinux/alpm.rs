@@ -195,14 +195,7 @@ impl<'a> AlpmList<'a, Db<'a>> {
 
         let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.handle, self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;
-
-        let pkg = Package {
-            handle: self.handle,
-            pkg,
-            drop: false,
-        };
-
-        Some(pkg)
+        unsafe { Some(Package::new(self.handle, pkg)) }
     }
 }
 
@@ -212,14 +205,7 @@ impl<'a> AlpmList<'a, Package<'a>> {
 
         let pkg = unsafe { alpm_find_satisfier(self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;
-
-        let pkg = Package {
-            handle: self.handle,
-            pkg,
-            drop: false,
-        };
-
-        Some(pkg)
+        unsafe { Some(Package::new(self.handle, pkg)) }
     }
 }
 
