@@ -1,10 +1,10 @@
-use crate::{Package, Result, Trans};
+use crate::{Alpm, Package, Result};
 
 use alpm_sys::*;
 
-impl<'a> Trans<'a> {
-    pub fn add_pkg(&mut self, pkg: &Package) -> Result<()> {
-        let ret = unsafe { alpm_add_pkg(self.handle.handle, pkg.pkg) };
-        self.handle.check_ret(ret)
+impl Alpm {
+    pub fn trans_add_pkg(&self, pkg: Package) -> Result<()> {
+        let ret = unsafe { alpm_add_pkg(self.handle, pkg.pkg) };
+        self.check_ret(ret)
     }
 }

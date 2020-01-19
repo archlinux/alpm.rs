@@ -28,41 +28,29 @@ bitflags! {
     }
 }
 
-pub struct Trans<'a> {
-    pub(crate) handle: &'a Alpm,
-}
-
-impl<'a> Drop for Trans<'a> {
-    fn drop(&mut self) {
-        unsafe { alpm_trans_release(self.handle.handle) };
-    }
-}
-
-impl<'a> Trans<'a> {
-    pub fn flags(self) -> TransFlag {
-        let flags = unsafe { alpm_trans_get_flags(self.handle.handle) };
+impl Alpm {
+    pub fn trans_flags(self) -> TransFlag {
+        let flags = unsafe { alpm_trans_get_flags(self.handle) };
         TransFlag::from_bits(flags as u32).unwrap()
     }
 
-    pub fn prepare(&mut self) -> std::result::Result<(), (PrepareReturn, Error)> {
+    pub fn trans_prepare(&mut self) -> std::result::Result<(), (PrepareReturn, Error)> {
         let mut list = ptr::null_mut();
-        let ret = unsafe { alpm_trans_prepare(self.handle.handle, &mut list) };
-        let err = self.handle.check_ret(ret);
+        let ret = unsafe { alpm_trans_prepare(self.handle, &mut list) };
+        let err = self.check_ret(ret);
 
         if let Err(err) = err {
             let ret = match err {
-                Error::PkgInvalidArch => PrepareReturn::PkgInvalidArch(AlpmList::new(
-                    self.handle,
-                    list,
-                    FreeMethod::FreeInner,
-                )),
+                Error::PkgInvalidArch => {
+                    PrepareReturn::PkgInvalidArch(AlpmList::new(self, list, FreeMethod::FreeInner))
+                }
                 Error::UnsatisfiedDeps => PrepareReturn::UnsatisfiedDeps(AlpmList::new(
-                    self.handle,
+                    self,
                     list,
                     FreeMethod::FreeDepMissing,
                 )),
                 Error::ConflictingDeps => PrepareReturn::ConflictingDeps(AlpmList::new(
-                    self.handle,
+                    self,
                     list,
                     FreeMethod::FreeConflict,
                 )),
@@ -75,24 +63,20 @@ impl<'a> Trans<'a> {
         }
     }
 
-    pub fn commit(&mut self) -> std::result::Result<(), (CommitReturn, Error)> {
+    pub fn trans_commit(&mut self) -> std::result::Result<(), (CommitReturn, Error)> {
         let mut list = ptr::null_mut();
-        let ret = unsafe { alpm_trans_commit(self.handle.handle, &mut list) };
-        let err = self.handle.check_ret(ret);
+        let ret = unsafe { alpm_trans_commit(self.handle, &mut list) };
+        let err = self.check_ret(ret);
 
         if let Err(err) = err {
             let ret = match err {
                 Error::FileConflicts => CommitReturn::FileConflict(AlpmList::new(
-                    self.handle,
+                    self,
                     list,
                     FreeMethod::FreeFileConflict,
                 )),
                 Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => {
-                    CommitReturn::PkgInvalid(AlpmList::new(
-                        self.handle,
-                        list,
-                        FreeMethod::FreeInner,
-                    ))
+                    CommitReturn::PkgInvalid(AlpmList::new(self, list, FreeMethod::FreeInner))
                 }
                 _ => CommitReturn::None,
             };
@@ -103,27 +87,31 @@ impl<'a> Trans<'a> {
         }
     }
 
-    pub fn interrupt(&mut self) -> Result<()> {
-        let ret = unsafe { alpm_trans_interrupt(self.handle.handle) };
-        self.handle.check_ret(ret)
+    pub fn trans_interrupt(&mut self) -> Result<()> {
+        let ret = unsafe { alpm_trans_interrupt(self.handle) };
+        self.check_ret(ret)
     }
 
-    pub fn add(&self) -> AlpmList<Package> {
-        let list = unsafe { alpm_trans_get_add(self.handle.handle) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+    pub fn trans_add(&self) -> AlpmList<Package> {
+        let list = unsafe { alpm_trans_get_add(self.handle) };
+        AlpmList::new(self, list, FreeMethod::None)
     }
 
-    pub fn remove(&self) -> AlpmList<Package> {
-        let list = unsafe { alpm_trans_get_remove(self.handle.handle) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+    pub fn trans_remove(&self) -> AlpmList<Package> {
+        let list = unsafe { alpm_trans_get_remove(self.handle) };
+        AlpmList::new(self, list, FreeMethod::None)
+    }
+
+    pub fn trans_release(&mut self) -> Result<()> {
+        let ret = unsafe { alpm_trans_release(self.handle) };
+        self.check_ret(ret)
     }
 }
 
-impl<'a> Alpm {
-    pub fn trans(&'a self, flags: TransFlag) -> Result<Trans<'a>> {
+impl Alpm {
+    pub fn trans_init(&self, flags: TransFlag) -> Result<()> {
         let ret = unsafe { alpm_trans_init(self.handle, flags.bits() as i32) };
-        self.check_ret(ret)?;
-        Ok(Trans { handle: self })
+        self.check_ret(ret)
     }
 }
 
@@ -157,11 +145,11 @@ mod tests {
         let db = handle.syncdbs().find(|db| db.name() == "core").unwrap();
         let pkg = db.pkg("filesystem").unwrap();
 
-        let mut trans = handle.trans(flags).unwrap();
-        trans.add_pkg(&pkg).unwrap();
-        trans.prepare().unwrap();
+        handle.trans_init(flags).unwrap();
+        handle.trans_add_pkg(pkg).unwrap();
+        handle.trans_prepare().unwrap();
         // Due to age the mirror now returns 404 for the package.
         // But we're only testing that the function is called corectly anyway.
-        assert!(trans.commit().unwrap_err().1 == Error::Retrieve);
+        assert!(handle.trans_commit().unwrap_err().1 == Error::Retrieve);
     }
 }

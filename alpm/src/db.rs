@@ -31,7 +31,6 @@ impl<'a> Into<Db<'a>> for DbMut<'a> {
     }
 }
 
-
 #[derive(Debug)]
 pub struct DbBuilder {
     handle: Alpm,

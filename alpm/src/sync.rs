@@ -1,4 +1,4 @@
-use crate::{Alpm, AlpmList, Db, FreeMethod, Package, Result, Trans};
+use crate::{Alpm, AlpmList, Db, FreeMethod, Package, Result};
 
 use std::ffi::CString;
 
@@ -37,11 +37,11 @@ impl Alpm {
     }
 }
 
-impl<'a> Trans<'a> {
-    pub fn sysupgrade(&self, enable_downgrade: bool) -> Result<()> {
+impl Alpm {
+    pub fn trans_sysupgrade(&self, enable_downgrade: bool) -> Result<()> {
         let enable_downgrade = if enable_downgrade { 1 } else { 0 };
-        let ret = unsafe { alpm_sync_sysupgrade(self.handle.handle, enable_downgrade) };
+        let ret = unsafe { alpm_sync_sysupgrade(self.handle, enable_downgrade) };
 
-        self.handle.check_ret(ret)
+        self.check_ret(ret)
     }
 }

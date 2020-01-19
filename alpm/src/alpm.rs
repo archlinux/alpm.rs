@@ -29,6 +29,8 @@ pub struct Alpm {
 impl Drop for Alpm {
     fn drop(&mut self) {
         if self.drop {
+            // alpm should do this for us, but is bugged
+            unsafe { alpm_trans_release(self.handle) };
             unsafe { alpm_release(self.handle) };
         }
     }
