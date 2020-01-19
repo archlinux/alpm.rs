@@ -107,7 +107,7 @@ macro_rules! set_eventcb {
 
         unsafe extern "C" fn c_eventcb(event: *mut alpm_event_t) {
             let event = Event::new(C_ALPM_HANDLE, event);
-            $f(event);
+            $f(&event);
         }
 
         unsafe { alpm_option_set_eventcb($handle.as_alpm_handle_t(), Some(c_eventcb)) };
@@ -128,7 +128,7 @@ macro_rules! set_questioncb {
 
         unsafe extern "C" fn c_questioncb(question: *mut alpm_question_t) {
             let question = Question::new(C_ALPM_HANDLE, question);
-            $f(question);
+            $f(&question);
         }
 
         unsafe { alpm_option_set_questioncb($handle.as_alpm_handle_t(), Some(c_questioncb)) };

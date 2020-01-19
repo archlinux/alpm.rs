@@ -11,8 +11,8 @@ pub type LogCb = fn(level: LogLevel, s: &str);
 pub type DownloadCb = fn(filename: &str, xfered: u64, total: u64);
 pub type FetchCb = fn(url: &str, filename: &str, force: bool) -> FetchCbReturn;
 pub type TotalDownloadCb = fn(total: u64);
-pub type EventCb = fn(event: Event);
-pub type QuestionCb = fn(question: Question);
+pub type EventCb = fn(event: &Event);
+pub type QuestionCb = fn(question: &Question);
 pub type ProgressCb =
     fn(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize);
 
@@ -117,7 +117,7 @@ mod tests {
         }
     }
 
-    fn eventcb(event: Event) {
+    fn eventcb(event: &Event) {
         match event {
             Event::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
             _ => println!("event: {:?}", event),
@@ -128,7 +128,7 @@ mod tests {
         FetchCbReturn::Ok
     }
 
-    fn questioncb(question: Question) {
+    fn questioncb(question: &Question) {
         println!("question {:?}", question);
         match question {
             Question::Conflict(x) => {

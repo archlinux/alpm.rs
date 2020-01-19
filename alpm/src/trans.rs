@@ -124,7 +124,7 @@ mod tests {
         print!("{}", msg);
     }
 
-    fn eventcb(event: Event) {
+    fn eventcb(event: &Event) {
         match event {
             Event::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
             _ => println!("event: {:?}", event),
