@@ -1,7 +1,7 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, Conflict, Db, DepMissing, Depend, Error, FileConflict, FreeMethod, Package, Pkg,
-    PgpKey,
+    Alpm, AlpmList, Conflict, Db, DepMissing, Depend, Error, FileConflict, FreeMethod, Package,
+    PgpKey, Pkg,
 };
 
 use std::ffi::c_void;
@@ -372,8 +372,7 @@ impl PackageOperationEvent {
     }
 
     pub fn operation(&self) -> PackageOperation {
-
-        let oldpkg = unsafe{ Package::new(&self.handle, self.inner.oldpkg) };
+        let oldpkg = unsafe { Package::new(&self.handle, self.inner.oldpkg) };
         let newpkg = unsafe { Package::new(&self.handle, self.inner.newpkg) };
 
         match self.inner.operation {

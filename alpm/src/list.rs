@@ -187,6 +187,10 @@ unsafe extern "C" fn depmissing_free(ptr: *mut c_void) {
     alpm_depmissing_free(ptr as *mut alpm_depmissing_t);
 }
 
+pub(crate) unsafe extern "C" fn dep_free(ptr: *mut c_void) {
+    alpm_dep_free(ptr as *mut alpm_depend_t);
+}
+
 unsafe extern "C" fn conflict_free(ptr: *mut c_void) {
     alpm_conflict_free(ptr as *mut alpm_conflict_t);
 }

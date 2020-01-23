@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, Db, DbMut, Depend, FreeMethod, Match, Result, SigLevel};
+use crate::{free, Alpm, AlpmList, Db, DbMut, Depend, FreeMethod, Match, Result, SigLevel};
 
 use std::cmp::Ordering;
 use std::ffi::{c_void, CString};
@@ -101,6 +101,8 @@ impl Alpm {
     ) -> Result<()> {
         let list = to_strlist(list);
         let ret = unsafe { alpm_option_set_hookdirs(self.handle, list) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
+        unsafe { alpm_list_free(list) };
         self.check_ret(ret)
     }
 
@@ -126,6 +128,8 @@ impl Alpm {
     ) -> Result<()> {
         let list = to_strlist(list);
         let ret = unsafe { alpm_option_set_cachedirs(self.handle, list) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
+        unsafe { alpm_list_free(list) };
         self.check_ret(ret)
     }
 
@@ -168,6 +172,8 @@ impl Alpm {
     ) -> Result<()> {
         let list = to_strlist(list);
         let ret = unsafe { alpm_option_set_noupgrades(self.handle, list) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
+        unsafe { alpm_list_free(list) };
         self.check_ret(ret)
     }
 
@@ -204,6 +210,8 @@ impl Alpm {
     ) -> Result<()> {
         let list = to_strlist(list);
         let ret = unsafe { alpm_option_set_noextracts(self.handle, list) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
+        unsafe { alpm_list_free(list) };
         self.check_ret(ret)
     }
 
@@ -240,6 +248,8 @@ impl Alpm {
     ) -> Result<()> {
         let list = to_strlist(list);
         let ret = unsafe { alpm_option_set_ignorepkgs(self.handle, list) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
+        unsafe { alpm_list_free(list) };
         self.check_ret(ret)
     }
 
@@ -265,6 +275,8 @@ impl Alpm {
     ) -> Result<()> {
         let list = to_strlist(list);
         let ret = unsafe { alpm_option_set_ignoregroups(self.handle, list) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
+        unsafe { alpm_list_free(list) };
         self.check_ret(ret)
     }
 
@@ -290,6 +302,8 @@ impl Alpm {
     ) -> Result<()> {
         let list = to_strlist(list);
         let ret = unsafe { alpm_option_set_overwrite_files(self.handle, list) };
+        unsafe { alpm_list_free_inner(list, Some(free)) };
+        unsafe { alpm_list_free(list) };
         self.check_ret(ret)
     }
 
@@ -308,7 +322,10 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_assume_installed<'a, I: IntoIterator<Item = Depend<'a>>>(
+    //broken in alpm
+    #[allow(dead_code)]
+    /*pub*/
+    fn set_assume_installed<'a, I: IntoIterator<Item = Depend<'a>>>(
         &'a mut self,
         list: I,
     ) -> Result<()> {
@@ -319,6 +336,7 @@ impl Alpm {
 
         let ret = unsafe { alpm_option_set_assumeinstalled(self.handle, deps) };
         unsafe { alpm_list_free(deps) };
+        unsafe { alpm_list_free_inner(deps, Some(crate::dep_free)) };
         self.check_ret(ret)
     }
 
@@ -414,5 +432,44 @@ mod tests {
                 .to_str()
                 .unwrap()
         );
+    }
+
+    #[test]
+    fn test_setters() {
+        let mut handle = Alpm::new("/", "tests/db/").unwrap();
+
+        handle
+            .set_hookdirs(["1", "2", "3"].iter().cloned())
+            .unwrap();
+        handle.add_hookdir("x").unwrap();
+        handle
+            .set_hookdirs(["a", "b", "c"].iter().cloned())
+            .unwrap();
+        handle.add_hookdir("z").unwrap();
+        let hooks = handle.hookdirs().collect::<Vec<_>>();
+        assert_eq!(hooks, vec!["a/", "b/", "c/", "z/"]);
+
+        assert!(!handle.check_space());
+        handle.set_check_space(true);
+        assert!(handle.check_space());
+        handle.set_check_space(false);
+        assert!(!handle.check_space());
+
+        assert_eq!(handle.default_siglevel(), SigLevel::NONE);
+        handle
+            .set_default_siglevel(SigLevel::PACKAGE | SigLevel::DATABASE)
+            .unwrap();
+        assert_eq!(
+            handle.default_siglevel(),
+            SigLevel::PACKAGE | SigLevel::DATABASE
+        );
+
+        /*let indeps = vec!["a", "b", "c"].into_iter().map(|s| Depend::new(s)).collect::<Vec<_>>();
+        let deps = vec!["a", "b", "c"].into_iter().map(|s| Depend::new(s)).collect::<Vec<_>>();
+        handle.set_assume_installed(indeps);
+
+        let ai = handle.assume_installed().collect::<Vec<_>>();
+        assert_eq!(deps.into_iter().map(|d| d.to_string()).collect::<Vec<_>>(), ai.into_iter().map(|d| d.to_string()).collect::<Vec<_>>());
+        */
     }
 }

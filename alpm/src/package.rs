@@ -23,7 +23,7 @@ impl<'a> AsPkg for Pkg<'a> {
 
 #[derive(Debug)]
 pub struct Package<'a> {
-    pkg: Pkg<'a>
+    pkg: Pkg<'a>,
 }
 
 impl<'a> AsPkg for Package<'a> {
@@ -32,7 +32,7 @@ impl<'a> AsPkg for Package<'a> {
     }
 }
 
-impl<'a>  std::ops::Deref for Package<'a> {
+impl<'a> std::ops::Deref for Package<'a> {
     type Target = Pkg<'a>;
 
     fn deref(&self) -> &Self::Target {
@@ -42,11 +42,11 @@ impl<'a>  std::ops::Deref for Package<'a> {
 
 impl<'a> Package<'a> {
     pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Package {
-        Package { pkg: Pkg { handle, pkg } }
+        Package {
+            pkg: Pkg { handle, pkg },
+        }
     }
 }
-
-
 
 #[derive(Debug, Copy, Clone)]
 pub struct Pkg<'a> {
