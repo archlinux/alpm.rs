@@ -37,10 +37,10 @@ impl Drop for Alpm {
 }
 
 impl Alpm {
-    pub fn new<S: Into<String>>(root: S, db_path: S) -> Result<Alpm> {
+    pub fn new(root: impl AsRef<str>, db_path: impl AsRef<str>) -> Result<Alpm> {
         let mut err = alpm_errno_t::ALPM_ERR_OK;
-        let root = CString::new(root.into()).unwrap();
-        let db_path = CString::new(db_path.into()).unwrap();
+        let root = CString::new(root.as_ref()).unwrap();
+        let db_path = CString::new(db_path.as_ref()).unwrap();
 
         let handle = unsafe { alpm_initialize(root.as_ptr(), db_path.as_ptr(), &mut err) };
 

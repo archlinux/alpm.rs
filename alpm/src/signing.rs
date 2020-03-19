@@ -9,8 +9,8 @@ use std::ffi::{c_void, CString};
 use std::mem::transmute;
 use std::{ptr, slice};
 
-pub fn decode_signature<S: Into<String>>(b64: S) -> std::result::Result<Vec<u8>, ()> {
-    let b64 = CString::new(b64.into()).unwrap();
+pub fn decode_signature(b64: impl AsRef<str>) -> std::result::Result<Vec<u8>, ()> {
+    let b64 = CString::new(b64.as_ref()).unwrap();
     let mut data = ptr::null_mut();
     let mut len = 0;
     let ret = unsafe { alpm_decode_signature(b64.as_ptr(), &mut data, &mut len) };
@@ -172,12 +172,12 @@ impl<'a> Db<'a> {
 }
 
 impl Alpm {
-    pub fn extract_keyid<'a, S: Into<String>>(
+    pub fn extract_keyid<'a>(
         &'a self,
-        ident: S,
+        ident: impl AsRef<str>,
         sig: &[u8],
     ) -> Result<AlpmList<'a, String>> {
-        let ident = CString::new(ident.into()).unwrap();
+        let ident = CString::new(ident.as_ref()).unwrap();
         let mut keys = ptr::null_mut();
 
         let ret = unsafe {

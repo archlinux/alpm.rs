@@ -13,7 +13,7 @@ pub fn satisfies_dep<'a, S: AsRef<str>, V: AsRef<Ver>>(dep: &Depend, name: S, ve
     satisfies_ver(dep, version)
 }
 
-/// Checks if a dependency is satisdied by a provide.
+/// Checks if a dependency is satisfied by a provide.
 pub fn satisfies_provide<'a>(dep: &Depend<'a>, provide: &Depend<'a>) -> bool {
     if dep.name() != provide.name() {
         return false;
@@ -23,7 +23,10 @@ pub fn satisfies_provide<'a>(dep: &Depend<'a>, provide: &Depend<'a>) -> bool {
         return false;
     }
 
-    satisfies_ver(dep, provide.version())
+    match provide.version() {
+        None => false,
+        Some(provide_ver) => satisfies_ver(dep, provide_ver)
+    }
 }
 
 /// Checks if a Depend is satisfied by a name + version + provides combo
@@ -62,15 +65,20 @@ fn satisfies_ver<'a, V: AsRef<Ver>>(dep: &Depend<'a>, version: V) -> bool {
         return true;
     }
 
-    let cmp = version.cmp(dep.version());
+    match dep.version() {
+        None => false,
+        Some(depver) => {
+            let cmp = version.cmp(depver);
 
-    match dep.depmod() {
-        DepMod::Eq => cmp == Ordering::Equal,
-        DepMod::Ge => cmp == Ordering::Greater || cmp == Ordering::Equal,
-        DepMod::Le => cmp == Ordering::Less || cmp == Ordering::Equal,
-        DepMod::Gt => cmp == Ordering::Greater,
-        DepMod::Lt => cmp == Ordering::Less,
-        DepMod::Any => true,
+            match dep.depmod() {
+                DepMod::Eq => cmp == Ordering::Equal,
+                DepMod::Ge => cmp == Ordering::Greater || cmp == Ordering::Equal,
+                DepMod::Le => cmp == Ordering::Less || cmp == Ordering::Equal,
+                DepMod::Gt => cmp == Ordering::Greater,
+                DepMod::Lt => cmp == Ordering::Less,
+                DepMod::Any => true,
+            }
+        }
     }
 }
 

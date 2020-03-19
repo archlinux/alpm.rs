@@ -19,11 +19,11 @@ pub unsafe fn from_cstr_optional<'a>(s: *const c_char) -> Option<&'a str> {
         .filter(|s| !s.is_empty())
 }
 
-pub fn to_strlist<S: Into<String>, I: IntoIterator<Item = S>>(list: I) -> *mut alpm_list_t {
+pub fn to_strlist<S: AsRef<str>, I: IntoIterator<Item = S>>(list: I) -> *mut alpm_list_t {
     let mut alpmlist = ptr::null_mut();
 
     for s in list {
-        let cs = CString::new(s.into()).unwrap();
+        let cs = CString::new(s.as_ref()).unwrap();
         unsafe { alpm_list_append_strdup(&mut alpmlist, cs.as_ptr()) };
     }
 

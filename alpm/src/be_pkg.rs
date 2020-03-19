@@ -31,13 +31,13 @@ impl<'a> LoadedPackage<'a> {
 }
 
 impl Alpm {
-    pub fn pkg_load<'a, S: Into<String>>(
+    pub fn pkg_load<'a>(
         &'a self,
-        filename: S,
+        filename: impl AsRef<str>,
         full: bool,
         level: SigLevel,
     ) -> Result<LoadedPackage<'a>> {
-        let filename = CString::new(filename.into()).unwrap();
+        let filename = CString::new(filename.as_ref()).unwrap();
         let mut pkg = Pkg {
             pkg: ptr::null_mut(),
             handle: self,

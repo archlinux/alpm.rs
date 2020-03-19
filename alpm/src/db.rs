@@ -38,8 +38,8 @@ pub struct DbBuilder {
 }
 
 impl Alpm {
-    pub fn register_syncdb<S: Into<String>>(&self, name: S, sig_level: SigLevel) -> Result<Db> {
-        let name = CString::new(name.into()).unwrap();
+    pub fn register_syncdb(&self, name: impl AsRef<str>, sig_level: SigLevel) -> Result<Db> {
+        let name = CString::new(name.as_ref()).unwrap();
 
         let db =
             unsafe { alpm_register_syncdb(self.handle, name.as_ptr(), sig_level.bits() as i32) };
@@ -48,12 +48,12 @@ impl Alpm {
         Ok(Db { db, handle: self })
     }
 
-    pub fn register_syncdb_mut<S: Into<String>>(
+    pub fn register_syncdb_mut(
         &mut self,
-        name: S,
+        name: impl AsRef<str>,
         sig_level: SigLevel,
     ) -> Result<DbMut> {
-        let name = CString::new(name.into()).unwrap();
+        let name = CString::new(name.as_ref()).unwrap();
 
         let db =
             unsafe { alpm_register_syncdb(self.handle, name.as_ptr(), sig_level.bits() as i32) };
@@ -74,20 +74,20 @@ impl<'a> DbMut<'a> {
         unsafe { alpm_db_unregister(self.db) };
     }
 
-    pub fn add_server<S: Into<String>>(&self, server: S) -> Result<()> {
-        let server = CString::new(server.into()).unwrap();
+    pub fn add_server(&self, server: impl AsRef<str>) -> Result<()> {
+        let server = CString::new(server.as_ref()).unwrap();
         let ret = unsafe { alpm_db_add_server(self.db, server.as_ptr()) };
         self.handle.check_ret(ret)
     }
 
-    pub fn set_servers<S: Into<String>, I: IntoIterator<Item = S>>(&self, list: I) -> Result<()> {
+    pub fn set_servers<S: AsRef<str>, I: IntoIterator<Item = S>>(&self, list: I) -> Result<()> {
         let list = to_strlist(list);
         let ret = unsafe { alpm_db_set_servers(self.db, list) };
         self.handle.check_ret(ret)
     }
 
-    pub fn remove_server<S: Into<String>>(&self, server: S) -> Result<()> {
-        let server = CString::new(server.into()).unwrap();
+    pub fn remove_server(&self, server: impl AsRef<str>) -> Result<()> {
+        let server = CString::new(server.as_ref()).unwrap();
         let ret = unsafe { alpm_db_remove_server(self.db, server.as_ptr()) };
         self.handle.check_ret(ret)
     }
@@ -104,8 +104,8 @@ impl<'a> Db<'a> {
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn pkg<S: Into<String>>(&self, name: S) -> Result<Package<'a>> {
-        let name = CString::new(name.into()).unwrap();
+    pub fn pkg(&self, name: impl AsRef<str>) -> Result<Package<'a>> {
+        let name = CString::new(name.as_ref()).unwrap();
         let pkg = unsafe { alpm_db_get_pkg(self.db, name.as_ptr()) };
         self.handle.check_null(pkg)?;
         unsafe { Ok(Package::new(self.handle, pkg)) }
@@ -117,8 +117,8 @@ impl<'a> Db<'a> {
         Ok(AlpmList::new(self.handle, pkgs, FreeMethod::None))
     }
 
-    pub fn group<S: Into<String>>(&self, name: S) -> Result<Group> {
-        let name = CString::new(name.into()).unwrap();
+    pub fn group(&self, name: impl AsRef<str>) -> Result<Group> {
+        let name = CString::new(name.as_ref()).unwrap();
         let group = unsafe { alpm_db_get_group(self.db, name.as_ptr()) };
         self.handle.check_null(group)?;
         Ok(Group {
@@ -133,7 +133,7 @@ impl<'a> Db<'a> {
     }
 
     #[cfg(not(feature = "git"))]
-    pub fn search<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn search<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &self,
         list: I,
     ) -> Result<AlpmList<'a, Package<'a>>> {
@@ -146,7 +146,7 @@ impl<'a> Db<'a> {
     }
 
     #[cfg(feature = "git")]
-    pub fn search<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn search<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &self,
         list: I,
     ) -> Result<AlpmList<'a, Package<'a>>> {

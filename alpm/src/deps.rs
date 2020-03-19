@@ -56,15 +56,9 @@ impl<'a> fmt::Display for Depend<'a> {
     }
 }
 
-impl<S: Into<String>> From<S> for Depend<'static> {
-    fn from(s: S) -> Depend<'static> {
-        Depend::new(s)
-    }
-}
-
 impl<'a> Depend<'a> {
-    pub fn new<S: Into<String>>(s: S) -> Depend<'static> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn new(s: impl AsRef<str>) -> Depend<'static> {
+        let s = CString::new(s.as_ref()).unwrap();
         let dep = unsafe { alpm_dep_from_string(s.as_ptr()) };
 
         Depend {
@@ -190,8 +184,8 @@ impl DepMissing {
 }
 
 impl<'a> AlpmList<'a, Db<'a>> {
-    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package<'a>> {
-        let dep = CString::new(dep.into()).unwrap();
+    pub fn find_satisfier(&self, dep: impl AsRef<str>) -> Option<Package<'a>> {
+        let dep = CString::new(dep.as_ref()).unwrap();
 
         let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.handle, self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;
@@ -200,8 +194,8 @@ impl<'a> AlpmList<'a, Db<'a>> {
 }
 
 impl<'a> AlpmList<'a, Package<'a>> {
-    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package<'a>> {
-        let dep = CString::new(dep.into()).unwrap();
+    pub fn find_satisfier(&self, dep: impl AsRef<str>) -> Option<Package<'a>> {
+        let dep = CString::new(dep.as_ref()).unwrap();
 
         let pkg = unsafe { alpm_find_satisfier(self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;

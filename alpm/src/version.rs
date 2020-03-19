@@ -7,9 +7,9 @@ use std::os::raw::c_char;
 
 use alpm_sys::*;
 
-pub fn vercmp<S: Into<String>>(a: S, b: S) -> Ordering {
-    let a = CString::new(a.into()).unwrap();
-    let b = CString::new(b.into()).unwrap();
+pub fn vercmp(a: impl AsRef<str>, b: impl AsRef<str>) -> Ordering {
+    let a = CString::new(a.as_ref()).unwrap();
+    let b = CString::new(b.as_ref()).unwrap();
     unsafe { alpm_pkg_vercmp(a.as_ptr(), b.as_ptr()).cmp(&0) }
 }
 
@@ -92,8 +92,8 @@ impl PartialOrd<Version> for &Ver {
 pub struct Version(CString);
 
 impl Version {
-    pub fn new<S: Into<String>>(s: S) -> Self {
-        let s = CString::new(s.into()).unwrap();
+    pub fn new(s: impl AsRef<str>) -> Self {
+        let s = CString::new(s.as_ref()).unwrap();
         Version(s)
     }
 

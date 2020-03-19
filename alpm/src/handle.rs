@@ -89,13 +89,13 @@ impl Alpm {
         unsafe { from_cstr(alpm_option_get_dbext(self.handle)) }
     }
 
-    pub fn add_hookdir<S: Into<String>>(&mut self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn add_hookdir(&mut self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_add_hookdir(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_hookdirs<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn set_hookdirs<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &mut self,
         list: I,
     ) -> Result<()> {
@@ -106,8 +106,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_hookdir<S: Into<String>>(&mut self, s: S) -> Result<bool> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn remove_hookdir(&mut self, s: impl AsRef<str>) -> Result<bool> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_remove_hookdir(self.handle, s.as_ptr()) };
         if ret == 1 {
             Ok(true)
@@ -116,13 +116,13 @@ impl Alpm {
         }
     }
 
-    pub fn add_cachedir<S: Into<String>>(&mut self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn add_cachedir(&mut self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_add_cachedir(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_cachedirs<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn set_cachedirs<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &mut self,
         list: I,
     ) -> Result<()> {
@@ -133,8 +133,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_cachedir<S: Into<String>>(&mut self, s: S) -> Result<bool> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn remove_cachedir(&mut self, s: impl AsRef<str>) -> Result<bool> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_remove_cachedir(self.handle, s.as_ptr()) };
         if ret == 1 {
             Ok(true)
@@ -143,14 +143,14 @@ impl Alpm {
         }
     }
 
-    pub fn set_logfile<S: Into<String>>(&self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn set_logfile(&self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_set_logfile(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_gpgdir<S: Into<String>>(&self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn set_gpgdir(&self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_set_gpgdir(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
@@ -160,13 +160,13 @@ impl Alpm {
         unsafe { alpm_option_set_usesyslog(self.handle, b) };
     }
 
-    pub fn add_noupgrade<S: Into<String>>(&mut self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn add_noupgrade(&mut self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_add_noupgrade(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_noupgrades<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn set_noupgrades<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &mut self,
         list: I,
     ) -> Result<()> {
@@ -177,8 +177,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_noupgrade<S: Into<String>>(&mut self, s: S) -> Result<bool> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn remove_noupgrade(&mut self, s: impl AsRef<str>) -> Result<bool> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_remove_noupgrade(self.handle, s.as_ptr()) };
         if ret == 1 {
             Ok(true)
@@ -187,8 +187,8 @@ impl Alpm {
         }
     }
 
-    pub fn match_noupgrade<S: Into<String>>(&mut self, s: S) -> Match {
-        let s = CString::new(s.into()).unwrap();
+    pub fn match_noupgrade(&mut self, s: impl AsRef<str>) -> Match {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_match_noupgrade(self.handle, s.as_ptr()) };
 
         match ret.cmp(&0) {
@@ -198,13 +198,13 @@ impl Alpm {
         }
     }
 
-    pub fn add_noextract<S: Into<String>>(&mut self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn add_noextract(&mut self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_add_noextract(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_noextracts<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn set_noextracts<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &mut self,
         list: I,
     ) -> Result<()> {
@@ -215,8 +215,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_noextract<S: Into<String>>(&mut self, s: S) -> Result<bool> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn remove_noextract(&mut self, s: impl AsRef<str>) -> Result<bool> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_remove_noextract(self.handle, s.as_ptr()) };
         if ret == 1 {
             Ok(true)
@@ -225,8 +225,8 @@ impl Alpm {
         }
     }
 
-    pub fn match_noextract<S: Into<String>>(&mut self, s: S) -> Match {
-        let s = CString::new(s.into()).unwrap();
+    pub fn match_noextract(&mut self, s: impl AsRef<str>) -> Match {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_match_noextract(self.handle, s.as_ptr()) };
 
         match ret.cmp(&0) {
@@ -236,13 +236,13 @@ impl Alpm {
         }
     }
 
-    pub fn add_ignorepkg<S: Into<String>>(&mut self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn add_ignorepkg(&mut self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_add_ignorepkg(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_ignorepkgs<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn set_ignorepkgs<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &mut self,
         list: I,
     ) -> Result<()> {
@@ -253,8 +253,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_ignorepkg<S: Into<String>>(&mut self, s: S) -> Result<bool> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn remove_ignorepkg(&mut self, s: impl AsRef<str>) -> Result<bool> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_remove_ignorepkg(self.handle, s.as_ptr()) };
         if ret == 1 {
             Ok(true)
@@ -263,13 +263,13 @@ impl Alpm {
         }
     }
 
-    pub fn add_ignoregroup<S: Into<String>>(&mut self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn add_ignoregroup(&mut self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_add_ignoregroup(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_ignoregroups<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn set_ignoregroups<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &mut self,
         list: I,
     ) -> Result<()> {
@@ -280,8 +280,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_ignoregroup<S: Into<String>>(&mut self, s: S) -> Result<bool> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn remove_ignoregroup(&mut self, s: impl AsRef<str>) -> Result<bool> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_remove_ignoregroup(self.handle, s.as_ptr()) };
         if ret == 1 {
             Ok(true)
@@ -290,13 +290,13 @@ impl Alpm {
         }
     }
 
-    pub fn add_overwrite_file<S: Into<String>>(&mut self, s: S) -> Result<()> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn add_overwrite_file(&mut self, s: impl AsRef<str>) -> Result<()> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_add_overwrite_file(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_overwrite_files<S: Into<String>, I: IntoIterator<Item = S>>(
+    pub fn set_overwrite_files<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &mut self,
         list: I,
     ) -> Result<()> {
@@ -307,8 +307,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_overwrite_file<S: Into<String>>(&mut self, s: S) -> Result<bool> {
-        let s = CString::new(s.into()).unwrap();
+    pub fn remove_overwrite_file(&mut self, s: impl AsRef<str>) -> Result<bool> {
+        let s = CString::new(s.as_ref()).unwrap();
         let ret = unsafe { alpm_option_remove_overwrite_file(self.handle, s.as_ptr()) };
         if ret == 1 {
             Ok(true)
@@ -349,8 +349,8 @@ impl Alpm {
         }
     }
 
-    pub fn set_arch<S: Into<String>>(&self, s: S) {
-        let s = CString::new(s.into()).unwrap();
+    pub fn set_arch(&self, s: impl AsRef<str>) {
+        let s = CString::new(s.as_ref()).unwrap();
         unsafe { alpm_option_set_arch(self.handle, s.as_ptr()) };
     }
 
@@ -374,8 +374,8 @@ impl Alpm {
         unsafe { alpm_option_set_checkspace(self.handle, b) };
     }
 
-    pub fn set_dbext<S: Into<String>>(&self, s: S) {
-        let s = CString::new(s.into()).unwrap();
+    pub fn set_dbext(&self, s: impl AsRef<str>) {
+        let s = CString::new(s.as_ref()).unwrap();
         unsafe { alpm_option_set_dbext(self.handle, s.as_ptr()) };
     }
 

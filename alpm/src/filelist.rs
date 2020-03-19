@@ -36,8 +36,8 @@ impl FileList {
         unsafe { slice::from_raw_parts(self.inner.files as *const File, self.inner.count) }
     }
 
-    pub fn contains<S: Into<String>>(&self, path: S) -> Result<Option<File>> {
-        let path = CString::new(path.into()).unwrap();
+    pub fn contains(&self, path: impl AsRef<str>) -> Result<Option<File>> {
+        let path = CString::new(path.as_ref()).unwrap();
         let file = unsafe {
             alpm_filelist_contains(
                 &self.inner as *const alpm_filelist_t as *mut alpm_filelist_t,
