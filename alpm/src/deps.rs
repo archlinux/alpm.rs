@@ -210,18 +210,36 @@ impl<'a> AlpmList<'a, Package<'a>> {
 }
 
 impl Alpm {
-    pub fn check_deps(
+    pub fn check_deps<'a>(
         &self,
-        pkgs: AlpmList<Package>,
-        rem: AlpmList<Package>,
-        upgrade: AlpmList<Package>,
+        pkgs: impl IntoIterator<Item = Package<'a>>,
+        rem: impl IntoIterator<Item = Package<'a>>,
+        upgrade: impl IntoIterator<Item = Package<'a>>,
         reverse_deps: bool,
     ) -> AlpmList<DepMissing> {
         let reverse_deps = if reverse_deps { 1 } else { 0 };
-        let list =
-            unsafe { alpm_checkdeps(self.handle, pkgs.list, rem.list, upgrade.list, reverse_deps) };
+        let mut pkglist = std::ptr::null_mut();
+        let mut remlist = std::ptr::null_mut();
+        let mut upgradelist = std::ptr::null_mut();
 
-        AlpmList::new(self, list, FreeMethod::FreeDepMissing)
+        for pkg in pkgs {
+            pkglist = unsafe { alpm_list_add(pkglist, pkg.pkg as *mut c_void) };
+        }
+
+        for pkg in rem {
+            remlist = unsafe { alpm_list_add(remlist, pkg.pkg as *mut c_void) };
+        }
+
+        for pkg in upgrade {
+            upgradelist = unsafe { alpm_list_add(upgradelist, pkg.pkg as *mut c_void) };
+        }
+
+        let ret =
+            unsafe { alpm_checkdeps(self.handle, pkglist, remlist, upgradelist, reverse_deps) };
+        unsafe { alpm_list_free(pkglist) };
+        unsafe { alpm_list_free(remlist) };
+        unsafe { alpm_list_free(upgradelist) };
+        AlpmList::new(self, ret, FreeMethod::FreeDepMissing)
     }
 }
 
@@ -246,5 +264,17 @@ mod tests {
     fn test_eq() {
         assert_eq!(Depend::new("foo=1"), Depend::new("foo=1"));
         assert!(Depend::new("foo=2") != Depend::new("foo=1"));
+    }
+
+    #[test]
+    fn test_check_deps() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        handle.register_syncdb("extra", SigLevel::NONE).unwrap();
+        handle.register_syncdb("community", SigLevel::NONE).unwrap();
+
+        let pkgs = handle.localdb().pkgs().unwrap().collect::<Vec<_>>();
+        let rem = handle.localdb().pkg("ncurses").unwrap();
+        let missing = handle.check_deps(pkgs, vec![rem], vec![], true);
+        assert_eq!(missing.len(), 9);
     }
 }

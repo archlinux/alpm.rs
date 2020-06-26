@@ -175,7 +175,9 @@ unsafe impl<'a> AsAlpmListItem<'a> for &'a str {
 unsafe impl<'a> AsAlpmListItem<'a> for String {
     fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         let s = unsafe { CStr::from_ptr(ptr as *mut c_char) };
-        s.to_str().unwrap().to_string()
+        let s = s.to_str().unwrap().to_string();
+        unsafe { free(ptr) };
+        s
     }
 }
 
@@ -203,20 +205,20 @@ impl<'a, T> Drop for AlpmList<'a, T> {
                 unsafe { alpm_list_free(self.list) };
             }
             FreeMethod::FreeInner => {
-                unsafe { alpm_list_free_inner(self.list, Some(free)) };
+                unsafe { alpm_list_free_inner(self.current, Some(free)) };
                 unsafe { alpm_list_free(self.list) };
             }
             FreeMethod::FreeConflict => {
-                unsafe { alpm_list_free_inner(self.list, Some(conflict_free)) };
-                unsafe { alpm_list_free(self.current) };
+                unsafe { alpm_list_free_inner(self.current, Some(conflict_free)) };
+                unsafe { alpm_list_free(self.list) };
             }
             FreeMethod::FreeFileConflict => {
-                unsafe { alpm_list_free_inner(self.list, Some(fileconflict_free)) };
-                unsafe { alpm_list_free(self.current) };
+                unsafe { alpm_list_free_inner(self.current, Some(fileconflict_free)) };
+                unsafe { alpm_list_free(self.list) };
             }
             FreeMethod::FreeDepMissing => {
-                unsafe { alpm_list_free_inner(self.list, Some(depmissing_free)) };
-                unsafe { alpm_list_free(self.current) };
+                unsafe { alpm_list_free_inner(self.current, Some(depmissing_free)) };
+                unsafe { alpm_list_free(self.list) };
             }
         }
     }

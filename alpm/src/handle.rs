@@ -329,9 +329,9 @@ impl Alpm {
         &'a mut self,
         list: I,
     ) -> Result<()> {
-        let deps = ptr::null_mut();
+        let mut deps = ptr::null_mut();
         for dep in list.into_iter() {
-            unsafe { alpm_list_add(deps, dep.inner as *mut c_void) };
+            unsafe { deps = alpm_list_add(deps, dep.inner as *mut c_void) };
         }
 
         let ret = unsafe { alpm_option_set_assumeinstalled(self.handle, deps) };
