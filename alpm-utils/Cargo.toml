@@ -1,11 +1,18 @@
 [package]
 name = "alpm-utils"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["morganamilo <morganamilo@gmail.com>"]
 edition = "2018"
+
+description = "Helper functions for working with alpm"
+homepage = "http://github.com/Morganamilo/alpm.rs"
+repository = "http://github.com/Morganamilo/alpm.rs"
+documentation = "https://docs.rs/alpm-utils"
+license = "GPL-3.0"
+keywords = ["archlinux", "arch", "alpm", "pacman"]
 
 [features]
 git = ["alpm/git"]
 
 [dependencies]
-alpm = { path = "../alpm" }
+alpm = "0.9.0"

@@ -1,6 +1,4 @@
-use alpm::{DepMod, Depend, Ver};
-
-use std::cmp::Ordering;
+use alpm::{DepModVer, Depend, Ver};
 
 /// Checks if a dependency is satisfied by a package (name + version).
 pub fn satisfies_dep<'a, S: AsRef<str>, V: AsRef<Ver>>(dep: &Depend, name: S, version: V) -> bool {
@@ -19,11 +17,14 @@ pub fn satisfies_provide<'a>(dep: &Depend<'a>, provide: &Depend<'a>) -> bool {
         return false;
     }
 
-    if provide.depmod() == DepMod::Any && dep.depmod() != DepMod::Any {
+    if provide.version().is_none() && dep.version().is_some() {
         return false;
     }
 
-    satisfies_ver(dep, provide.version())
+    match provide.version() {
+        None => dep.version().is_none(),
+        Some(ver) => satisfies_ver(dep, ver),
+    }
 }
 
 /// Checks if a Depend is satisfied by a name + version + provides combo
@@ -58,19 +59,13 @@ pub fn satisfies_provide_nover<'a>(dep: &Depend<'a>, provide: &Depend<'a>) -> bo
 fn satisfies_ver<'a, V: AsRef<Ver>>(dep: &Depend<'a>, version: V) -> bool {
     let version = version.as_ref();
 
-    if dep.depmod() == DepMod::Any {
-        return true;
-    }
-
-    let cmp = version.cmp(dep.version());
-
-    match dep.depmod() {
-        DepMod::Eq => cmp == Ordering::Equal,
-        DepMod::Ge => cmp == Ordering::Greater || cmp == Ordering::Equal,
-        DepMod::Le => cmp == Ordering::Less || cmp == Ordering::Equal,
-        DepMod::Gt => cmp == Ordering::Greater,
-        DepMod::Lt => cmp == Ordering::Less,
-        DepMod::Any => true,
+    match dep.depmodver() {
+        DepModVer::Any => true,
+        DepModVer::Eq(dep) => version == dep,
+        DepModVer::Ge(dep) => version >= dep,
+        DepModVer::Le(dep) => version <= dep,
+        DepModVer::Gt(dep) => version > dep,
+        DepModVer::Lt(dep) => version < dep,
     }
 }
 
