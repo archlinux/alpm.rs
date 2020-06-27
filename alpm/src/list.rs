@@ -11,7 +11,7 @@ use std::os::raw::c_char;
 use alpm_sys::*;
 
 pub unsafe trait AsAlpmListItem<'a> {
-    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self;
+    unsafe fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self;
 }
 
 impl<'a, T> ExactSizeIterator for AlpmList<'a, T> where T: AsAlpmListItem<'a> {}
@@ -25,7 +25,7 @@ where
         let data = self.next_data();
 
         match data {
-            Some(data) => Some(T::as_alpm_list_item(self.handle, data, self.free)),
+            Some(data) => unsafe { Some(T::as_alpm_list_item(self.handle, data, self.free)) },
             None => None,
         }
     }
@@ -86,13 +86,13 @@ pub struct AlpmList<'a, T> {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for Package<'a> {
-    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
-        unsafe { Package::new(handle, ptr as *mut alpm_pkg_t) }
+    unsafe fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        Package::new(handle, ptr as *mut alpm_pkg_t)
     }
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for Group<'a> {
-    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+    unsafe fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         Group {
             inner: ptr as *mut alpm_group_t,
             handle,
@@ -101,7 +101,7 @@ unsafe impl<'a> AsAlpmListItem<'a> for Group<'a> {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for Depend<'a> {
-    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         Depend {
             inner: ptr as *mut alpm_depend_t,
             drop: false,
@@ -111,7 +111,7 @@ unsafe impl<'a> AsAlpmListItem<'a> for Depend<'a> {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for Backup {
-    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         Backup {
             inner: ptr as *mut alpm_backup_t,
         }
@@ -119,7 +119,7 @@ unsafe impl<'a> AsAlpmListItem<'a> for Backup {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for FileConflict {
-    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         FileConflict {
             inner: ptr as *mut alpm_fileconflict_t,
         }
@@ -127,7 +127,7 @@ unsafe impl<'a> AsAlpmListItem<'a> for FileConflict {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for DepMissing {
-    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         DepMissing {
             inner: ptr as *mut alpm_depmissing_t,
         }
@@ -135,7 +135,7 @@ unsafe impl<'a> AsAlpmListItem<'a> for DepMissing {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for Conflict {
-    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, free: FreeMethod) -> Self {
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, free: FreeMethod) -> Self {
         let drop = free != FreeMethod::FreeList && free != FreeMethod::None;
 
         Conflict {
@@ -146,7 +146,7 @@ unsafe impl<'a> AsAlpmListItem<'a> for Conflict {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for Db<'a> {
-    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+    unsafe fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         Db {
             db: ptr as *mut alpm_db_t,
             handle,
@@ -155,7 +155,7 @@ unsafe impl<'a> AsAlpmListItem<'a> for Db<'a> {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for DbMut<'a> {
-    fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+    unsafe fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
         DbMut {
             inner: Db {
                 db: ptr as *mut alpm_db_t,
@@ -166,17 +166,17 @@ unsafe impl<'a> AsAlpmListItem<'a> for DbMut<'a> {
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for &'a str {
-    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
-        let s = unsafe { CStr::from_ptr(ptr as *mut c_char) };
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        let s = CStr::from_ptr(ptr as *mut c_char);
         s.to_str().unwrap()
     }
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for String {
-    fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
-        let s = unsafe { CStr::from_ptr(ptr as *mut c_char) };
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        let s = CStr::from_ptr(ptr as *mut c_char);
         let s = s.to_str().unwrap().to_string();
-        unsafe { free(ptr) };
+        free(ptr);
         s
     }
 }
