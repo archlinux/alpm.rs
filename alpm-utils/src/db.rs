@@ -11,6 +11,8 @@ pub trait DbListExt<'a> {
     ) -> Result<Option<Package<'a>>>;
     /// Similar to pkg() but expects a Target instead of a &str.
     fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Option<Package<'a>>;
+    /// The same as pkg() on Db but will try each Db in order return the first match.
+    fn pkg<S: Into<String>>(&mut self, pkg: S) -> Result<Package<'_>>;
 }
 
 impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
@@ -47,5 +49,18 @@ impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
         }
 
         None
+    }
+
+    fn pkg<S: Into<String>>(&mut self, pkg: S) -> Result<Package<'_>> {
+        let pkg = pkg.into();
+
+        for db in self {
+            let pkg = db.pkg(&pkg);
+            if pkg.is_ok() {
+                return pkg;
+            }
+        }
+
+        return Err(alpm::Error::PkgNotFound);
     }
 }
