@@ -22,6 +22,10 @@ impl Ver {
         unsafe { &*(s as *const CStr as *const Ver) }
     }
 
+    pub fn as_str(&self) -> &str {
+        self
+    }
+
     pub(crate) unsafe fn from_ptr<'a>(s: *const c_char) -> &'a Ver {
         Ver::new(CStr::from_ptr(s))
     }
@@ -60,12 +64,6 @@ impl Ord for Ver {
 
 impl AsRef<str> for Ver {
     fn as_ref(&self) -> &str {
-        self
-    }
-}
-
-impl AsRef<Ver> for Ver {
-    fn as_ref(&self) -> &Ver {
         self
     }
 }
