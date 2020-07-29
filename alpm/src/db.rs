@@ -141,8 +141,12 @@ impl<'a> Db<'a> {
         let pkgs = unsafe { alpm_db_search(self.db, list) };
         unsafe { alpm_list_free_inner(list, Some(free)) };
         unsafe { alpm_list_free(list) };
-        self.handle.check_null(pkgs)?;
-        Ok(AlpmList::new(self.handle, pkgs, FreeMethod::FreeList))
+
+        if self.handle.last_error().ok() {
+            Ok(AlpmList::new(self.handle, pkgs, FreeMethod::FreeList))
+        } else {
+            Err(self.handle.last_error())
+        }
     }
 
     #[cfg(feature = "git")]
