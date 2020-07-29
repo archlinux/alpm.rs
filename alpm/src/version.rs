@@ -37,6 +37,12 @@ impl<'a> From<&'a CStr> for &'a Ver {
     }
 }
 
+impl AsRef<Ver> for Ver {
+    fn as_ref(&self) -> &Ver {
+        self
+    }
+}
+
 impl Deref for Ver {
     type Target = str;
     fn deref(&self) -> &Self::Target {
