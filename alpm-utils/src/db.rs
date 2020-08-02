@@ -6,18 +6,18 @@ use crate::Target;
 pub trait DbListExt<'a> {
     /// Similar to find_satisfier() but expects a Target instead of a &str.
     fn find_target_satisfier<'b, T: Into<Target<'b>>>(
-        &mut self,
+        self,
         target: T,
     ) -> Result<Option<Package<'a>>>;
     /// Similar to pkg() but expects a Target instead of a &str.
-    fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Option<Package<'a>>;
+    fn find_target<'b, T: Into<Target<'b>>>(self, target: T) -> Option<Package<'a>>;
     /// The same as pkg() on Db but will try each Db in order return the first match.
-    fn pkg<S: Into<String>>(&mut self, pkg: S) -> Result<Package<'_>>;
+    fn pkg<S: Into<String>>(self, pkg: S) -> Result<Package<'a>>;
 }
 
 impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
     fn find_target_satisfier<'b, T: Into<Target<'b>>>(
-        &mut self,
+        mut self,
         target: T,
     ) -> Result<Option<Package<'a>>> {
         let target = target.into();
@@ -33,7 +33,7 @@ impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
         Ok(None)
     }
 
-    fn find_target<'b, T: Into<Target<'b>>>(&mut self, target: T) -> Option<Package<'a>> {
+    fn find_target<'b, T: Into<Target<'b>>>(mut self, target: T) -> Option<Package<'a>> {
         let target = target.into();
 
         if let Some(repo) = target.repo {
@@ -51,7 +51,7 @@ impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
         None
     }
 
-    fn pkg<S: Into<String>>(&mut self, pkg: S) -> Result<Package<'_>> {
+    fn pkg<S: Into<String>>(self, pkg: S) -> Result<Package<'a>> {
         let pkg = pkg.into();
 
         for db in self {
