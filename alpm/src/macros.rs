@@ -1,9 +1,9 @@
 #[macro_export]
 macro_rules! set_logcb {
     ( $handle:tt, $f:tt ) => {{
-        use ::std::ffi::{c_void, CStr};
-        use ::std::os::raw::{c_char, c_int};
-        use ::std::ptr;
+        use std::ffi::{c_void, CStr};
+        use std::os::raw::{c_char, c_int};
+        use std::ptr;
         use $crate::alpm_sys::*;
         use $crate::LogLevel;
 
@@ -38,8 +38,8 @@ macro_rules! set_logcb {
 #[macro_export]
 macro_rules! set_dlcb {
     ( $handle:tt, $f:tt ) => {{
-        use ::std::ffi::CStr;
-        use ::std::os::raw::c_char;
+        use std::ffi::CStr;
+        use std::os::raw::c_char;
         use $crate::alpm_sys::*;
 
         unsafe extern "C" fn c_dlcb(filename: *const c_char, xfered: off_t, total: off_t) {
@@ -55,8 +55,8 @@ macro_rules! set_dlcb {
 #[macro_export]
 macro_rules! set_fetchcb {
     ( $handle:tt, $f:tt ) => {{
-        use ::std::ffi::CStr;
-        use ::std::os::raw::{c_char, c_int};
+        use std::ffi::CStr;
+        use std::os::raw::{c_char, c_int};
         use $crate::alpm_sys::*;
         use $crate::FetchCbReturn;
 
@@ -96,7 +96,7 @@ macro_rules! set_totaldlcb {
 #[macro_export]
 macro_rules! set_eventcb {
     ( $handle:tt, $f:tt ) => {{
-        use ::std::ptr;
+        use std::ptr;
         use $crate::alpm_sys::*;
         use $crate::Event;
 
@@ -117,7 +117,7 @@ macro_rules! set_eventcb {
 #[macro_export]
 macro_rules! set_questioncb {
     ( $handle:tt, $f:tt ) => {{
-        use ::std::ptr;
+        use std::ptr;
         use $crate::alpm_sys::*;
         use $crate::Question;
 
@@ -127,8 +127,8 @@ macro_rules! set_questioncb {
         }
 
         unsafe extern "C" fn c_questioncb(question: *mut alpm_question_t) {
-            let question = Question::new(C_ALPM_HANDLE, question);
-            $f(&question);
+            let mut question = Question::new(C_ALPM_HANDLE, question);
+            $f(&mut question);
         }
 
         unsafe { alpm_option_set_questioncb($handle.as_alpm_handle_t(), Some(c_questioncb)) };
@@ -138,9 +138,9 @@ macro_rules! set_questioncb {
 #[macro_export]
 macro_rules! set_progresscb {
     ( $handle:tt, $f:tt ) => {{
-        use ::std::ffi::CStr;
-        use ::std::mem::transmute;
-        use ::std::os::raw::{c_char, c_int};
+        use std::ffi::CStr;
+        use std::mem::transmute;
+        use std::os::raw::{c_char, c_int};
         use $crate::alpm_sys::*;
 
         unsafe extern "C" fn c_progresscb(
