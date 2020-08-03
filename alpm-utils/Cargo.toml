@@ -15,4 +15,4 @@ keywords = ["archlinux", "arch", "alpm", "pacman"]
 git = ["alpm/git"]
 
 [dependencies]
-alpm = "0.9.0"
+alpm = { version = "0.9.0", path = "../alpm" }

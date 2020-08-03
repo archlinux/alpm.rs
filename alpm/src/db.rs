@@ -94,12 +94,12 @@ impl<'a> DbMut<'a> {
 }
 
 impl<'a> Db<'a> {
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> &'a str {
         let name = unsafe { alpm_db_get_name(self.db) };
         unsafe { from_cstr(name) }
     }
 
-    pub fn servers(&self) -> AlpmList<&str> {
+    pub fn servers(&self) -> AlpmList<&'a str> {
         let list = unsafe { alpm_db_get_servers(self.db) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
@@ -117,7 +117,7 @@ impl<'a> Db<'a> {
         Ok(AlpmList::new(self.handle, pkgs, FreeMethod::None))
     }
 
-    pub fn group<S: Into<String>>(&self, name: S) -> Result<Group> {
+    pub fn group<S: Into<String>>(&self, name: S) -> Result<Group<'a>> {
         let name = CString::new(name.into()).unwrap();
         let group = unsafe { alpm_db_get_group(self.db, name.as_ptr()) };
         self.handle.check_null(group)?;

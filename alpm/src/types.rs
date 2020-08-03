@@ -892,11 +892,11 @@ pub struct Group<'a> {
 }
 
 impl<'a> Group<'a> {
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> &'a str {
         unsafe { from_cstr((*self.inner).name) }
     }
 
-    pub fn packages(&self) -> AlpmList<Package> {
+    pub fn packages(&self) -> AlpmList<'a, Package<'a>> {
         let pkgs = unsafe { (*self.inner).packages };
         AlpmList::new(self.handle, pkgs, FreeMethod::None)
     }
