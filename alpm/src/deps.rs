@@ -277,4 +277,23 @@ mod tests {
         let missing = handle.check_deps(pkgs, vec![rem], vec![], true);
         assert_eq!(missing.len(), 9);
     }
+
+    #[test]
+    fn test_find_satisfier() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        handle.register_syncdb("extra", SigLevel::NONE).unwrap();
+        handle.register_syncdb("community", SigLevel::NONE).unwrap();
+
+        let pkg = handle
+            .localdb()
+            .pkgs()
+            .unwrap()
+            .find_satisfier("linux>0")
+            .unwrap();
+        assert_eq!(pkg.name(), "linux");
+
+        let pkg = handle.syncdbs().find_satisfier("linux>0").unwrap();
+        assert_eq!(pkg.name(), "linux");
+    }
 }
