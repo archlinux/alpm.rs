@@ -61,7 +61,7 @@ fn satisfies_ver<'a, V: AsRef<Ver>>(dep: &Depend<'a>, version: V) -> bool {
 
     match dep.depmodver() {
         DepModVer::Any => true,
-        DepModVer::Eq(dep) => version == dep,
+        DepModVer::Eq(dep) => version == dep || version.split('-').next().unwrap() == dep.as_str(),
         DepModVer::Ge(dep) => version >= dep,
         DepModVer::Le(dep) => version <= dep,
         DepModVer::Gt(dep) => version > dep,
@@ -78,6 +78,17 @@ mod tests {
     fn test_satisfies_ver() {
         assert!(satisfies_ver(&Depend::new("foo>0"), Version::new("9.0.0")));
         assert!(satisfies_ver(&Depend::new("foo<10"), Version::new("9.0.0")));
+        assert!(satisfies_ver(&Depend::new("foo=10"), Version::new("10")));
+        assert!(satisfies_ver(
+            &Depend::new("foo=10-1"),
+            Version::new("10-1")
+        ));
+        assert!(satisfies_ver(&Depend::new("foo=10"), Version::new("10-1")));
+        assert!(satisfies_ver(&Depend::new("foo=10"), Version::new("10-2")));
+        assert!(!satisfies_ver(
+            &Depend::new("foo=10-1"),
+            Version::new("10-2")
+        ));
         assert!(satisfies_ver(
             &Depend::new("foo<=10"),
             Version::new("9.0.0")

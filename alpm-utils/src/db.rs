@@ -55,6 +55,6 @@ impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
             }
         }
 
-        return Err(alpm::Error::PkgNotFound);
+        Err(alpm::Error::PkgNotFound)
     }
 }
