@@ -1,5 +1,5 @@
 [package]
-name = "alpm-sys-fork"
+name = "alpm-sys"
 version = "1.0.0"
 authors = ["morganamilo <morganamilo@gmail.com>"]
 
