@@ -26,6 +26,8 @@ pub struct Alpm {
     pub(crate) drop: bool,
 }
 
+unsafe impl Send for Alpm {}
+
 impl Drop for Alpm {
     fn drop(&mut self) {
         if self.drop {
