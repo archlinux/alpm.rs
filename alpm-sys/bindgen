@@ -16,3 +16,4 @@ bindgen /usr/include/alpm.h \
     --opaque-type alpm_db_t \
     --opaque-type alpm_pkg_t \
     --opaque-type alpm_trans_t \
+    --size_t-is-usize \

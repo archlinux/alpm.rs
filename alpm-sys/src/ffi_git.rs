@@ -5,7 +5,6 @@ pub type __mode_t = ::std::os::raw::c_uint;
 pub type __off_t = ::std::os::raw::c_long;
 pub type mode_t = __mode_t;
 pub type off_t = __off_t;
-pub type size_t = ::std::os::raw::c_ulong;
 pub type va_list = __builtin_va_list;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -120,7 +119,7 @@ extern "C" {
 extern "C" {
     pub fn alpm_list_msort(
         list: *mut alpm_list_t,
-        n: size_t,
+        n: usize,
         fn_: alpm_list_fn_cmp,
     ) -> *mut alpm_list_t;
 }
@@ -155,13 +154,13 @@ extern "C" {
     pub fn alpm_list_copy(list: *const alpm_list_t) -> *mut alpm_list_t;
 }
 extern "C" {
-    pub fn alpm_list_copy_data(list: *const alpm_list_t, size: size_t) -> *mut alpm_list_t;
+    pub fn alpm_list_copy_data(list: *const alpm_list_t, size: usize) -> *mut alpm_list_t;
 }
 extern "C" {
     pub fn alpm_list_reverse(list: *mut alpm_list_t) -> *mut alpm_list_t;
 }
 extern "C" {
-    pub fn alpm_list_nth(list: *const alpm_list_t, n: size_t) -> *mut alpm_list_t;
+    pub fn alpm_list_nth(list: *const alpm_list_t, n: usize) -> *mut alpm_list_t;
 }
 extern "C" {
     pub fn alpm_list_next(list: *const alpm_list_t) -> *mut alpm_list_t;
@@ -173,7 +172,7 @@ extern "C" {
     pub fn alpm_list_last(list: *const alpm_list_t) -> *mut alpm_list_t;
 }
 extern "C" {
-    pub fn alpm_list_count(list: *const alpm_list_t) -> size_t;
+    pub fn alpm_list_count(list: *const alpm_list_t) -> usize;
 }
 extern "C" {
     pub fn alpm_list_find(
@@ -213,8 +212,8 @@ extern "C" {
 extern "C" {
     pub fn alpm_list_to_array(
         list: *const alpm_list_t,
-        n: size_t,
-        size: size_t,
+        n: usize,
+        size: usize,
     ) -> *mut ::std::os::raw::c_void;
 }
 pub type alpm_handle_t = u8;
@@ -768,7 +767,7 @@ pub type alpm_file_t = _alpm_file_t;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _alpm_filelist_t {
-    pub count: size_t,
+    pub count: usize,
     pub files: *mut alpm_file_t,
 }
 #[test]
@@ -1036,7 +1035,7 @@ pub type alpm_sigresult_t = _alpm_sigresult_t;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _alpm_siglist_t {
-    pub count: size_t,
+    pub count: usize,
     pub results: *mut alpm_sigresult_t,
 }
 #[test]
@@ -1714,9 +1713,9 @@ pub struct _alpm_event_hook_run_t {
     #[doc = " Description of hook to be outputted"]
     pub desc: *const ::std::os::raw::c_char,
     #[doc = " position of hook being run"]
-    pub position: size_t,
+    pub position: usize,
     #[doc = " total hooks being run"]
-    pub total: size_t,
+    pub total: usize,
 }
 #[test]
 fn bindgen_test_layout__alpm_event_hook_run_t() {
@@ -2622,8 +2621,8 @@ pub type alpm_cb_progress = ::std::option::Option<
         arg1: alpm_progress_t,
         arg2: *const ::std::os::raw::c_char,
         arg3: ::std::os::raw::c_int,
-        arg4: size_t,
-        arg5: size_t,
+        arg4: usize,
+        arg5: usize,
     ),
 >;
 pub const alpm_download_event_type_t_ALPM_DOWNLOAD_INIT: alpm_download_event_type_t = 0;
@@ -3686,7 +3685,7 @@ extern "C" {
     pub fn alpm_pkg_get_sig(
         pkg: *mut alpm_pkg_t,
         sig: *mut *mut ::std::os::raw::c_uchar,
-        sig_len: *mut size_t,
+        sig_len: *mut usize,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -3715,10 +3714,10 @@ extern "C" {
     #[doc = " error occurred."]
     pub fn alpm_pkg_changelog_read(
         ptr: *mut ::std::os::raw::c_void,
-        size: size_t,
+        size: usize,
         pkg: *const alpm_pkg_t,
         fp: *mut ::std::os::raw::c_void,
-    ) -> size_t;
+    ) -> usize;
 }
 extern "C" {
     #[doc = " Close a package changelog for reading."]
@@ -3830,7 +3829,7 @@ extern "C" {
     pub fn alpm_decode_signature(
         base64_data: *const ::std::os::raw::c_char,
         data: *mut *mut ::std::os::raw::c_uchar,
-        data_len: *mut size_t,
+        data_len: *mut usize,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -3843,7 +3842,7 @@ extern "C" {
         handle: *mut alpm_handle_t,
         identifier: *const ::std::os::raw::c_char,
         sig: *const ::std::os::raw::c_uchar,
-        len: size_t,
+        len: usize,
         keys: *mut *mut alpm_list_t,
     ) -> ::std::os::raw::c_int;
 }
