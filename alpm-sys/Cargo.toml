@@ -13,3 +13,7 @@ categories = ["external-ffi-bindings"]
 
 [features]
 git = []
+generate = ["bindgen"]
+
+[build-dependencies]
+bindgen = { version = "0.55.1", optional = true }

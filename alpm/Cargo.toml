@@ -16,6 +16,7 @@ exclude = ["tests"]
 [features]
 mtree = ["libarchive", "libarchive3-sys"]
 git = ["alpm-sys/git"]
+generate = ["alpm-sys/generate"]
 
 [dependencies]
 bitflags = "1.0.4"
