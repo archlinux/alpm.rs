@@ -164,7 +164,7 @@ impl<'a> Db<'a> {
     }
 
     pub fn groups(&self) -> Result<AlpmList<'a, Group>> {
-        let groups = unsafe { alpm_db_get_pkgcache(self.db) };
+        let groups = unsafe { alpm_db_get_groupcache(self.db) };
         self.handle.check_null(groups)?;
         Ok(AlpmList::new(self.handle, groups, FreeMethod::FreeList))
     }
