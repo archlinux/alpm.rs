@@ -16,4 +16,4 @@ git = []
 generate = ["bindgen"]
 
 [build-dependencies]
-bindgen = { version = "0.55.1", optional = true }
+bindgen = { version = "0.55.1", optional = true, default-features = false, features = ["runtime"] }
