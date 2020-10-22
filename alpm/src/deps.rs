@@ -11,21 +11,37 @@ use std::marker::PhantomData;
 use std::mem::transmute;
 
 #[derive(Debug)]
-pub struct Depend<'a> {
+pub struct Dep<'a> {
     pub(crate) inner: *mut alpm_depend_t,
-    pub(crate) drop: bool,
     pub(crate) phantom: PhantomData<&'a ()>,
 }
 
-impl<'a> Drop for Depend<'a> {
-    fn drop(&mut self) {
-        if self.drop {
-            unsafe { alpm_dep_free(self.inner) }
-        }
+#[derive(Debug, Hash, PartialEq, Eq)]
+pub struct Depend {
+    dep: Dep<'static>,
+}
+
+impl fmt::Display for Depend {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.dep.fmt(f)
     }
 }
 
-impl<'a> Hash for Depend<'a> {
+impl std::ops::Deref for Depend {
+    type Target = Dep<'static>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.dep
+    }
+}
+
+impl Drop for Depend {
+    fn drop(&mut self) {
+        unsafe { alpm_dep_free(self.dep.inner) }
+    }
+}
+
+impl<'a> Hash for Dep<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.name().hash(state);
         self.depmod().hash(state);
@@ -33,7 +49,7 @@ impl<'a> Hash for Depend<'a> {
     }
 }
 
-impl<'a> PartialEq for Depend<'a> {
+impl<'a> PartialEq for Dep<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.name() == other.name()
             && self.depmod() == other.depmod()
@@ -42,9 +58,9 @@ impl<'a> PartialEq for Depend<'a> {
     }
 }
 
-impl<'a> Eq for Depend<'a> {}
+impl<'a> Eq for Dep<'a> {}
 
-impl<'a> fmt::Display for Depend<'a> {
+impl<'a> fmt::Display for Dep<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         unsafe {
             let cs = alpm_dep_compute_string(self.inner);
@@ -56,24 +72,30 @@ impl<'a> fmt::Display for Depend<'a> {
     }
 }
 
-impl<S: Into<String>> From<S> for Depend<'static> {
-    fn from(s: S) -> Depend<'static> {
-        Depend::new(s)
-    }
-}
-
-impl<'a> Depend<'a> {
-    pub fn new<S: Into<String>>(s: S) -> Depend<'static> {
+impl Depend {
+    pub fn new<S: Into<String>>(s: S) -> Depend {
         let s = CString::new(s.into()).unwrap();
         let dep = unsafe { alpm_dep_from_string(s.as_ptr()) };
 
         Depend {
-            inner: dep,
-            drop: true,
-            phantom: PhantomData,
+            dep: Dep {
+                inner: dep,
+                phantom: PhantomData,
+            },
         }
     }
 
+    pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depend_t) -> Depend {
+        Depend {
+            dep: Dep {
+                inner: ptr,
+                phantom: PhantomData,
+            },
+        }
+    }
+}
+
+impl<'a> Dep<'a> {
     pub fn name(&self) -> &str {
         unsafe { from_cstr((*self.inner).name) }
     }
@@ -108,6 +130,12 @@ impl<'a> Depend<'a> {
                 DepMod::Gt => DepModVer::Gt(self.version_unchecked()),
                 DepMod::Lt => DepModVer::Lt(self.version_unchecked()),
             }
+        }
+    }
+    pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depend_t) -> Dep<'a> {
+        Dep {
+            inner: ptr,
+            phantom: PhantomData,
         }
     }
 }
@@ -169,14 +197,10 @@ impl DepMissing {
         unsafe { from_cstr(target) }
     }
 
-    pub fn depend(&self) -> Depend {
+    pub fn depend(&self) -> Dep {
         let depend = unsafe { (*self.inner).depend };
 
-        Depend {
-            inner: depend,
-            phantom: PhantomData,
-            drop: false,
-        }
+        unsafe { Dep::from_ptr(depend) }
     }
 
     pub fn causing_pkg<'a>(&self) -> Option<&'a str> {

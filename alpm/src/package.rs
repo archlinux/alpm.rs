@@ -1,7 +1,7 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, Backup, ChangeLog, Db, Depend, FileList, FreeMethod, PackageFrom,
-    PackageReason, PackageValidation, Result, Ver,
+    Alpm, AlpmList, Backup, ChangeLog, Db, Dep, FileList, FreeMethod, PackageFrom, PackageReason,
+    PackageValidation, Result, Ver,
 };
 
 #[cfg(feature = "mtree")]
@@ -164,37 +164,37 @@ impl<'a> Pkg<'a> {
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn depends(&self) -> AlpmList<'a, Depend<'a>> {
+    pub fn depends(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_depends(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn optdepends(&self) -> AlpmList<'a, Depend<'a>> {
+    pub fn optdepends(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_optdepends(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn checkdepends(&self) -> AlpmList<'a, Depend<'a>> {
+    pub fn checkdepends(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_checkdepends(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn makedepends(&self) -> AlpmList<'a, Depend<'a>> {
+    pub fn makedepends(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_makedepends(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn conflicts(&self) -> AlpmList<'a, Depend<'a>> {
+    pub fn conflicts(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_conflicts(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn provides(&self) -> AlpmList<'a, Depend<'a>> {
+    pub fn provides(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_provides(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }
 
-    pub fn replaces(&self) -> AlpmList<'a, Depend<'a>> {
+    pub fn replaces(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_replaces(self.pkg) };
         AlpmList::new(self.handle, list, FreeMethod::None)
     }

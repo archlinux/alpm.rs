@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, Db, DbMut, Depend, FreeMethod, Match, Result, SigLevel};
+use crate::{free, Alpm, AlpmList, Db, DbMut, Dep, Depend, FreeMethod, Match, Result, SigLevel};
 
 use std::cmp::Ordering;
 use std::ffi::{c_void, CString};
@@ -317,21 +317,21 @@ impl Alpm {
         }
     }
 
-    pub fn add_assume_installed(&mut self, s: Depend) -> Result<()> {
-        let ret = unsafe { alpm_option_add_assumeinstalled(self.handle, s.inner) };
+    pub fn add_assume_installed<'a, D: AsRef<Dep<'a>>>(&mut self, s: D) -> Result<()> {
+        let ret = unsafe { alpm_option_add_assumeinstalled(self.handle, s.as_ref().inner) };
         self.check_ret(ret)
     }
 
     //broken in alpm
     #[allow(dead_code)]
     /*pub*/
-    fn set_assume_installed<'a, I: IntoIterator<Item = Depend<'a>>>(
+    fn set_assume_installed<'a, 'b, D: AsRef<Dep<'b>>, I: IntoIterator<Item = D>>(
         &'a mut self,
         list: I,
     ) -> Result<()> {
         let mut deps = ptr::null_mut();
         for dep in list.into_iter() {
-            unsafe { deps = alpm_list_add(deps, dep.inner as *mut c_void) };
+            unsafe { deps = alpm_list_add(deps, dep.as_ref().inner as *mut c_void) };
         }
 
         let ret = unsafe { alpm_option_set_assumeinstalled(self.handle, deps) };
@@ -340,8 +340,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_assume_installed(&mut self, s: Depend) -> Result<bool> {
-        let ret = unsafe { alpm_option_remove_assumeinstalled(self.handle, s.inner) };
+    pub fn remove_assume_installed<'a, D: AsRef<Dep<'a>>>(&mut self, s: D) -> Result<bool> {
+        let ret = unsafe { alpm_option_remove_assumeinstalled(self.handle, s.as_ref().inner) };
         if ret == 1 {
             Ok(true)
         } else {

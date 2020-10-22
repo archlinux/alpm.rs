@@ -1,5 +1,6 @@
 use crate::{
-    free, Alpm, Backup, Conflict, Db, DbMut, DepMissing, Depend, FileConflict, Group, Package,
+    free, Alpm, Backup, Conflict, Db, DbMut, Dep, DepMissing, Depend, FileConflict, Group,
+    OwnedConflict, Package,
 };
 
 use std::ffi::{c_void, CStr};
@@ -21,6 +22,10 @@ pub struct AlpmList<'a, T> {
     pub(crate) current: *mut alpm_list_t,
     pub(crate) free: FreeMethod,
     pub(crate) _marker: PhantomData<T>,
+}
+
+impl<'a, T> AlpmList<'a, T> {
+    //TODO
 }
 
 impl<'a, T> IntoIterator for AlpmList<'a, T>
@@ -119,13 +124,15 @@ unsafe impl<'a> AsAlpmListItem<'a> for Group<'a> {
     }
 }
 
-unsafe impl<'a> AsAlpmListItem<'a> for Depend<'a> {
+unsafe impl<'a> AsAlpmListItem<'a> for Depend {
     unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
-        Depend {
-            inner: ptr as *mut alpm_depend_t,
-            drop: false,
-            phantom: PhantomData,
-        }
+        Depend::from_ptr(ptr as *mut alpm_depend_t)
+    }
+}
+
+unsafe impl<'a> AsAlpmListItem<'a> for Dep<'a> {
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        Dep::from_ptr(ptr as *mut alpm_depend_t)
     }
 }
 
@@ -153,14 +160,15 @@ unsafe impl<'a> AsAlpmListItem<'a> for DepMissing {
     }
 }
 
-unsafe impl<'a> AsAlpmListItem<'a> for Conflict {
-    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, free: FreeMethod) -> Self {
-        let drop = free != FreeMethod::FreeList && free != FreeMethod::None;
+unsafe impl<'a> AsAlpmListItem<'a> for OwnedConflict {
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        OwnedConflict::from_ptr(ptr as *mut alpm_conflict_t)
+    }
+}
 
-        Conflict {
-            inner: ptr as *mut alpm_conflict_t,
-            drop,
-        }
+unsafe impl<'a> AsAlpmListItem<'a> for Conflict<'a> {
+    unsafe fn as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self {
+        Conflict::from_ptr(ptr as *mut alpm_conflict_t)
     }
 }
 

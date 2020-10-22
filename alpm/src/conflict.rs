@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, Depend, FreeMethod, Package};
+use crate::{Alpm, AlpmList, Dep, FreeMethod, Package};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
@@ -9,20 +9,42 @@ use std::marker::PhantomData;
 use std::mem::transmute;
 
 #[derive(Debug)]
-pub struct Conflict {
-    pub(crate) inner: *mut alpm_conflict_t,
-    pub(crate) drop: bool,
+pub struct OwnedConflict {
+    conflict: Conflict<'static>,
 }
 
-impl Drop for Conflict {
-    fn drop(&mut self) {
-        if self.drop {
-            unsafe { alpm_conflict_free(self.inner) }
+impl OwnedConflict {
+    pub(crate) unsafe fn from_ptr(ptr: *mut alpm_conflict_t) -> OwnedConflict {
+        OwnedConflict {
+            conflict: Conflict {
+                inner: ptr,
+                phantom: PhantomData,
+            },
         }
     }
 }
 
-impl Conflict {
+#[derive(Debug)]
+pub struct Conflict<'a> {
+    pub(crate) inner: *mut alpm_conflict_t,
+    pub(crate) phantom: PhantomData<&'a ()>,
+}
+
+impl std::ops::Deref for OwnedConflict {
+    type Target = Conflict<'static>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.conflict
+    }
+}
+
+impl Drop for OwnedConflict {
+    fn drop(&mut self) {
+        unsafe { alpm_conflict_free(self.conflict.inner) }
+    }
+}
+
+impl<'a> Conflict<'a> {
     pub fn package1_hash(&self) -> u64 {
         #[allow(clippy::identity_conversion)]
         unsafe {
@@ -45,10 +67,13 @@ impl Conflict {
         unsafe { from_cstr((*self.inner).package2) }
     }
 
-    pub fn reason(&self) -> Depend {
-        Depend {
-            inner: unsafe { (*self.inner).reason },
-            drop: false,
+    pub fn reason(&self) -> Dep {
+        unsafe { Dep::from_ptr((*self.inner).reason) }
+    }
+
+    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_conflict_t) -> Conflict<'b> {
+        Conflict {
+            inner: ptr,
             phantom: PhantomData,
         }
     }
@@ -95,7 +120,7 @@ impl Alpm {
     pub fn check_conflicts<'a>(
         &self,
         pkgs: impl IntoIterator<Item = Package<'a>>,
-    ) -> AlpmList<Conflict> {
+    ) -> AlpmList<OwnedConflict> {
         let mut list = std::ptr::null_mut();
 
         for pkg in pkgs {

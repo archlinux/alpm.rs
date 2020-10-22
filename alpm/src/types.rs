@@ -1,12 +1,11 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, Conflict, Db, DepMissing, Depend, Error, FileConflict, FreeMethod, Package,
-    PgpKey, Pkg,
+    Alpm, AlpmList, Conflict, Db, Dep, DepMissing, Error, FileConflict, FreeMethod, OwnedConflict,
+    Package, PgpKey, Pkg,
 };
 
 use std::ffi::c_void;
 use std::io::{self, Read};
-use std::marker::PhantomData;
 use std::mem::transmute;
 #[cfg(feature = "mtree")]
 use std::ptr;
@@ -418,13 +417,8 @@ impl OptDepRemovalEvent {
         unsafe { Package::new(&self.handle, self.inner.pkg) }
     }
 
-    pub fn optdep(&self) -> Depend {
-        let dep = self.inner.optdep;
-        Depend {
-            inner: dep,
-            drop: false,
-            phantom: PhantomData,
-        }
+    pub fn optdep(&self) -> Dep {
+        unsafe { Dep::from_ptr(self.inner.optdep) }
     }
 }
 
@@ -785,12 +779,7 @@ impl ConflictQuestion {
     }
 
     pub fn conflict(&self) -> Conflict {
-        unsafe {
-            Conflict {
-                inner: (*self.inner).conflict,
-                drop: false,
-            }
-        }
+        unsafe { Conflict::from_ptr((*self.inner).conflict) }
     }
 }
 
@@ -867,14 +856,8 @@ impl SelectProviderQuestion {
         AlpmList::new(&self.handle, list, FreeMethod::None)
     }
 
-    pub fn depend(&self) -> Depend {
-        unsafe {
-            Depend {
-                inner: (*self.inner).depend,
-                drop: false,
-                phantom: PhantomData,
-            }
-        }
+    pub fn depend(&self) -> Dep {
+        unsafe { Dep::from_ptr((*self.inner).depend) }
     }
 }
 
@@ -992,7 +975,7 @@ pub enum Match {
 pub enum PrepareReturn<'a> {
     PkgInvalidArch(AlpmList<'a, Package<'a>>),
     UnsatisfiedDeps(AlpmList<'a, DepMissing>),
-    ConflictingDeps(AlpmList<'a, Conflict>),
+    ConflictingDeps(AlpmList<'a, OwnedConflict>),
     None,
 }
 
