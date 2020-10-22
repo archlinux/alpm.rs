@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, Db, FreeMethod, Pkg, Result};
+use crate::{free, Alpm, AlpmListMut, Db, Package, Result};
 
 use alpm_sys::_alpm_sigstatus_t::*;
 use alpm_sys::_alpm_sigvalidity_t::*;
@@ -143,7 +143,7 @@ impl SigList {
     }
 }
 
-impl<'a> Pkg<'a> {
+impl<'a> Package<'a> {
     pub fn check_signature(&self) -> Result<(bool, SigList)> {
         let mut siglist = SigList::new();
         let ret = unsafe { alpm_pkg_check_pgp_signature(self.pkg, &mut siglist.inner) };
@@ -176,7 +176,7 @@ impl Alpm {
         &'a self,
         ident: S,
         sig: &[u8],
-    ) -> Result<AlpmList<'a, String>> {
+    ) -> Result<AlpmListMut<'a, String>> {
         let ident = CString::new(ident.into()).unwrap();
         let mut keys = ptr::null_mut();
 
@@ -191,6 +191,6 @@ impl Alpm {
         };
 
         self.check_ret(ret)?;
-        Ok(AlpmList::new(self, keys, FreeMethod::FreeInner))
+        Ok(AlpmListMut::from_parts(self, keys))
     }
 }

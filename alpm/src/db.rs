@@ -1,12 +1,12 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, FreeMethod, Group, Package, Result, SigLevel, Usage};
+use crate::{Alpm, AlpmList, AlpmListMut, AsRawAlpmList, Group, Package, Result, SigLevel, Usage};
 
 use std::ffi::CString;
 use std::ops::Deref;
 
 use alpm_sys::*;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Db<'a> {
     pub(crate) db: *mut alpm_db_t,
     pub(crate) handle: &'a Alpm,
@@ -29,12 +29,6 @@ impl<'a> Into<Db<'a>> for DbMut<'a> {
     fn into(self) -> Db<'a> {
         self.inner
     }
-}
-
-#[derive(Debug)]
-pub struct DbBuilder {
-    handle: Alpm,
-    pub(crate) db: *mut alpm_db_t,
 }
 
 impl Alpm {
@@ -80,9 +74,9 @@ impl<'a> DbMut<'a> {
         self.handle.check_ret(ret)
     }
 
-    pub fn set_servers<S: Into<String>, I: IntoIterator<Item = S>>(&self, list: I) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_db_set_servers(self.db, list) };
+    pub fn set_servers<L: AsRawAlpmList<'a, String>>(&self, list: L) -> Result<()> {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_db_set_servers(self.db, alpm_list_strdup(list.list())) };
         self.handle.check_ret(ret)
     }
 
@@ -101,7 +95,7 @@ impl<'a> Db<'a> {
 
     pub fn servers(&self) -> AlpmList<&'a str> {
         let list = unsafe { alpm_db_get_servers(self.db) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn pkg<S: Into<String>>(&self, name: S) -> Result<Package<'a>> {
@@ -111,10 +105,9 @@ impl<'a> Db<'a> {
         unsafe { Ok(Package::new(self.handle, pkg)) }
     }
 
-    pub fn pkgs(&self) -> Result<AlpmList<'a, Package<'a>>> {
+    pub fn pkgs(&self) -> AlpmList<'a, Package<'a>> {
         let pkgs = unsafe { alpm_db_get_pkgcache(self.db) };
-        self.handle.check_null(pkgs)?;
-        Ok(AlpmList::new(self.handle, pkgs, FreeMethod::None))
+        AlpmList::from_parts(self.handle, pkgs)
     }
 
     pub fn group<S: Into<String>>(&self, name: S) -> Result<Group<'a>> {
@@ -133,40 +126,36 @@ impl<'a> Db<'a> {
     }
 
     #[cfg(not(feature = "git"))]
-    pub fn search<S: Into<String>, I: IntoIterator<Item = S>>(
-        &self,
-        list: I,
-    ) -> Result<AlpmList<'a, Package<'a>>> {
-        let list = to_strlist(list.into_iter());
-        let pkgs = unsafe { alpm_db_search(self.db, list) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+    pub fn search<L>(&self, list: L) -> Result<AlpmListMut<'a, Package<'a>>>
+    where
+        L: AsRawAlpmList<'a, String>,
+    {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let pkgs = unsafe { alpm_db_search(self.db, list.list()) };
 
         if self.handle.last_error().ok() {
-            Ok(AlpmList::new(self.handle, pkgs, FreeMethod::FreeList))
+            Ok(AlpmListMut::from_parts(self.handle, pkgs))
         } else {
             Err(self.handle.last_error())
         }
     }
 
     #[cfg(feature = "git")]
-    pub fn search<S: Into<String>, I: IntoIterator<Item = S>>(
-        &self,
-        list: I,
-    ) -> Result<AlpmList<'a, Package<'a>>> {
-        let list = to_strlist(list.into_iter());
+    pub fn search<L>(&self, list: L) -> Result<AlpmListMut<'a, Package<'a>>>
+    where
+        L: AsRawAlpmList<'a, String>,
+    {
         let mut ret = std::ptr::null_mut();
-        let ok = unsafe { alpm_db_search(self.db, list, &mut ret) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ok = unsafe { alpm_db_search(self.db, list.list(), &mut ret) };
         self.handle.check_ret(ok)?;
-        Ok(AlpmList::new(self.handle, ret, FreeMethod::FreeList))
+        Ok(AlpmListMut::from_parts(self.handle, ret))
     }
 
-    pub fn groups(&self) -> Result<AlpmList<'a, Group>> {
+    pub fn groups(&self) -> Result<AlpmListMut<'a, Group<'a>>> {
         let groups = unsafe { alpm_db_get_groupcache(self.db) };
         self.handle.check_null(groups)?;
-        Ok(AlpmList::new(self.handle, groups, FreeMethod::FreeList))
+        Ok(AlpmListMut::from_parts(self.handle, groups))
     }
 
     pub fn siglevel(&self) -> SigLevel {
@@ -192,8 +181,8 @@ impl<'a> Db<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Alpm;
     use crate::SigLevel;
+    use crate::{Alpm, AlpmListMut};
 
     #[test]
     fn test_register() {
@@ -214,32 +203,20 @@ mod tests {
             db.add_server(*server).unwrap();
         }
 
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
-        let servers2 = db.servers().map(|s| s.to_string()).collect::<Vec<_>>();
-        db.set_servers(servers2).unwrap();
+        let servers2 = db
+            .servers()
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
+        db.set_servers(servers2.iter()).unwrap();
+        let servers2 = db
+            .servers()
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
+        db.set_servers(servers2.iter()).unwrap();
 
-        assert_eq!(servers, db.servers().collect::<Vec<_>>());
+        assert_eq!(servers, db.servers().iter().collect::<Vec<_>>());
     }
 
     #[test]
@@ -251,7 +228,7 @@ mod tests {
 
         db.set_servers(servers.iter().cloned()).unwrap();
 
-        assert_eq!(servers, db.servers().collect::<Vec<_>>());
+        assert_eq!(servers, db.servers().iter().collect::<Vec<_>>());
     }
 
     #[test]
@@ -269,7 +246,7 @@ mod tests {
         }
 
         for db in handle.syncdbs() {
-            assert_eq!(db.servers().collect::<Vec<_>>(), vec!["foo", "bar"]);
+            assert_eq!(db.servers().iter().collect::<Vec<_>>(), vec!["foo", "bar"]);
         }
 
         for db in handle.syncdbs_mut() {
@@ -294,7 +271,7 @@ mod tests {
         let res = db
             .search(["^mkinitcpio-nfs-utils$"].iter().cloned())
             .unwrap();
-        let res = res.collect::<Vec<_>>();
+        let res = res.iter().collect::<Vec<_>>();
 
         for _ in &res {}
         for _ in &res {}
@@ -302,7 +279,14 @@ mod tests {
         assert_eq!(res.len(), 1);
         assert_eq!(res[0].name(), "mkinitcpio-nfs-utils");
 
-        db.search(["["].iter().cloned()).unwrap_err();
+        let mut list: AlpmListMut<String> = AlpmListMut::new(&handle);
+        list.push("pacman".to_string());
+
+        let pkgs = db.search(&list).unwrap();
+        assert!(!pkgs.is_empty());
+
+        db.search(["pacman"].iter().cloned()).unwrap();
+        db.search(vec!["pacman".to_string()].into_iter()).unwrap();
     }
 
     #[test]

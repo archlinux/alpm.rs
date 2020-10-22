@@ -1,10 +1,11 @@
-use crate::utils::*;
-use crate::{free, Alpm, Result};
+#[cfg(not(feature = "git"))]
+use crate::{free, utils::*};
+use crate::{Alpm, Result};
 
 use alpm_sys::*;
 
 #[cfg(feature = "git")]
-use crate::{AlpmList, FreeMethod};
+use crate::{AlpmListMut, AsRawAlpmList};
 #[cfg(feature = "git")]
 use std::ptr;
 
@@ -24,17 +25,15 @@ impl Alpm {
     }
 
     #[cfg(feature = "git")]
-    pub fn fetch_pkgurl<'a, S: Into<String>>(
+    pub fn fetch_pkgurl<'a, L: AsRawAlpmList<'a, String>>(
         &'a self,
-        urls: impl IntoIterator<Item = S>,
-    ) -> Result<AlpmList<'a, String>> {
-        let list = to_strlist(urls);
+        urls: L,
+    ) -> Result<AlpmListMut<'a, String>> {
         let mut out = ptr::null_mut();
-        let ret = unsafe { alpm_fetch_pkgurl(self.handle, list, &mut out) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+        let list = unsafe { urls.as_raw_alpm_list() };
+        let ret = unsafe { alpm_fetch_pkgurl(self.handle, list.list(), &mut out) };
         self.check_ret(ret)?;
-        let fetched = AlpmList::new(self, out, FreeMethod::FreeInner);
+        let fetched = AlpmListMut::from_parts(self, out);
         Ok(fetched)
     }
 }

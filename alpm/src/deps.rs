@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, Db, FreeMethod, Package, Ver};
+use crate::{free, Alpm, AlpmList, AlpmListMut, AsRawAlpmList, Db, Package, Ver};
 
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
@@ -32,6 +32,28 @@ impl std::ops::Deref for Depend {
 
     fn deref(&self) -> &Self::Target {
         &self.dep
+    }
+}
+
+pub trait AsDep {
+    fn as_dep(&self) -> &Dep;
+}
+
+impl AsDep for Depend {
+    fn as_dep(&self) -> &Dep {
+        &self.dep
+    }
+}
+
+impl<'a> AsDep for Dep<'a> {
+    fn as_dep(&self) -> &Dep {
+        self
+    }
+}
+
+impl<'a> AsDep for &Dep<'a> {
+    fn as_dep(&self) -> &Dep {
+        self
     }
 }
 
@@ -96,6 +118,10 @@ impl Depend {
 }
 
 impl<'a> Dep<'a> {
+    pub fn to_depend(&self) -> Depend {
+        Depend::new(self.to_string())
+    }
+
     pub fn name(&self) -> &str {
         unsafe { from_cstr((*self.inner).name) }
     }
@@ -181,18 +207,32 @@ pub enum DepMod {
 }
 
 #[derive(Debug)]
-pub struct DepMissing {
+pub struct DepMissing<'a> {
     pub(crate) inner: *mut alpm_depmissing_t,
+    pub(crate) phantom: PhantomData<&'a ()>,
 }
 
-impl Drop for DepMissing {
-    fn drop(&mut self) {
-        unsafe { alpm_depmissing_free(self.inner) }
+impl std::ops::Deref for DependMissing {
+    type Target = DepMissing<'static>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
     }
 }
 
-impl DepMissing {
-    pub fn target<'a>(&self) -> &'a str {
+#[derive(Debug)]
+pub struct DependMissing {
+    pub(crate) inner: DepMissing<'static>,
+}
+
+impl Drop for DependMissing {
+    fn drop(&mut self) {
+        unsafe { alpm_depmissing_free(self.inner.inner) }
+    }
+}
+
+impl<'a> DepMissing<'a> {
+    pub fn target(&self) -> &str {
         let target = unsafe { (*self.inner).target };
         unsafe { from_cstr(target) }
     }
@@ -203,7 +243,7 @@ impl DepMissing {
         unsafe { Dep::from_ptr(depend) }
     }
 
-    pub fn causing_pkg<'a>(&self) -> Option<&'a str> {
+    pub fn causing_pkg(&self) -> Option<&str> {
         let causing_pkg = unsafe { (*self.inner).causingpkg };
         if causing_pkg.is_null() {
             None
@@ -236,34 +276,27 @@ impl<'a> AlpmList<'a, Package<'a>> {
 impl Alpm {
     pub fn check_deps<'a>(
         &self,
-        pkgs: impl IntoIterator<Item = Package<'a>>,
-        rem: impl IntoIterator<Item = Package<'a>>,
-        upgrade: impl IntoIterator<Item = Package<'a>>,
+        pkgs: impl AsRawAlpmList<'a, Package<'a>>,
+        rem: impl AsRawAlpmList<'a, Package<'a>>,
+        upgrade: impl AsRawAlpmList<'a, Package<'a>>,
         reverse_deps: bool,
-    ) -> AlpmList<DepMissing> {
+    ) -> AlpmListMut<DependMissing> {
         let reverse_deps = if reverse_deps { 1 } else { 0 };
-        let mut pkglist = std::ptr::null_mut();
-        let mut remlist = std::ptr::null_mut();
-        let mut upgradelist = std::ptr::null_mut();
 
-        for pkg in pkgs {
-            pkglist = unsafe { alpm_list_add(pkglist, pkg.pkg as *mut c_void) };
-        }
+        let pkgs = unsafe { pkgs.as_raw_alpm_list() };
+        let rem = unsafe { rem.as_raw_alpm_list() };
+        let upgrade = unsafe { upgrade.as_raw_alpm_list() };
 
-        for pkg in rem {
-            remlist = unsafe { alpm_list_add(remlist, pkg.pkg as *mut c_void) };
-        }
-
-        for pkg in upgrade {
-            upgradelist = unsafe { alpm_list_add(upgradelist, pkg.pkg as *mut c_void) };
-        }
-
-        let ret =
-            unsafe { alpm_checkdeps(self.handle, pkglist, remlist, upgradelist, reverse_deps) };
-        unsafe { alpm_list_free(pkglist) };
-        unsafe { alpm_list_free(remlist) };
-        unsafe { alpm_list_free(upgradelist) };
-        AlpmList::new(self, ret, FreeMethod::FreeDepMissing)
+        let ret = unsafe {
+            alpm_checkdeps(
+                self.handle,
+                pkgs.list(),
+                rem.list(),
+                upgrade.list(),
+                reverse_deps,
+            )
+        };
+        AlpmListMut::from_parts(self, ret)
     }
 }
 
@@ -273,12 +306,18 @@ mod tests {
     use crate::SigLevel;
 
     #[test]
+    fn test_depend() {
+        let dep = Depend::new("abc");
+        assert_eq!(dep.name(), "abc");
+    }
+
+    #[test]
     fn test_depend_lifetime() {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
         let depends = pkg.depends();
-        let vec = depends.collect::<Vec<_>>();
+        let vec = depends.iter().collect::<Vec<_>>();
         drop(pkg);
         drop(db);
         println!("{:?}", vec);
@@ -296,9 +335,16 @@ mod tests {
         handle.register_syncdb("extra", SigLevel::NONE).unwrap();
         handle.register_syncdb("community", SigLevel::NONE).unwrap();
 
-        let pkgs = handle.localdb().pkgs().unwrap().collect::<Vec<_>>();
+        let pkgs1 = handle.localdb().pkgs();
+        let pkgs = pkgs1.iter().collect::<Vec<_>>();
+        drop(pkgs1);
         let rem = handle.localdb().pkg("ncurses").unwrap();
-        let missing = handle.check_deps(pkgs, vec![rem], vec![], true);
+        let missing = handle.check_deps(
+            pkgs.iter(),
+            vec![rem].iter(),
+            &AlpmListMut::new(&handle),
+            true,
+        );
         assert_eq!(missing.len(), 9);
     }
 
@@ -309,12 +355,7 @@ mod tests {
         handle.register_syncdb("extra", SigLevel::NONE).unwrap();
         handle.register_syncdb("community", SigLevel::NONE).unwrap();
 
-        let pkg = handle
-            .localdb()
-            .pkgs()
-            .unwrap()
-            .find_satisfier("linux>0")
-            .unwrap();
+        let pkg = handle.localdb().pkgs().find_satisfier("linux>0").unwrap();
         assert_eq!(pkg.name(), "linux");
 
         let pkg = handle.syncdbs().find_satisfier("linux>0").unwrap();

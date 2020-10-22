@@ -1,4 +1,4 @@
-use crate::{Alpm, AsPkg, Pkg, Result, SigLevel};
+use crate::{Alpm, Package, Result, SigLevel};
 
 use alpm_sys::*;
 
@@ -7,7 +7,7 @@ use std::os::raw::c_int;
 use std::ptr;
 
 pub struct LoadedPackage<'a> {
-    pub(crate) pkg: Pkg<'a>,
+    pub(crate) pkg: Package<'a>,
 }
 
 impl<'a> Drop for LoadedPackage<'a> {
@@ -19,34 +19,28 @@ impl<'a> Drop for LoadedPackage<'a> {
 }
 
 impl<'a> std::ops::Deref for LoadedPackage<'a> {
-    type Target = Pkg<'a>;
+    type Target = Package<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.pkg
     }
 }
 
-impl<'a> AsPkg for LoadedPackage<'a> {
-    fn as_package(&self) -> Pkg {
+impl<'a> LoadedPackage<'a> {
+    pub fn pkg(&'a self) -> Package<'a> {
         self.pkg
     }
 }
 
-impl<'a> LoadedPackage<'a> {
-    pub fn pkg(&'a self) -> &'a Pkg<'a> {
-        &self.pkg
-    }
-}
-
 impl Alpm {
-    pub fn pkg_load<'a, S: Into<String>>(
-        &'a self,
+    pub fn pkg_load<S: Into<String>>(
+        &self,
         filename: S,
         full: bool,
         level: SigLevel,
-    ) -> Result<LoadedPackage<'a>> {
+    ) -> Result<LoadedPackage> {
         let filename = CString::new(filename.into()).unwrap();
-        let mut pkg = Pkg {
+        let mut pkg = Package {
             pkg: ptr::null_mut(),
             handle: self,
         };
@@ -78,7 +72,6 @@ mod tests {
             false,
             SigLevel::NONE,
         )?;
-        let pkg = pkg.pkg();
         assert_eq!(pkg.name(), "pacman");
         assert_eq!(pkg.version(), "5.1.3-1");
         assert_eq!(pkg.base(), Some("pacman"));
@@ -92,6 +85,11 @@ mod tests {
         assert_eq!(pkg.md5sum(), None);
         assert_eq!(pkg.sha256sum(), None);
         assert_eq!(pkg.base64_sig(), None);
+
+        let mut pkgs = handle.localdb().pkgs().unwrap().to_list();
+        pkgs.push(pkg.pkg());
+        pkgs.find_satisfier("foo");
+
         Ok(())
     }
 
@@ -105,7 +103,6 @@ mod tests {
                 SigLevel::NONE,
             )
             .unwrap();
-        let pkg = pkg.pkg();
         assert_eq!(pkg.name(), "pacman");
         assert_eq!(pkg.version(), "5.1.3-1");
         assert_eq!(pkg.base(), None);

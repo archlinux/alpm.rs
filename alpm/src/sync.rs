@@ -1,12 +1,13 @@
-use crate::{Alpm, AlpmList, Db, FreeMethod, Package, Pkg, Result};
+use crate::{Alpm, AlpmList, AlpmListMut, AsRawAlpmList, Db, Package, Result};
 
 use std::ffi::CString;
 
 use alpm_sys::*;
 
-impl<'a> Pkg<'a> {
-    pub fn sync_new_version(&self, dbs: AlpmList<Db>) -> Option<Package> {
-        let ret = unsafe { alpm_sync_get_new_version(self.pkg, dbs.list) };
+impl<'a> Package<'a> {
+    pub fn sync_new_version<T: AsRawAlpmList<'a, Db<'a>>>(&self, dbs: T) -> Option<Package> {
+        let dbs = unsafe { dbs.as_raw_alpm_list() };
+        let ret = unsafe { alpm_sync_get_new_version(self.pkg, dbs.list()) };
 
         if ret.is_null() {
             None
@@ -26,10 +27,10 @@ impl Alpm {
         &'a self,
         dbs: AlpmList<Db>,
         s: S,
-    ) -> AlpmList<'a, Package<'a>> {
+    ) -> AlpmListMut<'a, Package<'a>> {
         let name = CString::new(s.into()).unwrap();
         let ret = unsafe { alpm_find_group_pkgs(dbs.list, name.as_ptr()) };
-        AlpmList::new(self, ret, FreeMethod::FreeList)
+        AlpmListMut::from_parts(self, ret)
     }
 }
 

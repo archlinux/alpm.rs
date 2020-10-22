@@ -1,9 +1,8 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, Db, DbMut, Dep, Depend, FreeMethod, Match, Result, SigLevel};
+use crate::{free, Alpm, AlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
 
 use std::cmp::Ordering;
-use std::ffi::{c_void, CString};
-use std::ptr;
+use std::ffi::CString;
 
 use alpm_sys::*;
 
@@ -27,12 +26,12 @@ impl Alpm {
 
     pub fn hookdirs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_hookdirs(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn cachedirs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_cachedirs(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn lockfile(&self) -> &str {
@@ -49,32 +48,32 @@ impl Alpm {
 
     pub fn noupgrades(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_noupgrades(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn noextracts(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_noextracts(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn ignorepkgs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_ignorepkgs(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn ignoregroups(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_ignoregroups(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn overwrite_files(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_overwrite_files(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn assume_installed(&self) -> AlpmList<'_, Depend> {
         let list = unsafe { alpm_option_get_assumeinstalled(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn arch(&self) -> &str {
@@ -322,21 +321,19 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    //broken in alpm
-    #[allow(dead_code)]
-    /*pub*/
-    fn set_assume_installed<'a, 'b, D: AsRef<Dep<'b>>, I: IntoIterator<Item = D>>(
+    // Broken in stable
+    #[cfg(feature = "git")]
+    pub fn set_assume_installed<'a, 'b, D: AsRef<Dep<'b>>, I: IntoIterator<Item = D>>(
         &'a mut self,
         list: I,
     ) -> Result<()> {
-        let mut deps = ptr::null_mut();
+        let mut deps = std::ptr::null_mut();
         for dep in list.into_iter() {
-            unsafe { deps = alpm_list_add(deps, dep.as_ref().inner as *mut c_void) };
+            unsafe { deps = alpm_list_add(deps, dep.as_ref().inner as _) };
         }
 
         let ret = unsafe { alpm_option_set_assumeinstalled(self.handle, deps) };
         unsafe { alpm_list_free(deps) };
-        unsafe { alpm_list_free_inner(deps, Some(crate::dep_free)) };
         self.check_ret(ret)
     }
 
@@ -361,12 +358,12 @@ impl Alpm {
 
     pub fn syncdbs(&self) -> AlpmList<Db> {
         let dbs = unsafe { alpm_get_syncdbs(self.handle) };
-        AlpmList::new(self, dbs, FreeMethod::None)
+        AlpmList::from_parts(self, dbs)
     }
 
     pub fn syncdbs_mut(&mut self) -> AlpmList<DbMut> {
         let dbs = unsafe { alpm_get_syncdbs(self.handle) };
-        AlpmList::new(self, dbs, FreeMethod::None)
+        AlpmList::from_parts(self, dbs)
     }
 
     pub fn set_check_space(&self, b: bool) {
@@ -446,7 +443,7 @@ mod tests {
             .set_hookdirs(["a", "b", "c"].iter().cloned())
             .unwrap();
         handle.add_hookdir("z").unwrap();
-        let hooks = handle.hookdirs().collect::<Vec<_>>();
+        let hooks = handle.hookdirs().iter().collect::<Vec<_>>();
         assert_eq!(hooks, vec!["a/", "b/", "c/", "z/"]);
 
         assert!(!handle.check_space());

@@ -13,6 +13,7 @@ keywords = ["archlinux", "arch", "alpm", "pacman"]
 
 [features]
 git = ["alpm/git"]
+generate = ["alpm/generate"]
 
 [dependencies]
 alpm = { version = "0.10.0", path = "../alpm" }

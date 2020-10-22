@@ -1,10 +1,9 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, Dep, FreeMethod, Package};
+use crate::{Alpm, AlpmListMut, AsRawAlpmList, Dep, Package};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
 
-use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::mem::transmute;
 
@@ -87,11 +86,25 @@ pub enum FileConflictType {
 }
 
 #[derive(Debug)]
-pub struct FileConflict {
+pub struct FileConflict<'a> {
     pub(crate) inner: *mut alpm_fileconflict_t,
+    pub(crate) phantom: PhantomData<&'a ()>,
 }
 
-impl FileConflict {
+impl std::ops::Deref for OwnedFileConflict {
+    type Target = FileConflict<'static>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+#[derive(Debug)]
+pub struct OwnedFileConflict {
+    pub(crate) inner: FileConflict<'static>,
+}
+
+impl<'a> FileConflict<'a> {
     pub fn target(&self) -> &str {
         unsafe { from_cstr((*self.inner).target) }
     }
@@ -116,20 +129,20 @@ impl FileConflict {
     }
 }
 
+impl Drop for OwnedFileConflict {
+    fn drop(&mut self) {
+        unsafe { alpm_fileconflict_free(self.inner.inner) }
+    }
+}
+
 impl Alpm {
-    pub fn check_conflicts<'a>(
+    pub fn check_conflicts<'a, L: AsRawAlpmList<'a, Package<'a>>>(
         &self,
-        pkgs: impl IntoIterator<Item = Package<'a>>,
-    ) -> AlpmList<OwnedConflict> {
-        let mut list = std::ptr::null_mut();
-
-        for pkg in pkgs {
-            list = unsafe { alpm_list_add(list, pkg.pkg as *mut c_void) };
-        }
-
-        let ret = unsafe { alpm_checkconflicts(self.handle, list) };
-        unsafe { alpm_list_free(list) };
-        AlpmList::new(self, ret, FreeMethod::FreeConflict)
+        list: L,
+    ) -> AlpmListMut<OwnedConflict> {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_checkconflicts(self.handle, list.list()) };
+        AlpmListMut::from_parts(self, ret)
     }
 }
 
@@ -147,14 +160,14 @@ mod tests {
 
         let i3 = handle.syncdbs().find_satisfier("i3-wm").unwrap();
         let i3gaps = handle.syncdbs().find_satisfier("i3-gaps").unwrap();
-        let mut conflicts = handle.check_conflicts(vec![i3, i3gaps]);
-        let conflict = conflicts.next().unwrap();
+        let conflicts = handle.check_conflicts(vec![i3, i3gaps].iter());
+        let conflict = conflicts.first().unwrap();
         assert_eq!(conflict.package1(), "i3-gaps");
         assert_eq!(conflict.package2(), "i3-wm");
 
         let xterm = handle.syncdbs().find_satisfier("xterm").unwrap();
         let systemd = handle.syncdbs().find_satisfier("systemd").unwrap();
-        let conflicts = handle.check_conflicts(vec![xterm, systemd]);
+        let conflicts = handle.check_conflicts(vec![xterm, systemd].iter());
         assert!(conflicts.is_empty());
     }
 }

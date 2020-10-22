@@ -1,12 +1,12 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, Conflict, Db, Dep, DepMissing, Error, FileConflict, FreeMethod, OwnedConflict,
-    Package, PgpKey, Pkg,
+    Alpm, AlpmList, AlpmListMut, Conflict, Db, Dep, DependMissing, Error, OwnedConflict,
+    OwnedFileConflict, Package, PgpKey,
 };
 
 use std::ffi::c_void;
 use std::io::{self, Read};
-use std::mem::transmute;
+use std::mem::{transmute, ManuallyDrop};
 #[cfg(feature = "mtree")]
 use std::ptr;
 
@@ -190,13 +190,13 @@ pub enum PackageOperation<'a> {
 
 #[derive(Debug)]
 pub struct PackageOperationEvent {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: alpm_event_package_operation_t,
 }
 
 #[derive(Debug)]
 pub struct OptDepRemovalEvent {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: alpm_event_optdep_removal_t,
 }
 
@@ -217,13 +217,13 @@ pub struct PkgDownloadEvent {
 
 #[derive(Debug)]
 pub struct PacnewCreatedEvent {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: alpm_event_pacnew_created_t,
 }
 
 #[derive(Debug)]
 pub struct PacsaveCreatedEvent {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: alpm_event_pacsave_created_t,
 }
 
@@ -264,12 +264,10 @@ impl Event {
     pub unsafe fn new(handle: *mut alpm_handle_t, event: *const alpm_event_t) -> Event {
         let event_type = (*event).type_;
         let event_type = transmute::<alpm_event_type_t, EventType>(event_type);
-        let handle = Alpm {
-            handle,
-            drop: false,
-        };
+        let handle = Alpm { handle };
+        let handle = ManuallyDrop::new(handle);
 
-        match &event_type {
+        let event = match &event_type {
             EventType::CheckDepsStart => Event::Other(event_type),
             EventType::CheckDepsDone => Event::Other(event_type),
             EventType::FileConflictsStart => Event::Other(event_type),
@@ -332,7 +330,9 @@ impl Event {
             EventType::HookDone => Event::Other(event_type),
             EventType::HookRunStart => Event::Other(event_type),
             EventType::HookRunDone => Event::Other(event_type),
-        }
+        };
+
+        event
     }
 
     pub fn any(self) -> AnyEvent {
@@ -540,43 +540,43 @@ pub struct AnyQuestion {
 
 #[derive(Debug)]
 pub struct InstallIgnorepkgQuestion {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_install_ignorepkg_t,
 }
 
 #[derive(Debug)]
 pub struct ReplaceQuestion {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_replace_t,
 }
 
 #[derive(Debug)]
 pub struct ConflictQuestion {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_conflict_t,
 }
 
 #[derive(Debug)]
 pub struct CorruptedQuestion {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_corrupted_t,
 }
 
 #[derive(Debug)]
 pub struct RemovePkgsQuestion {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_remove_pkgs_t,
 }
 
 #[derive(Debug)]
 pub struct SelectProviderQuestion {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_select_provider_t,
 }
 
 #[derive(Debug)]
 pub struct ImportKeyQuestion {
-    handle: Alpm,
+    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_import_key_t,
 }
 
@@ -609,10 +609,8 @@ impl Question {
     pub unsafe fn new(handle: *mut alpm_handle_t, question: *mut alpm_question_t) -> Question {
         let question_type = (*question).type_;
         let question_type = transmute::<alpm_question_type_t, QuestionType>(question_type);
-        let handle = Alpm {
-            handle,
-            drop: false,
-        };
+        let handle = Alpm { handle };
+        let handle = ManuallyDrop::new(handle);
 
         match &question_type {
             QuestionType::InstallIgnorepkg => {
@@ -832,7 +830,7 @@ impl RemovePkgsQuestion {
 
     pub fn packages<'a>(&'a self) -> AlpmList<'a, Package> {
         let list = unsafe { (*self.inner).packages };
-        AlpmList::new(&self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(&self.handle, list)
     }
 }
 
@@ -853,7 +851,7 @@ impl SelectProviderQuestion {
 
     pub fn providers(&self) -> AlpmList<Package> {
         let list = unsafe { (*self.inner).providers };
-        AlpmList::new(&self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(&self.handle, list)
     }
 
     pub fn depend(&self) -> Dep {
@@ -899,7 +897,7 @@ impl<'a> Group<'a> {
 
     pub fn packages(&self) -> AlpmList<'a, Package<'a>> {
         let pkgs = unsafe { (*self.inner).packages };
-        AlpmList::new(self.handle, pkgs, FreeMethod::None)
+        AlpmList::from_parts(self.handle, pkgs)
     }
 }
 
@@ -940,7 +938,7 @@ impl<'a> Iterator for MTree<'a> {
 }
 
 pub struct ChangeLog<'a> {
-    pub(crate) pkg: &'a Pkg<'a>,
+    pub(crate) pkg: &'a Package<'a>,
     pub(crate) stream: *mut c_void,
 }
 
@@ -973,23 +971,17 @@ pub enum Match {
 
 #[derive(Debug)]
 pub enum PrepareReturn<'a> {
-    PkgInvalidArch(AlpmList<'a, Package<'a>>),
-    UnsatisfiedDeps(AlpmList<'a, DepMissing>),
-    ConflictingDeps(AlpmList<'a, OwnedConflict>),
+    PkgInvalidArch(AlpmListMut<'a, Package<'a>>),
+    UnsatisfiedDeps(AlpmListMut<'a, DependMissing>),
+    ConflictingDeps(AlpmListMut<'a, OwnedConflict>),
     None,
 }
 
 #[derive(Debug)]
 pub enum CommitReturn<'a> {
-    FileConflict(AlpmList<'a, FileConflict>),
-    PkgInvalid(AlpmList<'a, String>),
+    FileConflict(AlpmListMut<'a, OwnedFileConflict>),
+    PkgInvalid(AlpmListMut<'a, String>),
     None,
-}
-
-impl Drop for FileConflict {
-    fn drop(&mut self) {
-        unsafe { alpm_fileconflict_free(self.inner) }
-    }
 }
 
 #[derive(Debug)]

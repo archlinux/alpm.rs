@@ -1,6 +1,6 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, Backup, ChangeLog, Db, Dep, FileList, FreeMethod, PackageFrom, PackageReason,
+    Alpm, AlpmList, AlpmListMut, Backup, ChangeLog, Db, Dep, FileList, PackageFrom, PackageReason,
     PackageValidation, Result, Ver,
 };
 
@@ -11,50 +11,19 @@ use std::mem::transmute;
 
 use alpm_sys::*;
 
-pub trait AsPkg {
-    fn as_package(&self) -> Pkg;
-}
-
-impl<'a> AsPkg for Pkg<'a> {
-    fn as_package(&self) -> Pkg {
-        *self
-    }
-}
-
 #[derive(Debug, Copy, Clone)]
 pub struct Package<'a> {
-    pkg: Pkg<'a>,
-}
-
-impl<'a> AsPkg for Package<'a> {
-    fn as_package(&self) -> Pkg {
-        self.pkg
-    }
-}
-
-impl<'a> std::ops::Deref for Package<'a> {
-    type Target = Pkg<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.pkg
-    }
-}
-
-impl<'a> Package<'a> {
-    pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Package {
-        Package {
-            pkg: Pkg { handle, pkg },
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct Pkg<'a> {
     pub(crate) handle: &'a Alpm,
     pub(crate) pkg: *mut alpm_pkg_t,
 }
 
-impl<'a> Pkg<'a> {
+impl<'a> Package<'a> {
+    pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Package {
+        Package { handle, pkg }
+    }
+}
+
+impl<'a> Package<'a> {
     pub fn name(&self) -> &'a str {
         let name = unsafe { alpm_pkg_get_name(self.pkg) };
         unsafe { from_cstr(name) }
@@ -156,47 +125,47 @@ impl<'a> Pkg<'a> {
 
     pub fn licenses(&self) -> AlpmList<'a, &'a str> {
         let list = unsafe { alpm_pkg_get_licenses(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn groups(&self) -> AlpmList<'a, &'a str> {
         let list = unsafe { alpm_pkg_get_groups(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn depends(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_depends(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn optdepends(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_optdepends(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn checkdepends(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_checkdepends(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn makedepends(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_makedepends(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn conflicts(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_conflicts(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn provides(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_provides(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn replaces(&self) -> AlpmList<'a, Dep<'a>> {
         let list = unsafe { alpm_pkg_get_replaces(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn files(&self) -> FileList {
@@ -206,7 +175,7 @@ impl<'a> Pkg<'a> {
 
     pub fn backup(&self) -> AlpmList<'a, Backup> {
         let list = unsafe { alpm_pkg_get_backup(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::None)
+        AlpmList::from_parts(self.handle, list)
     }
 
     pub fn db(&self) -> Option<Db> {
@@ -240,14 +209,14 @@ impl<'a> Pkg<'a> {
         Ok(archive)
     }
 
-    pub fn required_by(&self) -> AlpmList<'a, String> {
+    pub fn required_by(&self) -> AlpmListMut<'a, String> {
         let list = unsafe { alpm_pkg_compute_requiredby(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::FreeInner)
+        AlpmListMut::from_parts(self.handle, list)
     }
 
-    pub fn optional_for(&self) -> AlpmList<'a, String> {
+    pub fn optional_for(&self) -> AlpmListMut<'a, String> {
         let list = unsafe { alpm_pkg_compute_optionalfor(self.pkg) };
-        AlpmList::new(self.handle, list, FreeMethod::FreeInner)
+        AlpmListMut::from_parts(self.handle, list)
     }
 
     pub fn base64_sig(&self) -> Option<&'a str> {
@@ -271,7 +240,11 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
-        let depends = pkg.depends().map(|d| d.to_string()).collect::<Vec<_>>();
+        let depends = pkg
+            .depends()
+            .iter()
+            .map(|d| d.to_string())
+            .collect::<Vec<_>>();
         assert_eq!(
             &depends,
             &["coreutils", "linux-firmware", "kmod", "mkinitcpio"]
@@ -299,7 +272,7 @@ mod tests {
         let pkg = db.pkg("linux").unwrap();
         let groups = pkg.groups();
 
-        assert_eq!(&groups.collect::<Vec<_>>(), &["base"],)
+        assert_eq!(&groups.iter().collect::<Vec<_>>(), &["base"],)
     }
 
     #[test]
@@ -307,8 +280,8 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.localdb();
         let pkg = db.pkg("pacman").unwrap();
-        let mut backup = pkg.backup();
-        assert_eq!(backup.next().unwrap().name(), "etc/pacman.conf");
+        let backup = pkg.backup();
+        assert_eq!(backup.first().unwrap().name(), "etc/pacman.conf");
     }
 
     #[test]
@@ -316,7 +289,11 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("extra", SigLevel::NONE).unwrap();
         let pkg = db.pkg("ostree").unwrap();
-        let optional = pkg.required_by().map(|d| d.to_string()).collect::<Vec<_>>();
+        let optional = pkg
+            .required_by()
+            .iter()
+            .map(|d| d.to_string())
+            .collect::<Vec<_>>();
         assert_eq!(&optional, &["flatpak"])
     }
 

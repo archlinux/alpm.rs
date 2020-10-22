@@ -1,4 +1,4 @@
-use crate::{Alpm, AlpmList, CommitReturn, Error, FreeMethod, Package, PrepareReturn, Result};
+use crate::{Alpm, AlpmList, AlpmListMut, CommitReturn, Error, Package, PrepareReturn, Result};
 
 use alpm_sys::_alpm_transflag_t::*;
 use alpm_sys::*;
@@ -42,18 +42,14 @@ impl Alpm {
         if let Err(err) = err {
             let ret = match err {
                 Error::PkgInvalidArch => {
-                    PrepareReturn::PkgInvalidArch(AlpmList::new(self, list, FreeMethod::FreeInner))
+                    PrepareReturn::PkgInvalidArch(AlpmListMut::from_parts(self, list))
                 }
-                Error::UnsatisfiedDeps => PrepareReturn::UnsatisfiedDeps(AlpmList::new(
-                    self,
-                    list,
-                    FreeMethod::FreeDepMissing,
-                )),
-                Error::ConflictingDeps => PrepareReturn::ConflictingDeps(AlpmList::new(
-                    self,
-                    list,
-                    FreeMethod::FreeConflict,
-                )),
+                Error::UnsatisfiedDeps => {
+                    PrepareReturn::UnsatisfiedDeps(AlpmListMut::from_parts(self, list))
+                }
+                Error::ConflictingDeps => {
+                    PrepareReturn::ConflictingDeps(AlpmListMut::from_parts(self, list))
+                }
                 _ => PrepareReturn::None,
             };
 
@@ -70,13 +66,11 @@ impl Alpm {
 
         if let Err(err) = err {
             let ret = match err {
-                Error::FileConflicts => CommitReturn::FileConflict(AlpmList::new(
-                    self,
-                    list,
-                    FreeMethod::FreeFileConflict,
-                )),
+                Error::FileConflicts => {
+                    CommitReturn::FileConflict(AlpmListMut::from_parts(self, list))
+                }
                 Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => {
-                    CommitReturn::PkgInvalid(AlpmList::new(self, list, FreeMethod::FreeInner))
+                    CommitReturn::PkgInvalid(AlpmListMut::from_parts(self, list))
                 }
                 _ => CommitReturn::None,
             };
@@ -94,12 +88,12 @@ impl Alpm {
 
     pub fn trans_add(&self) -> AlpmList<Package> {
         let list = unsafe { alpm_trans_get_add(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn trans_remove(&self) -> AlpmList<Package> {
         let list = unsafe { alpm_trans_get_remove(self.handle) };
-        AlpmList::new(self, list, FreeMethod::None)
+        AlpmList::from_parts(self, list)
     }
 
     pub fn trans_release(&mut self) -> Result<()> {
@@ -132,6 +126,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_trans() {
         let mut handle = Alpm::new("/", "tests/db").unwrap();
         let flags = TransFlag::DB_ONLY;
@@ -142,7 +137,11 @@ mod tests {
         let db = handle.register_syncdb_mut("core", SigLevel::NONE).unwrap();
         db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/core/os/x86_64")
             .unwrap();
-        let db = handle.syncdbs().find(|db| db.name() == "core").unwrap();
+        let db = handle
+            .syncdbs()
+            .iter()
+            .find(|db| db.name() == "core")
+            .unwrap();
         let pkg = db.pkg("filesystem").unwrap();
 
         handle.trans_init(flags).unwrap();

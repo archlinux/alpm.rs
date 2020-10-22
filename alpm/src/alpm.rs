@@ -23,18 +23,14 @@ extern "C" {
 #[derive(Debug)]
 pub struct Alpm {
     pub(crate) handle: *mut alpm_handle_t,
-    pub(crate) drop: bool,
 }
 
 unsafe impl Send for Alpm {}
 
 impl Drop for Alpm {
     fn drop(&mut self) {
-        if self.drop {
-            // alpm should do this for us, but is bugged
-            unsafe { alpm_trans_release(self.handle) };
-            unsafe { alpm_release(self.handle) };
-        }
+        unsafe { alpm_trans_release(self.handle) };
+        unsafe { alpm_release(self.handle) };
     }
 }
 
@@ -50,7 +46,7 @@ impl Alpm {
             unsafe { return Err(Error::new(err)) };
         }
 
-        Ok(Alpm { handle, drop: true })
+        Ok(Alpm { handle })
     }
 
     pub(crate) fn check_ret(&self, int: c_int) -> Result<()> {
@@ -200,9 +196,9 @@ mod tests {
     fn test_list_lifetime() {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
-        let pkgs = db.pkgs().unwrap();
+        let pkgs = db.pkgs();
 
         drop(db);
-        assert!(pkgs.count() > 10);
+        assert!(pkgs.len() > 10);
     }
 }
