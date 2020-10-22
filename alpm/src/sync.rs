@@ -1,10 +1,10 @@
-use crate::{Alpm, AlpmList, Db, FreeMethod, Package, Result};
+use crate::{Alpm, AlpmList, Db, FreeMethod, Package, Pkg, Result};
 
 use std::ffi::CString;
 
 use alpm_sys::*;
 
-impl<'a> Package<'a> {
+impl<'a> Pkg<'a> {
     pub fn sync_new_version(&self, dbs: AlpmList<Db>) -> Option<Package> {
         let ret = unsafe { alpm_sync_get_new_version(self.pkg, dbs.list) };
 

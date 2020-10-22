@@ -21,7 +21,7 @@ impl<'a> AsPkg for Pkg<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Package<'a> {
     pkg: Pkg<'a>,
 }
