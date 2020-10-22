@@ -14,24 +14,51 @@ pub unsafe trait AsAlpmListItem<'a> {
     unsafe fn as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void, _free: FreeMethod) -> Self;
 }
 
-impl<'a, T> ExactSizeIterator for AlpmList<'a, T> where T: AsAlpmListItem<'a> {}
+#[derive(Debug)]
+pub struct AlpmList<'a, T> {
+    pub(crate) handle: &'a Alpm,
+    pub(crate) list: *mut alpm_list_t,
+    pub(crate) current: *mut alpm_list_t,
+    pub(crate) free: FreeMethod,
+    pub(crate) _marker: PhantomData<T>,
+}
 
-impl<'a, T> Iterator for AlpmList<'a, T>
+impl<'a, T> IntoIterator for AlpmList<'a, T>
+where
+    T: AsAlpmListItem<'a>,
+{
+    type Item = T;
+    type IntoIter = IntoIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter { list: self }
+    }
+}
+
+pub struct IntoIter<'a, T> {
+    list: AlpmList<'a, T>,
+}
+
+impl<'a, T> ExactSizeIterator for IntoIter<'a, T> where T: AsAlpmListItem<'a> {}
+
+impl<'a, T> Iterator for IntoIter<'a, T>
 where
     T: AsAlpmListItem<'a>,
 {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        let data = self.next_data();
+        let data = self.list.next_data();
 
         match data {
-            Some(data) => unsafe { Some(T::as_alpm_list_item(self.handle, data, self.free)) },
+            Some(data) => unsafe {
+                Some(T::as_alpm_list_item(self.list.handle, data, self.list.free))
+            },
             None => None,
         }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let size = unsafe { alpm_list_count(self.current) };
+        let size = unsafe { alpm_list_count(self.list.current) };
         (size, Some(size))
     }
 }
@@ -57,6 +84,7 @@ impl<'a, T> AlpmList<'a, T> {
         } else {
             let data = unsafe { (*(self.current)).data };
             self.current = unsafe { alpm_list_next(self.current) };
+
             Some(data)
         }
     }
@@ -74,15 +102,6 @@ pub enum FreeMethod {
     FreeFileConflict,
     FreeDepMissing,
     None,
-}
-
-#[derive(Debug)]
-pub struct AlpmList<'a, T> {
-    pub(crate) handle: &'a Alpm,
-    pub(crate) list: *mut alpm_list_t,
-    pub(crate) current: *mut alpm_list_t,
-    pub(crate) free: FreeMethod,
-    pub(crate) _marker: PhantomData<T>,
 }
 
 unsafe impl<'a> AsAlpmListItem<'a> for Package<'a> {
