@@ -278,7 +278,7 @@ where
 
 impl<'a> AlpmListMut<'a, String> {
     pub fn push_str(&mut self, s: &str) {
-        let s = unsafe { strndup(s.as_bytes().as_ptr() as *const i8, s.len()) };
+        let s = unsafe { strndup(s.as_bytes().as_ptr() as _, s.len()) };
         unsafe { self.list.list = alpm_list_add(self.list.list, s as *mut c_void) };
     }
 }
@@ -612,7 +612,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for String {
     type Output = String;
     const FREE: Option<unsafe extern "C" fn(_ptr: *mut c_void)> = Some(free);
     fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as *const i8, self.len()) as *mut c_void }
+        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
     }
 }
 
@@ -621,7 +621,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for &String {
     const FREE: Option<unsafe extern "C" fn(_ptr: *mut c_void)> = Some(free);
 
     fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as *const i8, self.len()) as *mut c_void }
+        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
     }
 }
 
@@ -630,7 +630,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for &str {
     const FREE: Option<unsafe extern "C" fn(_ptr: *mut c_void)> = Some(free);
 
     fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as *const i8, self.len()) as *mut c_void }
+        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
     }
 }
 
