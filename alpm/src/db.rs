@@ -47,15 +47,8 @@ impl Alpm {
         name: S,
         sig_level: SigLevel,
     ) -> Result<DbMut> {
-        let name = CString::new(name.into()).unwrap();
-
-        let db =
-            unsafe { alpm_register_syncdb(self.handle, name.as_ptr(), sig_level.bits() as i32) };
-
-        self.check_null(db)?;
-        Ok(DbMut {
-            inner: Db { db, handle: self },
-        })
+        let db = self.register_syncdb(name, sig_level)?;
+        Ok(DbMut { inner: db })
     }
 
     pub fn unregister_all_syncdbs(&mut self) -> Result<()> {
