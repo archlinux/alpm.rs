@@ -241,6 +241,12 @@ where
     }
 }
 
+impl<'a> AlpmList<'a, String> {
+    pub fn as_str<'b>(&'b self) -> AlpmList<'a, &'b str> {
+        AlpmList::from_parts(self.handle, self.list)
+    }
+}
+
 impl<'a, T> AlpmList<'a, T>
 where
     for<'b> T: IntoAlpmListItem<'a, 'b>,

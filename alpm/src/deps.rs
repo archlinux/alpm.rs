@@ -94,6 +94,18 @@ impl<'a> fmt::Display for Dep<'a> {
     }
 }
 
+impl<'a> Into<Vec<u8>> for Dep<'a> {
+    fn into(self) -> Vec<u8> {
+        unsafe {
+            let cs = alpm_dep_compute_string(self.inner);
+            let s = std::ffi::CStr::from_ptr(cs);
+            let s = s.to_bytes().to_vec();
+            free(cs as *mut c_void);
+            s
+        }
+    }
+}
+
 impl Depend {
     pub fn new<S: Into<Vec<u8>>>(s: S) -> Depend {
         let s = CString::new(s).unwrap();

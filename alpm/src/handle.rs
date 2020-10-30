@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
+use crate::{free, Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
 
 use std::cmp::Ordering;
 use std::ffi::CString;
@@ -241,14 +241,9 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignorepkgs<S: Into<Vec<u8>>, I: IntoIterator<Item = S>>(
-        &mut self,
-        list: I,
-    ) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_option_set_ignorepkgs(self.handle, list) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+    pub fn set_ignorepkgs<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_option_set_ignorepkgs(self.handle, list.list()) };
         self.check_ret(ret)
     }
 
@@ -460,6 +455,8 @@ mod tests {
             handle.default_siglevel(),
             SigLevel::PACKAGE | SigLevel::DATABASE
         );
+
+        handle.set_ignorepkgs(["a", "b", "c"].iter());
 
         /*let indeps = vec!["a", "b", "c"].into_iter().map(|s| Depend::new(s)).collect::<Vec<_>>();
         let deps = vec!["a", "b", "c"].into_iter().map(|s| Depend::new(s)).collect::<Vec<_>>();
