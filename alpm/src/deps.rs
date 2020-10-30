@@ -95,8 +95,8 @@ impl<'a> fmt::Display for Dep<'a> {
 }
 
 impl Depend {
-    pub fn new<S: Into<String>>(s: S) -> Depend {
-        let s = CString::new(s.into()).unwrap();
+    pub fn new<S: Into<Vec<u8>>>(s: S) -> Depend {
+        let s = CString::new(s).unwrap();
         let dep = unsafe { alpm_dep_from_string(s.as_ptr()) };
 
         Depend {
@@ -254,8 +254,8 @@ impl<'a> DepMissing<'a> {
 }
 
 impl<'a> AlpmList<'a, Db<'a>> {
-    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package<'a>> {
-        let dep = CString::new(dep.into()).unwrap();
+    pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<Package<'a>> {
+        let dep = CString::new(dep).unwrap();
 
         let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.handle, self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;
@@ -264,8 +264,8 @@ impl<'a> AlpmList<'a, Db<'a>> {
 }
 
 impl<'a> AlpmList<'a, Package<'a>> {
-    pub fn find_satisfier<S: Into<String>>(&self, dep: S) -> Option<Package<'a>> {
-        let dep = CString::new(dep.into()).unwrap();
+    pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<Package<'a>> {
+        let dep = CString::new(dep).unwrap();
 
         let pkg = unsafe { alpm_find_satisfier(self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;

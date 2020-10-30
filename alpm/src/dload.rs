@@ -14,8 +14,8 @@ use std::ffi::{c_void, CString};
 
 impl Alpm {
     #[cfg(not(feature = "git"))]
-    pub fn fetch_pkgurl<S: Into<String>>(&self, url: S) -> Result<String> {
-        let url = CString::new(url.into()).unwrap();
+    pub fn fetch_pkgurl<S: Into<Vec<u8>>>(&self, url: S) -> Result<String> {
+        let url = CString::new(url).unwrap();
         let path = unsafe { alpm_fetch_pkgurl(self.handle, url.as_ptr()) };
         self.check_null(path)?;
         let path_str = unsafe { from_cstr(path) };

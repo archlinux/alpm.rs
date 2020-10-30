@@ -33,13 +33,13 @@ impl<'a> LoadedPackage<'a> {
 }
 
 impl Alpm {
-    pub fn pkg_load<S: Into<String>>(
+    pub fn pkg_load<S: Into<Vec<u8>>>(
         &self,
         filename: S,
         full: bool,
         level: SigLevel,
     ) -> Result<LoadedPackage> {
-        let filename = CString::new(filename.into()).unwrap();
+        let filename = CString::new(filename).unwrap();
         let mut pkg = Package {
             pkg: ptr::null_mut(),
             handle: self,
@@ -86,7 +86,7 @@ mod tests {
         assert_eq!(pkg.sha256sum(), None);
         assert_eq!(pkg.base64_sig(), None);
 
-        let mut pkgs = handle.localdb().pkgs().unwrap().to_list();
+        let mut pkgs = handle.localdb().pkgs().to_list();
         pkgs.push(pkg.pkg());
         pkgs.find_satisfier("foo");
 

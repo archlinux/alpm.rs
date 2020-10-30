@@ -32,8 +32,8 @@ impl<'a> Into<Db<'a>> for DbMut<'a> {
 }
 
 impl Alpm {
-    pub fn register_syncdb<S: Into<String>>(&self, name: S, sig_level: SigLevel) -> Result<Db> {
-        let name = CString::new(name.into()).unwrap();
+    pub fn register_syncdb<S: Into<Vec<u8>>>(&self, name: S, sig_level: SigLevel) -> Result<Db> {
+        let name = CString::new(name).unwrap();
 
         let db =
             unsafe { alpm_register_syncdb(self.handle, name.as_ptr(), sig_level.bits() as i32) };
@@ -42,7 +42,7 @@ impl Alpm {
         Ok(Db { db, handle: self })
     }
 
-    pub fn register_syncdb_mut<S: Into<String>>(
+    pub fn register_syncdb_mut<S: Into<Vec<u8>>>(
         &mut self,
         name: S,
         sig_level: SigLevel,
@@ -61,8 +61,8 @@ impl<'a> DbMut<'a> {
         unsafe { alpm_db_unregister(self.db) };
     }
 
-    pub fn add_server<S: Into<String>>(&self, server: S) -> Result<()> {
-        let server = CString::new(server.into()).unwrap();
+    pub fn add_server<S: Into<Vec<u8>>>(&self, server: S) -> Result<()> {
+        let server = CString::new(server).unwrap();
         let ret = unsafe { alpm_db_add_server(self.db, server.as_ptr()) };
         self.handle.check_ret(ret)
     }
@@ -73,8 +73,8 @@ impl<'a> DbMut<'a> {
         self.handle.check_ret(ret)
     }
 
-    pub fn remove_server<S: Into<String>>(&self, server: S) -> Result<()> {
-        let server = CString::new(server.into()).unwrap();
+    pub fn remove_server<S: Into<Vec<u8>>>(&self, server: S) -> Result<()> {
+        let server = CString::new(server).unwrap();
         let ret = unsafe { alpm_db_remove_server(self.db, server.as_ptr()) };
         self.handle.check_ret(ret)
     }
@@ -91,8 +91,8 @@ impl<'a> Db<'a> {
         AlpmList::from_parts(self.handle, list)
     }
 
-    pub fn pkg<S: Into<String>>(&self, name: S) -> Result<Package<'a>> {
-        let name = CString::new(name.into()).unwrap();
+    pub fn pkg<S: Into<Vec<u8>>>(&self, name: S) -> Result<Package<'a>> {
+        let name = CString::new(name).unwrap();
         let pkg = unsafe { alpm_db_get_pkg(self.db, name.as_ptr()) };
         self.handle.check_null(pkg)?;
         unsafe { Ok(Package::new(self.handle, pkg)) }
@@ -103,8 +103,8 @@ impl<'a> Db<'a> {
         AlpmList::from_parts(self.handle, pkgs)
     }
 
-    pub fn group<S: Into<String>>(&self, name: S) -> Result<Group<'a>> {
-        let name = CString::new(name.into()).unwrap();
+    pub fn group<S: Into<Vec<u8>>>(&self, name: S) -> Result<Group<'a>> {
+        let name = CString::new(name).unwrap();
         let group = unsafe { alpm_db_get_group(self.db, name.as_ptr()) };
         self.handle.check_null(group)?;
         Ok(Group {

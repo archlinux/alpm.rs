@@ -23,12 +23,12 @@ impl<'a> Package<'a> {
 }
 
 impl Alpm {
-    pub fn find_group_pkgs<'a, S: Into<String>>(
+    pub fn find_group_pkgs<'a, S: Into<Vec<u8>>>(
         &'a self,
         dbs: AlpmList<Db>,
         s: S,
     ) -> AlpmListMut<'a, Package<'a>> {
-        let name = CString::new(s.into()).unwrap();
+        let name = CString::new(s).unwrap();
         let ret = unsafe { alpm_find_group_pkgs(dbs.list, name.as_ptr()) };
         AlpmListMut::from_parts(self, ret)
     }
