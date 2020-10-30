@@ -35,10 +35,8 @@ impl Alpm {
 }
 
 impl Alpm {
-    pub fn trans_sysupgrade(&self, enable_downgrade: bool) -> Result<()> {
-        let enable_downgrade = if enable_downgrade { 1 } else { 0 };
-        let ret = unsafe { alpm_sync_sysupgrade(self.handle, enable_downgrade) };
-
+    pub fn sync_sysupgrade(&self, enable_downgrade: bool) -> Result<()> {
+        let ret = unsafe { alpm_sync_sysupgrade(self.handle, enable_downgrade as _) };
         self.check_ret(ret)
     }
 }
