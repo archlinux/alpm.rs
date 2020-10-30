@@ -267,7 +267,7 @@ impl Event {
         let handle = Alpm { handle };
         let handle = ManuallyDrop::new(handle);
 
-        let event = match &event_type {
+        match &event_type {
             EventType::CheckDepsStart => Event::Other(event_type),
             EventType::CheckDepsDone => Event::Other(event_type),
             EventType::FileConflictsStart => Event::Other(event_type),
@@ -330,9 +330,7 @@ impl Event {
             EventType::HookDone => Event::Other(event_type),
             EventType::HookRunStart => Event::Other(event_type),
             EventType::HookRunDone => Event::Other(event_type),
-        };
-
-        event
+        }
     }
 
     pub fn any(self) -> AnyEvent {
