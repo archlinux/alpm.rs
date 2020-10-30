@@ -8,7 +8,7 @@ fn benchmark_list(c: &mut Criterion) {
         let pkg = db.pkg("linux").unwrap();
 
         b.iter(|| {
-            black_box(&pkg.depends().collect::<Vec<_>>());
+            black_box(&pkg.depends().into_iter().collect::<Vec<_>>());
         });
     });
 }
