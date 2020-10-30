@@ -640,6 +640,15 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for &str {
     }
 }
 
+unsafe impl<'a> AsAlpmListItemPtr<'a> for &&str {
+    type Output = String;
+    const FREE: Option<unsafe extern "C" fn(_ptr: *mut c_void)> = Some(free);
+
+    fn as_ptr(&self) -> *mut c_void {
+        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+    }
+}
+
 unsafe impl<'a> Push<'a> for String {}
 unsafe impl<'a> Push<'a> for Package<'a> {}
 unsafe impl<'a> Push<'a> for Db<'a> {}

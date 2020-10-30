@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
+use crate::{Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
 
 use std::cmp::Ordering;
 use std::ffi::CString;
@@ -94,14 +94,9 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_hookdirs<S: Into<Vec<u8>>, I: IntoIterator<Item = S>>(
-        &mut self,
-        list: I,
-    ) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_option_set_hookdirs(self.handle, list) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+    pub fn set_hookdirs<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_option_set_hookdirs(self.handle, list.list()) };
         self.check_ret(ret)
     }
 
@@ -121,14 +116,9 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_cachedirs<S: Into<Vec<u8>>, I: IntoIterator<Item = S>>(
-        &mut self,
-        list: I,
-    ) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_option_set_cachedirs(self.handle, list) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+    pub fn set_cachedirs<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_option_set_cachedirs(self.handle, list.list()) };
         self.check_ret(ret)
     }
 
@@ -165,14 +155,9 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_noupgrades<S: Into<Vec<u8>>, I: IntoIterator<Item = S>>(
-        &mut self,
-        list: I,
-    ) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_option_set_noupgrades(self.handle, list) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+    pub fn set_noupgrades<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_option_set_noupgrades(self.handle, list.list()) };
         self.check_ret(ret)
     }
 
@@ -203,14 +188,9 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_noextracts<S: Into<Vec<u8>>, I: IntoIterator<Item = S>>(
-        &mut self,
-        list: I,
-    ) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_option_set_noextracts(self.handle, list) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+    pub fn set_noextracts<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_option_set_noextracts(self.handle, list.list()) };
         self.check_ret(ret)
     }
 
@@ -241,7 +221,7 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignorepkgs<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+    pub fn set_ignorepkgs<'a, T: AsRawAlpmList<'a, String>>(&mut self, list: T) -> Result<()> {
         let list = unsafe { list.as_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_ignorepkgs(self.handle, list.list()) };
         self.check_ret(ret)
@@ -263,14 +243,9 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignoregroups<S: Into<Vec<u8>>, I: IntoIterator<Item = S>>(
-        &mut self,
-        list: I,
-    ) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_option_set_ignoregroups(self.handle, list) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+    pub fn set_ignoregroups<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_option_set_ignoregroups(self.handle, list.list()) };
         self.check_ret(ret)
     }
 
@@ -290,14 +265,12 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_overwrite_files<S: Into<Vec<u8>>, I: IntoIterator<Item = S>>(
-        &mut self,
-        list: I,
+    pub fn set_overwrite_files<'a, T: AsRawAlpmList<'a, String>>(
+        &'a mut self,
+        list: T,
     ) -> Result<()> {
-        let list = to_strlist(list);
-        let ret = unsafe { alpm_option_set_overwrite_files(self.handle, list) };
-        unsafe { alpm_list_free_inner(list, Some(free)) };
-        unsafe { alpm_list_free(list) };
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_option_set_overwrite_files(self.handle, list.list()) };
         self.check_ret(ret)
     }
 
@@ -318,17 +291,12 @@ impl Alpm {
 
     // Broken in stable
     #[cfg(feature = "git")]
-    pub fn set_assume_installed<'a, 'b, D: AsRef<Dep<'b>>, I: IntoIterator<Item = D>>(
+    pub fn set_assume_installed<'a, T: AsRawAlpmList<'a, Dep<'a>>>(
         &'a mut self,
-        list: I,
+        list: T,
     ) -> Result<()> {
-        let mut deps = std::ptr::null_mut();
-        for dep in list.into_iter() {
-            unsafe { deps = alpm_list_add(deps, dep.as_ref().inner as _) };
-        }
-
-        let ret = unsafe { alpm_option_set_assumeinstalled(self.handle, deps) };
-        unsafe { alpm_list_free(deps) };
+        let list = unsafe { list.as_raw_alpm_list() };
+        let ret = unsafe { alpm_option_set_assumeinstalled(self.handle, list.list()) };
         self.check_ret(ret)
     }
 
@@ -430,13 +398,9 @@ mod tests {
     fn test_setters() {
         let mut handle = Alpm::new("/", "tests/db/").unwrap();
 
-        handle
-            .set_hookdirs(["1", "2", "3"].iter().cloned())
-            .unwrap();
+        handle.set_hookdirs(["1", "2", "3"].iter()).unwrap();
         handle.add_hookdir("x").unwrap();
-        handle
-            .set_hookdirs(["a", "b", "c"].iter().cloned())
-            .unwrap();
+        handle.set_hookdirs(["a", "b", "c"].iter()).unwrap();
         handle.add_hookdir("z").unwrap();
         let hooks = handle.hookdirs().iter().collect::<Vec<_>>();
         assert_eq!(hooks, vec!["a/", "b/", "c/", "z/"]);
@@ -456,7 +420,9 @@ mod tests {
             SigLevel::PACKAGE | SigLevel::DATABASE
         );
 
-        handle.set_ignorepkgs(["a", "b", "c"].iter());
+        handle.set_ignorepkgs(["a", "b", "c"].iter()).unwrap();
+        let pkgs = handle.ignorepkgs().iter().collect::<Vec<_>>();
+        assert_eq!(pkgs.as_slice(), ["a", "b", "c"]);
 
         /*let indeps = vec!["a", "b", "c"].into_iter().map(|s| Depend::new(s)).collect::<Vec<_>>();
         let deps = vec!["a", "b", "c"].into_iter().map(|s| Depend::new(s)).collect::<Vec<_>>();
