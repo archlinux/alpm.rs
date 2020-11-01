@@ -1,8 +1,12 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
+use crate::{
+    Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, DownloadCb, EventCb, FetchCb, LogCb,
+    Match, ProgressCb, QuestionCb, Result, SigLevel, TotalDownloadCb,
+};
 
 use std::cmp::Ordering;
 use std::ffi::CString;
+use std::marker::PhantomData;
 
 use alpm_sys::*;
 
@@ -372,6 +376,83 @@ impl Alpm {
     pub fn set_disable_dl_timeout(&self, b: bool) {
         let b = if b { 1 } else { 0 };
         unsafe { alpm_option_set_disable_dl_timeout(self.handle, b) };
+    }
+
+    pub fn log_cb(&self) -> LogCb {
+        LogCb {
+            marker: PhantomData,
+            cb: unsafe { alpm_option_get_logcb(self.handle) },
+        }
+    }
+
+    pub fn dl_cb(&self) -> DownloadCb {
+        DownloadCb {
+            marker: PhantomData,
+            cb: unsafe { alpm_option_get_dlcb(self.handle) },
+        }
+    }
+
+    pub fn fetch_cb(&self) -> FetchCb {
+        FetchCb {
+            marker: PhantomData,
+            cb: unsafe { alpm_option_get_fetchcb(self.handle) },
+        }
+    }
+
+    pub fn totaldl_cb(&self) -> TotalDownloadCb {
+        TotalDownloadCb {
+            marker: PhantomData,
+            cb: unsafe { alpm_option_get_totaldlcb(self.handle) },
+        }
+    }
+
+    pub fn event_cb(&self) -> EventCb {
+        EventCb {
+            marker: PhantomData,
+            cb: unsafe { alpm_option_get_eventcb(self.handle) },
+        }
+    }
+
+    pub fn question_cb(&self) -> QuestionCb {
+        QuestionCb {
+            marker: PhantomData,
+            cb: unsafe { alpm_option_get_questioncb(self.handle) },
+        }
+    }
+
+    pub fn progress_cb(&self) -> ProgressCb {
+        ProgressCb {
+            marker: PhantomData,
+            cb: unsafe { alpm_option_get_progresscb(self.handle) },
+        }
+    }
+
+    pub fn set_log_cb(&self, cb: LogCb) {
+        unsafe { alpm_option_set_logcb(self.handle, cb.cb) };
+    }
+
+    pub fn set_dl_cb(&self, cb: DownloadCb) {
+        unsafe { alpm_option_set_dlcb(self.handle, cb.cb) };
+    }
+
+    pub fn set_fetch_cb(&self, cb: FetchCb) {
+        unsafe { alpm_option_set_fetchcb(self.handle, cb.cb) };
+    }
+
+    pub fn set_totaldl_cb(&self, cb: TotalDownloadCb) {
+        unsafe { alpm_option_set_totaldlcb(self.handle, cb.cb) };
+    }
+
+    pub fn set_event_cb(&self, cb: EventCb) {
+        unsafe { alpm_option_set_eventcb(self.handle, cb.cb) };
+    }
+
+    pub fn set_question_cb(&self, cb: QuestionCb) {
+        unsafe { alpm_option_set_questioncb(self.handle, cb.cb) };
+    }
+
+    pub fn set_progress_cb(&self, cb: ProgressCb) {
+        unsafe { alpm_option_set_progresscb(self.handle, cb.cb) };
     }
 }
 

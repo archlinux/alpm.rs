@@ -142,6 +142,7 @@ macro_rules! set_progresscb {
         use std::mem::transmute;
         use std::os::raw::{c_char, c_int};
         use $crate::alpm_sys::*;
+        use $crate::Progress;
 
         unsafe extern "C" fn c_progresscb(
             progress: alpm_progress_t,

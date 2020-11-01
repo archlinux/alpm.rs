@@ -6,6 +6,7 @@ use crate::{
 
 use std::ffi::c_void;
 use std::io::{self, Read};
+use std::marker::PhantomData;
 use std::mem::{transmute, ManuallyDrop};
 #[cfg(feature = "mtree")]
 use std::ptr;
@@ -30,6 +31,111 @@ use libarchive::reader::ReaderEntry;
 use libarchive3_sys::ffi::*;
 
 use bitflags::bitflags;
+
+#[derive(Debug)]
+pub struct LogCb<'a> {
+    pub(crate) cb: alpm_cb_log,
+    pub(crate) marker: PhantomData<&'a ()>,
+}
+
+#[derive(Debug)]
+pub struct DownloadCb<'a> {
+    pub(crate) cb: alpm_cb_download,
+    pub(crate) marker: PhantomData<&'a ()>,
+}
+
+#[derive(Debug)]
+pub struct FetchCb<'a> {
+    pub(crate) cb: alpm_cb_fetch,
+    pub(crate) marker: PhantomData<&'a ()>,
+}
+
+#[derive(Debug)]
+pub struct TotalDownloadCb<'a> {
+    pub(crate) cb: alpm_cb_totaldl,
+    pub(crate) marker: PhantomData<&'a ()>,
+}
+
+#[derive(Debug)]
+pub struct EventCb<'a> {
+    pub(crate) cb: alpm_cb_event,
+    pub(crate) marker: PhantomData<&'a ()>,
+}
+
+#[derive(Debug)]
+pub struct QuestionCb<'a> {
+    pub(crate) cb: alpm_cb_question,
+    pub(crate) marker: PhantomData<&'a ()>,
+}
+
+#[derive(Debug)]
+pub struct ProgressCb<'a> {
+    pub(crate) cb: alpm_cb_progress,
+    pub(crate) marker: PhantomData<&'a ()>,
+}
+
+impl<'a> LogCb<'a> {
+    pub fn none() -> LogCb<'static> {
+        LogCb {
+            marker: PhantomData,
+            cb: None,
+        }
+    }
+}
+
+impl<'a> DownloadCb<'a> {
+    pub fn none() -> DownloadCb<'static> {
+        DownloadCb {
+            marker: PhantomData,
+            cb: None,
+        }
+    }
+}
+
+impl<'a> FetchCb<'a> {
+    pub fn none() -> FetchCb<'static> {
+        FetchCb {
+            marker: PhantomData,
+            cb: None,
+        }
+    }
+}
+
+impl<'a> TotalDownloadCb<'a> {
+    pub fn none() -> TotalDownloadCb<'static> {
+        TotalDownloadCb {
+            marker: PhantomData,
+            cb: None,
+        }
+    }
+}
+
+impl<'a> EventCb<'a> {
+    pub fn none() -> EventCb<'static> {
+        EventCb {
+            marker: PhantomData,
+            cb: None,
+        }
+    }
+}
+
+impl<'a> QuestionCb<'a> {
+    pub fn none() -> QuestionCb<'static> {
+        QuestionCb {
+            marker: PhantomData,
+            cb: None,
+        }
+    }
+}
+
+impl<'a> ProgressCb<'a> {
+    pub fn none() -> ProgressCb<'static> {
+        ProgressCb {
+            marker: PhantomData,
+            cb: None,
+        }
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum FetchCbReturn {

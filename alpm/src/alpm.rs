@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Error, Event, FetchCbReturn, LogLevel, Progress, Question, Result};
+use crate::{Error, Result};
 
 use std::ffi::{c_void, CString};
 use std::os::raw::c_int;
@@ -7,14 +7,18 @@ use std::os::raw::c_int;
 use alpm_sys::*;
 use bitflags::bitflags;
 
-pub type LogCb = fn(level: LogLevel, s: &str);
-pub type DownloadCb = fn(filename: &str, xfered: u64, total: u64);
-pub type FetchCb = fn(url: &str, filename: &str, force: bool) -> FetchCbReturn;
-pub type TotalDownloadCb = fn(total: u64);
-pub type EventCb = fn(event: &Event);
-pub type QuestionCb = fn(question: &mut Question);
-pub type ProgressCb =
-    fn(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize);
+/// Function types expected to be passed into set_*cb macros.
+pub mod macro_callbacks {
+    use crate::{Event, FetchCbReturn, LogLevel, Progress, Question};
+    pub type LogCb = fn(level: LogLevel, s: &str);
+    pub type DownloadCb = fn(filename: &str, xfered: u64, total: u64);
+    pub type FetchCb = fn(url: &str, filename: &str, force: bool) -> FetchCbReturn;
+    pub type TotalDownloadCb = fn(total: u64);
+    pub type EventCb = fn(event: &Event);
+    pub type QuestionCb = fn(question: &mut Question);
+    pub type ProgressCb =
+        fn(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize);
+}
 
 extern "C" {
     pub(crate) fn free(ptr: *mut c_void);
@@ -106,7 +110,8 @@ impl Capabilities {
 mod tests {
     use super::*;
     use crate::{
-        log_action, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb, SigLevel,
+        log_action, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb, Event,
+        FetchCbReturn, LogLevel, Progress, Question, SigLevel,
     };
 
     fn logcb(level: LogLevel, msg: &str) {
