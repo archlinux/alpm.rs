@@ -1094,8 +1094,8 @@ pub struct Backup {
 }
 
 impl Backup {
-    pub fn hash(&self) -> u64 {
-        unsafe { (*self.inner).name as u64 }
+    pub fn hash(&self) -> &str {
+        unsafe { from_cstr((*self.inner).hash) }
     }
 
     pub fn name(&self) -> &str {
