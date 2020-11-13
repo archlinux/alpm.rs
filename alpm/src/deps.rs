@@ -16,6 +16,9 @@ pub struct Dep<'a> {
     pub(crate) phantom: PhantomData<&'a ()>,
 }
 
+unsafe impl<'a> Send for Dep<'a> {}
+unsafe impl<'a> Sync for Dep<'a> {}
+
 #[derive(Debug, Hash, PartialEq, Eq)]
 pub struct Depend {
     dep: Dep<'static>,
@@ -217,6 +220,9 @@ pub enum DepMod {
     Gt = ALPM_DEP_MOD_GT as u32,
     Lt = ALPM_DEP_MOD_LT as u32,
 }
+
+unsafe impl<'a> Send for DepMissing<'a> {}
+unsafe impl<'a> Sync for DepMissing<'a> {}
 
 #[derive(Debug)]
 pub struct DepMissing<'a> {
