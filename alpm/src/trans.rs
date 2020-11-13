@@ -148,7 +148,7 @@ mod tests {
         handle.trans_add_pkg(pkg).unwrap();
         handle.trans_prepare().unwrap();
         // Due to age the mirror now returns 404 for the package.
-        // But we're only testing that the function is called corectly anyway.
+        // But we're only testing that the function is called correctly anyway.
         assert!(handle.trans_commit().unwrap_err().1 == Error::Retrieve);
     }
 }
