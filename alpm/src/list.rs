@@ -6,6 +6,7 @@ use crate::{
 use std::ffi::{c_void, CStr};
 use std::iter::{ExactSizeIterator, Iterator};
 use std::marker::PhantomData;
+use std::mem::ManuallyDrop;
 use std::os::raw::c_char;
 use std::ptr;
 
@@ -353,7 +354,7 @@ where
     fn into_iter(self) -> Self::IntoIter {
         IntoIterMut {
             current: self.list.list,
-            list: self,
+            list: ManuallyDrop::new(self),
         }
     }
 }
@@ -439,8 +440,17 @@ pub struct IntoIterMut<'a, T>
 where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
-    list: AlpmListMut<'a, T>,
+    list: ManuallyDrop<AlpmListMut<'a, T>>,
     current: *mut alpm_list_t,
+}
+
+impl<'a, T> Drop for IntoIterMut<'a, T>
+where
+    for<'b> T: IntoAlpmListItem<'a, 'b>,
+{
+    fn drop(&mut self) {
+        AlpmListMut::<T>::from_parts(self.list.handle, self.current);
+    }
 }
 
 impl<'a, T> ExactSizeIterator for IntoIterMut<'a, T> where for<'b> T: IntoAlpmListItem<'a, 'b> {}

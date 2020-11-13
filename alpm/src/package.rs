@@ -294,7 +294,7 @@ mod tests {
             .iter()
             .map(|d| d.to_string())
             .collect::<Vec<_>>();
-        assert_eq!(&optional, &["flatpak"])
+        assert_eq!(&optional, &["flatpak"]);
     }
 
     #[test]
