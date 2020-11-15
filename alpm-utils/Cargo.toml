@@ -14,6 +14,7 @@ keywords = ["archlinux", "arch", "alpm", "pacman"]
 [features]
 git = ["alpm/git"]
 generate = ["alpm/generate"]
+default = ["alpm"]
 
 [dependencies]
-alpm = { version = "1.0.0", path = "../alpm" }
+alpm = { version = "1.0.0", path = "../alpm", optional = true }

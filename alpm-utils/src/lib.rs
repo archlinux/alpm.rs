@@ -4,8 +4,10 @@
 
 #![warn(missing_docs)]
 
+#[cfg(feature = "alpm")]
 mod db;
 /// Utils for dependency checking.
+#[cfg(feature = "alpm")]
 pub mod depends;
 mod target;
 
