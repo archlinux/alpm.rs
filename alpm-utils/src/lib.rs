@@ -11,5 +11,6 @@ mod db;
 pub mod depends;
 mod target;
 
+#[cfg(feature = "alpm")]
 pub use crate::db::*;
 pub use crate::target::*;
