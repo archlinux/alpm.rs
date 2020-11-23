@@ -2625,10 +2625,13 @@ pub type alpm_cb_progress = ::std::option::Option<
         arg5: usize,
     ),
 >;
-pub const alpm_download_event_type_t_ALPM_DOWNLOAD_INIT: alpm_download_event_type_t = 0;
-pub const alpm_download_event_type_t_ALPM_DOWNLOAD_PROGRESS: alpm_download_event_type_t = 1;
-pub const alpm_download_event_type_t_ALPM_DOWNLOAD_COMPLETED: alpm_download_event_type_t = 2;
-pub type alpm_download_event_type_t = ::std::os::raw::c_uint;
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum alpm_download_event_type_t {
+    ALPM_DOWNLOAD_INIT = 0,
+    ALPM_DOWNLOAD_PROGRESS = 1,
+    ALPM_DOWNLOAD_COMPLETED = 2,
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct alpm_download_event_init_t {
