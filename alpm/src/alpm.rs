@@ -110,8 +110,8 @@ impl Capabilities {
 mod tests {
     use super::*;
     use crate::{
-        log_action, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb, Event,
-        FetchCbReturn, LogLevel, Progress, Question, SigLevel,
+        log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
+        DownloadEvent, Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
     };
 
     fn logcb(level: LogLevel, msg: &str) {
@@ -139,6 +139,25 @@ mod tests {
                 println!("CONFLICT BETWEEN {} AND {}", c.package1(), c.package2(),);
                 println!("conflict: {}", c.reason());
             }
+            _ => (),
+        }
+    }
+
+    #[cfg(not(feature = "git"))]
+    fn downloadcb(filename: &str, xfered: u64, total: u64) {
+        println!("download: {} {} {}", filename, xfered, total);
+    }
+
+    #[cfg(feature = "git")]
+    fn downloadcb(filename: &str, download: DownloadEvent) {
+        match download {
+            DownloadEvent::Init(init) => {
+                println!("init: file={} optional={}", filename, init.optional)
+            }
+            DownloadEvent::Completed(comp) => println!(
+                "complete: file={} total={} result={:?}",
+                filename, comp.total, comp.result
+            ),
             _ => (),
         }
     }
@@ -173,6 +192,7 @@ mod tests {
         set_fetchcb!(handle, fetchcb);
         set_questioncb!(handle, questioncb);
         set_progresscb!(handle, progresscb);
+        set_dlcb!(handle, downloadcb);
 
         handle.set_use_syslog(true);
         handle.set_logfile("tests/log").unwrap();

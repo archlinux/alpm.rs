@@ -4,6 +4,7 @@ bindgen /usr/include/alpm.h \
     --whitelist-type '(alpm|ALPM).*' \
     --whitelist-function '(alpm|ALPM).*' \
     --rustified-enum '_alpm_[a-z_]+_t' \
+    --rustified-enum 'alpm_download_event_type_t' \
     --constified-enum-module '_alpm_siglevel_t' \
     --constified-enum-module '_alpm_pkgvalidation_t' \
     --constified-enum-module '_alpm_loglevel_t' \

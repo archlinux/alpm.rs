@@ -1102,3 +1102,39 @@ impl Backup {
         unsafe { from_cstr((*self.inner).name) }
     }
 }
+
+#[cfg(feature = "git")]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub enum DownloadEvent {
+    Init(DownloadEventInit),
+    Progress(DownloadEventProgress),
+    Completed(DownloadEventCompleted),
+}
+
+#[cfg(feature = "git")]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub struct DownloadEventInit {
+    pub optional: bool,
+}
+
+#[cfg(feature = "git")]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub struct DownloadEventProgress {
+    pub downloaded: i64,
+    pub total: i64,
+}
+
+#[cfg(feature = "git")]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub struct DownloadEventCompleted {
+    pub total: i64,
+    pub result: DownloadResult,
+}
+
+#[cfg(feature = "git")]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub enum DownloadResult {
+    Success,
+    UpToDate,
+    Failed,
+}

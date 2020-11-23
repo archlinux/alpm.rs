@@ -35,6 +35,66 @@ macro_rules! set_logcb {
     }};
 }
 
+#[cfg(feature = "git")]
+#[macro_export]
+macro_rules! set_dlcb {
+    ( $handle:tt, $f:tt ) => {{
+        use std::cmp::Ordering;
+        use std::ffi::{c_void, CStr};
+        use std::os::raw::c_char;
+        use $crate::alpm_sys::alpm_download_event_type_t::*;
+        use $crate::alpm_sys::*;
+        use $crate::{
+            DownloadEvent, DownloadEventCompleted, DownloadEventInit, DownloadEventProgress,
+            DownloadResult,
+        };
+
+        unsafe extern "C" fn c_dlcb(
+            filename: *const c_char,
+            event: alpm_download_event_type_t,
+            data: *mut c_void,
+        ) {
+            let filename = CStr::from_ptr(filename);
+            let filename = filename.to_str().unwrap();
+
+            let event = match event {
+                ALPM_DOWNLOAD_INIT => {
+                    let data = data as *const alpm_download_event_init_t;
+                    let event = DownloadEventInit {
+                        optional: (*data).optional != 0,
+                    };
+                    DownloadEvent::Init(event)
+                }
+                ALPM_DOWNLOAD_PROGRESS => {
+                    let data = data as *const alpm_download_event_progress_t;
+                    let event = DownloadEventProgress {
+                        downloaded: (*data).downloaded,
+                        total: (*data).total,
+                    };
+                    DownloadEvent::Progress(event)
+                }
+                ALPM_DOWNLOAD_COMPLETED => {
+                    let data = data as *mut alpm_download_event_completed_t;
+                    let result = match (*data).result.cmp(&0) {
+                        Ordering::Equal => DownloadResult::Success,
+                        Ordering::Greater => DownloadResult::UpToDate,
+                        Ordering::Less => DownloadResult::Failed,
+                    };
+                    let event = DownloadEventCompleted {
+                        total: (*data).total,
+                        result,
+                    };
+                    DownloadEvent::Completed(event)
+                }
+            };
+            $f(&filename, event);
+        }
+
+        unsafe { alpm_option_set_dlcb($handle.as_alpm_handle_t(), Some(c_dlcb)) };
+    }};
+}
+
+#[cfg(not(feature = "git"))]
 #[macro_export]
 macro_rules! set_dlcb {
     ( $handle:tt, $f:tt ) => {{
