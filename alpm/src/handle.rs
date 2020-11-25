@@ -378,6 +378,11 @@ impl Alpm {
         unsafe { alpm_option_set_disable_dl_timeout(self.handle, b) };
     }
 
+    #[cfg(feature = "git")]
+    pub fn set_parallel_downloads(&self, n: u32) {
+        unsafe { alpm_option_set_parallel_downloads(self.handle, n) };
+    }
+
     pub fn log_cb(&self) -> LogCb {
         LogCb {
             marker: PhantomData,
