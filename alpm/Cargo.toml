@@ -1,6 +1,6 @@
 [package]
 name = "alpm"
-version = "1.1.4"
+version = "1.1.5"
 authors = ["morganamilo <morganamilo@gmail.com>"]
 edition = "2018"
 
