@@ -111,8 +111,11 @@ mod tests {
     use super::*;
     use crate::{
         log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
-        DownloadEvent, Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
+        Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
     };
+
+    #[cfg(feature = "git")]
+    use crate::DownloadEvent;
 
     fn logcb(level: LogLevel, msg: &str) {
         if level == LogLevel::ERROR {

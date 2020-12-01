@@ -137,19 +137,19 @@ impl<'a> Dep<'a> {
         Depend::new(self.to_string())
     }
 
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> &'a str {
         unsafe { from_cstr((*self.inner).name) }
     }
 
-    pub fn version(&self) -> Option<&Ver> {
+    pub fn version(&self) -> Option<&'a Ver> {
         unsafe { (*self.inner).version.as_ref().map(|p| Ver::from_ptr(p)) }
     }
 
-    unsafe fn version_unchecked(&self) -> &Ver {
+    unsafe fn version_unchecked(&self) -> &'a Ver {
         Ver::from_ptr((*self.inner).version)
     }
 
-    pub fn desc(&self) -> &str {
+    pub fn desc(&self) -> &'a str {
         unsafe { from_cstr((*self.inner).desc) }
     }
 

@@ -58,15 +58,15 @@ impl<'a> Conflict<'a> {
         }
     }
 
-    pub fn package1(&self) -> &str {
+    pub fn package1(&self) -> &'a str {
         unsafe { from_cstr((*self.inner).package1) }
     }
 
-    pub fn package2(&self) -> &str {
+    pub fn package2(&self) -> &'a str {
         unsafe { from_cstr((*self.inner).package2) }
     }
 
-    pub fn reason(&self) -> Dep {
+    pub fn reason(&self) -> Dep<'a> {
         unsafe { Dep::from_ptr((*self.inner).reason) }
     }
 
@@ -105,7 +105,7 @@ pub struct OwnedFileConflict {
 }
 
 impl<'a> FileConflict<'a> {
-    pub fn target(&self) -> &str {
+    pub fn target(&self) -> &'a str {
         unsafe { from_cstr((*self.inner).target) }
     }
 
@@ -114,11 +114,11 @@ impl<'a> FileConflict<'a> {
         unsafe { transmute::<alpm_fileconflicttype_t, FileConflictType>(t) }
     }
 
-    pub fn file(&self) -> &str {
+    pub fn file(&self) -> &'a str {
         unsafe { from_cstr((*self.inner).file) }
     }
 
-    pub fn conflicting_target(&self) -> Option<&str> {
+    pub fn conflicting_target(&self) -> Option<&'a str> {
         let s = unsafe { from_cstr((*self.inner).ctarget) };
 
         if s.is_empty() {
