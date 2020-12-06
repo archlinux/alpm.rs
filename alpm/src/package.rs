@@ -178,7 +178,7 @@ impl<'a> Package<'a> {
         AlpmList::from_parts(self.handle, list)
     }
 
-    pub fn db(&self) -> Option<Db> {
+    pub fn db(self) -> Option<Db<'a>> {
         let db = unsafe { alpm_pkg_get_db(self.pkg) };
         self.handle.check_null(db).ok()?;
         Some(Db {
