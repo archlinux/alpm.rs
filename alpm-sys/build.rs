@@ -14,7 +14,7 @@ fn main() {
             .whitelist_type("(alpm|ALPM).*")
             .whitelist_function("(alpm|ALPM).*")
             .rustified_enum("_alpm_[a-z_]+_t")
-            .rustifie_enum("alpm_download_event_type_t")
+            .rustified_enum("alpm_download_event_type_t")
             .constified_enum_module("_alpm_siglevel_t")
             .constified_enum_module("_alpm_pkgvalidation_t")
             .constified_enum_module("_alpm_loglevel_t")
