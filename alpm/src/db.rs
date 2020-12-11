@@ -86,7 +86,7 @@ impl<'a> Db<'a> {
         unsafe { from_cstr(name) }
     }
 
-    pub fn servers(&self) -> AlpmList<&'a str> {
+    pub fn servers(&self) -> AlpmList<'a, &'a str> {
         let list = unsafe { alpm_db_get_servers(self.db) };
         AlpmList::from_parts(self.handle, list)
     }
