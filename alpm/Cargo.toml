@@ -22,7 +22,7 @@ generate = ["alpm-sys/generate"]
 bitflags = "1.0.4"
 libarchive = { version = "0.1.1", optional = true }
 libarchive3-sys = { version = "0.1.2", optional = true }
-alpm-sys = { path = "../alpm-sys", version = "1.1.2" }
+alpm-sys = { path = "../alpm-sys", version = "1.1.4" }
 
 [dev-dependencies]
 criterion = "0.2.11"
