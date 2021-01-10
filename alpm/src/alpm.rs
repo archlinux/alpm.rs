@@ -110,8 +110,8 @@ impl Capabilities {
 mod tests {
     use super::*;
     use crate::{
-        log_action, set_dlcb, set_totaldlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
-        Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
+        log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
+        set_totaldlcb, Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
     };
 
     #[cfg(feature = "git")]
@@ -165,8 +165,14 @@ mod tests {
         }
     }
 
+    #[cfg(not(feature = "git"))]
     fn totaldownloadcb(total: u64) {
         println!("total: {}", total);
+    }
+
+    #[cfg(feature = "git")]
+    fn totaldownloadcb(packages: usize, total: u64) {
+        println!("total: {} {}", packages, total);
     }
 
     fn progresscb(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize) {
