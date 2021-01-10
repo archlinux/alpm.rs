@@ -110,7 +110,7 @@ impl Capabilities {
 mod tests {
     use super::*;
     use crate::{
-        log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
+        log_action, set_dlcb, set_totaldlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
         Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
     };
 
@@ -165,6 +165,10 @@ mod tests {
         }
     }
 
+    fn totaldownloadcb(total: u64) {
+        println!("total: {}", total);
+    }
+
     fn progresscb(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize) {
         println!(
             "progress {:?}, {} {} {} {}",
@@ -196,6 +200,7 @@ mod tests {
         set_questioncb!(handle, questioncb);
         set_progresscb!(handle, progresscb);
         set_dlcb!(handle, downloadcb);
+        set_totaldlcb!(handle, totaldownloadcb);
 
         handle.set_use_syslog(true);
         handle.set_logfile("tests/log").unwrap();
