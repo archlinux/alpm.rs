@@ -29,7 +29,7 @@ jobs:
       image: archlinux
     steps:
       - name: Install Packages
-        run: pacman -Syu rust curl clang git base-devel libarchive meson asciidoc --noconfirm fakechroot --needed
+        run: pacman -Syu rust curl clang git base-devel libarchive meson asciidoc doxygen --noconfirm fakechroot --needed
 
       - name: Install Pacman-git
         run: |
