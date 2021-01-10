@@ -140,6 +140,7 @@ macro_rules! set_fetchcb {
     }};
 }
 
+#[cfg(not(feature = "git"))]
 #[macro_export]
 macro_rules! set_totaldlcb {
     ( $handle:tt, $f:tt ) => {{
@@ -147,6 +148,20 @@ macro_rules! set_totaldlcb {
 
         unsafe extern "C" fn c_totaldlcb(total: off_t) {
             $f(total as u64);
+        }
+
+        unsafe { alpm_option_set_totaldlcb($handle.as_alpm_handle_t(), Some(c_totaldlcb)) };
+    }};
+}
+
+#[cfg(feature = "git")]
+#[macro_export]
+macro_rules! set_totaldlcb {
+    ( $handle:tt, $f:tt ) => {{
+        use $crate::alpm_sys::*;
+
+        unsafe extern "C" fn c_totaldlcb(packages: usize, total: off_t) {
+            $f(packages, total as u64);
         }
 
         unsafe { alpm_option_set_totaldlcb($handle.as_alpm_handle_t(), Some(c_totaldlcb)) };
