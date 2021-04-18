@@ -411,7 +411,7 @@ impl Event {
         }
     }
 
-    pub fn any(self) -> AnyEvent {
+    pub fn any(&self) -> AnyEvent {
         unsafe {
             let event = match self {
                 Event::PackageOperation(x) => alpm_event_t {
@@ -438,7 +438,7 @@ impl Event {
                     pkg_retrieve: x.inner,
                 },
                 Event::Other(x) => alpm_event_t {
-                    type_: transmute::<EventType, alpm_event_type_t>(x),
+                    type_: transmute::<EventType, alpm_event_type_t>(*x),
                 },
             };
 
