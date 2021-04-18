@@ -232,9 +232,9 @@ pub enum EventType {
     RetrieveStart = ALPM_EVENT_DB_RETRIEVE_START as u32,
     RetrieveDone = ALPM_EVENT_DB_RETRIEVE_DONE as u32,
     RetrieveFailed = ALPM_EVENT_DB_RETRIEVE_FAILED as u32,
-    PkgDownloadStart = ALPM_EVENT_PKG_RETRIEVE_START as u32,
-    PkgDownloadDone = ALPM_EVENT_PKG_RETRIEVE_DONE as u32,
-    PkgDownloadFailed = ALPM_EVENT_PKG_RETRIEVE_FAILED as u32,
+    PkgRetrieveStart = ALPM_EVENT_PKG_RETRIEVE_START as u32,
+    PkgRetrieveDone = ALPM_EVENT_PKG_RETRIEVE_DONE as u32,
+    PkgRetrieveFailed = ALPM_EVENT_PKG_RETRIEVE_FAILED as u32,
     DiskSpaceStart = ALPM_EVENT_DISKSPACE_START as u32,
     DiskSpaceDone = ALPM_EVENT_DISKSPACE_DONE as u32,
     OptDepRemoval = ALPM_EVENT_OPTDEP_REMOVAL as u32,
@@ -403,11 +403,11 @@ impl Event {
             EventType::HookDone => Event::Other(event_type),
             EventType::HookRunStart => Event::Other(event_type),
             EventType::HookRunDone => Event::Other(event_type),
-            EventType::PkgDownloadStart => Event::PkgRetrieve(PkgRetrieveEvent {
+            EventType::PkgRetrieveStart => Event::PkgRetrieve(PkgRetrieveEvent {
                 inner: (*event).pkg_retrieve,
             }),
-            EventType::PkgDownloadDone => Event::Other(event_type),
-            EventType::PkgDownloadFailed => Event::Other(event_type),
+            EventType::PkgRetrieveDone => Event::Other(event_type),
+            EventType::PkgRetrieveFailed => Event::Other(event_type),
         }
     }
 
