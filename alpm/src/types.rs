@@ -50,6 +50,7 @@ pub struct FetchCb<'a> {
     pub(crate) marker: PhantomData<&'a ()>,
 }
 
+#[cfg(not(feature = "git"))]
 #[derive(Debug)]
 pub struct TotalDownloadCb<'a> {
     pub(crate) cb: alpm_cb_totaldl,
@@ -101,6 +102,7 @@ impl<'a> FetchCb<'a> {
     }
 }
 
+#[cfg(not(feature = "git"))]
 impl<'a> TotalDownloadCb<'a> {
     pub fn none() -> TotalDownloadCb<'static> {
         TotalDownloadCb {
@@ -350,17 +352,26 @@ pub enum HookWhen {
     PostTransaction = ALPM_HOOK_POST_TRANSACTION as u32,
 }
 
+#[cfg(feature = "git")]
+#[derive(Debug)]
+pub struct PkgRetrieveEvent {
+    inner: alpm_event_pkg_retrieve_t,
+}
+
 #[derive(Debug)]
 pub enum Event {
     PackageOperation(PackageOperationEvent),
     OptDepRemoval(OptDepRemovalEvent),
     ScriptletInfo(ScriptletInfoEvent),
     DatabaseMissing(DatabaseMissingEvent),
+    #[cfg(not(feature = "git"))]
     PkgDownload(PkgDownloadEvent),
     PacnewCreated(PacnewCreatedEvent),
     PacsaveCreated(PacsaveCreatedEvent),
     Hook(HookEvent),
     HookRun(HookRunEvent),
+    #[cfg(feature = "git")]
+    PkgRetrieve(PkgRetrieveEvent),
     Other(EventType),
 }
 
@@ -402,12 +413,15 @@ impl Event {
             EventType::RetrieveStart => Event::Other(event_type),
             EventType::RetrieveDone => Event::Other(event_type),
             EventType::RetrieveFailed => Event::Other(event_type),
+            #[cfg(not(feature = "git"))]
             EventType::PkgDownloadStart => Event::PkgDownload(PkgDownloadEvent {
                 inner: (*event).pkgdownload,
             }),
+            #[cfg(not(feature = "git"))]
             EventType::PkgDownloadDone => Event::PkgDownload(PkgDownloadEvent {
                 inner: (*event).pkgdownload,
             }),
+            #[cfg(not(feature = "git"))]
             EventType::PkgDownloadFailed => Event::PkgDownload(PkgDownloadEvent {
                 inner: (*event).pkgdownload,
             }),
@@ -436,6 +450,14 @@ impl Event {
             EventType::HookDone => Event::Other(event_type),
             EventType::HookRunStart => Event::Other(event_type),
             EventType::HookRunDone => Event::Other(event_type),
+            #[cfg(feature = "git")]
+            EventType::PkgDownloadStart => Event::PkgRetrieve(PkgRetrieveEvent {
+                inner: (*event).pkg_retrieve,
+            }),
+            #[cfg(feature = "git")]
+            EventType::PkgDownloadDone => Event::Other(event_type),
+            #[cfg(feature = "git")]
+            EventType::PkgDownloadFailed => Event::Other(event_type),
         }
     }
 
@@ -454,6 +476,7 @@ impl Event {
                 Event::DatabaseMissing(x) => alpm_event_t {
                     database_missing: x.inner,
                 },
+                #[cfg(not(feature = "git"))]
                 Event::PkgDownload(x) => alpm_event_t {
                     pkgdownload: x.inner,
                 },
@@ -465,6 +488,10 @@ impl Event {
                 },
                 Event::Hook(x) => alpm_event_t { hook: x.inner },
                 Event::HookRun(x) => alpm_event_t { hook_run: x.inner },
+                #[cfg(feature = "git")]
+                Event::PkgRetrieve(x) => alpm_event_t {
+                    pkg_retrieve: x.inner,
+                },
                 Event::Other(x) => alpm_event_t {
                     type_: transmute::<EventType, alpm_event_type_t>(x),
                 },
@@ -546,6 +573,7 @@ impl DatabaseMissingEvent {
     }
 }
 
+#[cfg(not(feature = "git"))]
 impl PkgDownloadEvent {
     pub fn event_type(&self) -> EventType {
         unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
@@ -634,6 +662,21 @@ impl HookRunEvent {
 
     pub fn total(&self) -> usize {
         self.inner.total as usize
+    }
+}
+
+#[cfg(feature = "git")]
+impl PkgRetrieveEvent {
+    pub fn event_type(&self) -> EventType {
+        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
+    }
+
+    pub fn num(&self) -> usize {
+        self.inner.num
+    }
+
+    pub fn total_size(&self) -> i64 {
+        self.inner.total_size
     }
 }
 

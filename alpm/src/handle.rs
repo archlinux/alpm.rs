@@ -1,8 +1,11 @@
 use crate::utils::*;
 use crate::{
     Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, DownloadCb, EventCb, FetchCb, LogCb,
-    Match, ProgressCb, QuestionCb, Result, SigLevel, TotalDownloadCb,
+    Match, ProgressCb, QuestionCb, Result, SigLevel,
 };
+
+#[cfg(not(feature = "git"))]
+use crate::TotalDownloadCb;
 
 use std::cmp::Ordering;
 use std::ffi::CString;
@@ -404,6 +407,7 @@ impl Alpm {
         }
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn totaldl_cb(&self) -> TotalDownloadCb {
         TotalDownloadCb {
             marker: PhantomData,
@@ -444,6 +448,7 @@ impl Alpm {
         unsafe { alpm_option_set_fetchcb(self.handle, cb.cb) };
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn set_totaldl_cb(&self, cb: TotalDownloadCb) {
         unsafe { alpm_option_set_totaldlcb(self.handle, cb.cb) };
     }
