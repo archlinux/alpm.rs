@@ -41,7 +41,6 @@ macro_rules! set_logcb {
     }};
 }
 
-#[cfg(feature = "git")]
 #[macro_export]
 macro_rules! set_dlcb {
     ( $handle:tt, $f:tt ) => {{
@@ -109,24 +108,6 @@ macro_rules! set_dlcb {
     }};
 }
 
-#[cfg(not(feature = "git"))]
-#[macro_export]
-macro_rules! set_dlcb {
-    ( $handle:tt, $f:tt ) => {{
-        use std::ffi::CStr;
-        use std::os::raw::c_char;
-        use $crate::alpm_sys::*;
-
-        unsafe extern "C" fn c_dlcb(filename: *const c_char, xfered: off_t, total: off_t) {
-            let filename = CStr::from_ptr(filename);
-            let filename = filename.to_str().unwrap();
-            $f(&filename, xfered as u64, total as u64);
-        }
-
-        unsafe { alpm_option_set_dlcb($handle.as_alpm_handle_t(), Some(c_dlcb)) };
-    }};
-}
-
 #[macro_export]
 macro_rules! set_fetchcb {
     ( $handle:tt, $f:tt ) => {{
@@ -164,20 +145,6 @@ macro_rules! set_fetchcb {
                 std::ptr::null_mut(),
             );
         }
-    }};
-}
-
-#[cfg(not(feature = "git"))]
-#[macro_export]
-macro_rules! set_totaldlcb {
-    ( $handle:tt, $f:tt ) => {{
-        use $crate::alpm_sys::*;
-
-        unsafe extern "C" fn c_totaldlcb(total: off_t) {
-            $f(total as u64);
-        }
-
-        unsafe { alpm_option_set_totaldlcb($handle.as_alpm_handle_t(), Some(c_totaldlcb)) };
     }};
 }
 

@@ -118,22 +118,6 @@ impl<'a> Db<'a> {
         self.handle.check_ret(ret)
     }
 
-    #[cfg(not(feature = "git"))]
-    pub fn search<L>(&self, list: L) -> Result<AlpmListMut<'a, Package<'a>>>
-    where
-        L: AsRawAlpmList<'a, String>,
-    {
-        let list = unsafe { list.as_raw_alpm_list() };
-        let pkgs = unsafe { alpm_db_search(self.db, list.list()) };
-
-        if self.handle.last_error().ok() {
-            Ok(AlpmListMut::from_parts(self.handle, pkgs))
-        } else {
-            Err(self.handle.last_error())
-        }
-    }
-
-    #[cfg(feature = "git")]
     pub fn search<L>(&self, list: L) -> Result<AlpmListMut<'a, Package<'a>>>
     where
         L: AsRawAlpmList<'a, String>,

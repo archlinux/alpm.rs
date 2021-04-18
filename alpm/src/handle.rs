@@ -4,9 +4,6 @@ use crate::{
     Match, ProgressCb, QuestionCb, Result, SigLevel,
 };
 
-#[cfg(not(feature = "git"))]
-use crate::TotalDownloadCb;
-
 use std::cmp::Ordering;
 use std::ffi::CString;
 use std::marker::PhantomData;
@@ -305,8 +302,6 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    // Broken in stable
-    #[cfg(feature = "git")]
     pub fn set_assume_installed<'a, T: AsRawAlpmList<'a, Dep<'a>>>(
         &'a mut self,
         list: T,
@@ -419,7 +414,6 @@ impl Alpm {
         unsafe { alpm_option_set_disable_dl_timeout(self.handle, b) };
     }
 
-    #[cfg(feature = "git")]
     pub fn set_parallel_downloads(&self, n: u32) {
         unsafe { alpm_option_set_parallel_downloads(self.handle, n) };
     }
@@ -442,14 +436,6 @@ impl Alpm {
         FetchCb {
             marker: PhantomData,
             cb: unsafe { alpm_option_get_fetchcb(self.handle) },
-        }
-    }
-
-    #[cfg(not(feature = "git"))]
-    pub fn totaldl_cb(&self) -> TotalDownloadCb {
-        TotalDownloadCb {
-            marker: PhantomData,
-            cb: unsafe { alpm_option_get_totaldlcb(self.handle) },
         }
     }
 
@@ -505,11 +491,6 @@ impl Alpm {
         unsafe {
             alpm_option_set_fetchcb(self.handle, cb.cb, ptr::null_mut())
         };
-    }
-
-    #[cfg(not(feature = "git"))]
-    pub fn set_totaldl_cb(&self, cb: TotalDownloadCb) {
-        unsafe { alpm_option_set_totaldlcb(self.handle, cb.cb) };
     }
 
     pub fn set_event_cb(&self, cb: EventCb) {

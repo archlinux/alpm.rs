@@ -54,13 +54,6 @@ pub struct FetchCb<'a> {
     pub(crate) marker: PhantomData<&'a ()>,
 }
 
-#[cfg(not(feature = "git"))]
-#[derive(Debug)]
-pub struct TotalDownloadCb<'a> {
-    pub(crate) cb: alpm_cb_totaldl,
-    pub(crate) marker: PhantomData<&'a ()>,
-}
-
 #[derive(Debug)]
 pub struct EventCb<'a> {
     pub(crate) cb: alpm_cb_event,
@@ -100,16 +93,6 @@ impl<'a> DownloadCb<'a> {
 impl<'a> FetchCb<'a> {
     pub fn none() -> FetchCb<'static> {
         FetchCb {
-            marker: PhantomData,
-            cb: None,
-        }
-    }
-}
-
-#[cfg(not(feature = "git"))]
-impl<'a> TotalDownloadCb<'a> {
-    pub fn none() -> TotalDownloadCb<'static> {
-        TotalDownloadCb {
             marker: PhantomData,
             cb: None,
         }
@@ -246,29 +229,11 @@ pub enum EventType {
     LoadStart = ALPM_EVENT_LOAD_START as u32,
     LoadDone = ALPM_EVENT_LOAD_DONE as u32,
     ScriptletInfo = ALPM_EVENT_SCRIPTLET_INFO as u32,
-    #[cfg(not(feature = "git"))]
-    RetrieveStart = ALPM_EVENT_RETRIEVE_START as u32,
-    #[cfg(not(feature = "git"))]
-    RetrieveDone = ALPM_EVENT_RETRIEVE_DONE as u32,
-    #[cfg(not(feature = "git"))]
-    RetrieveFailed = ALPM_EVENT_RETRIEVE_FAILED as u32,
-    #[cfg(not(feature = "git"))]
-    PkgDownloadStart = ALPM_EVENT_PKGDOWNLOAD_START as u32,
-    #[cfg(not(feature = "git"))]
-    PkgDownloadDone = ALPM_EVENT_PKGDOWNLOAD_DONE as u32,
-    #[cfg(not(feature = "git"))]
-    PkgDownloadFailed = ALPM_EVENT_PKGDOWNLOAD_FAILED as u32,
-    #[cfg(feature = "git")]
     RetrieveStart = ALPM_EVENT_DB_RETRIEVE_START as u32,
-    #[cfg(feature = "git")]
     RetrieveDone = ALPM_EVENT_DB_RETRIEVE_DONE as u32,
-    #[cfg(feature = "git")]
     RetrieveFailed = ALPM_EVENT_DB_RETRIEVE_FAILED as u32,
-    #[cfg(feature = "git")]
     PkgDownloadStart = ALPM_EVENT_PKG_RETRIEVE_START as u32,
-    #[cfg(feature = "git")]
     PkgDownloadDone = ALPM_EVENT_PKG_RETRIEVE_DONE as u32,
-    #[cfg(feature = "git")]
     PkgDownloadFailed = ALPM_EVENT_PKG_RETRIEVE_FAILED as u32,
     DiskSpaceStart = ALPM_EVENT_DISKSPACE_START as u32,
     DiskSpaceDone = ALPM_EVENT_DISKSPACE_DONE as u32,
@@ -356,7 +321,6 @@ pub enum HookWhen {
     PostTransaction = ALPM_HOOK_POST_TRANSACTION as u32,
 }
 
-#[cfg(feature = "git")]
 #[derive(Debug)]
 pub struct PkgRetrieveEvent {
     inner: alpm_event_pkg_retrieve_t,
@@ -368,13 +332,10 @@ pub enum Event {
     OptDepRemoval(OptDepRemovalEvent),
     ScriptletInfo(ScriptletInfoEvent),
     DatabaseMissing(DatabaseMissingEvent),
-    #[cfg(not(feature = "git"))]
-    PkgDownload(PkgDownloadEvent),
     PacnewCreated(PacnewCreatedEvent),
     PacsaveCreated(PacsaveCreatedEvent),
     Hook(HookEvent),
     HookRun(HookRunEvent),
-    #[cfg(feature = "git")]
     PkgRetrieve(PkgRetrieveEvent),
     Other(EventType),
 }
@@ -417,18 +378,6 @@ impl Event {
             EventType::RetrieveStart => Event::Other(event_type),
             EventType::RetrieveDone => Event::Other(event_type),
             EventType::RetrieveFailed => Event::Other(event_type),
-            #[cfg(not(feature = "git"))]
-            EventType::PkgDownloadStart => Event::PkgDownload(PkgDownloadEvent {
-                inner: (*event).pkgdownload,
-            }),
-            #[cfg(not(feature = "git"))]
-            EventType::PkgDownloadDone => Event::PkgDownload(PkgDownloadEvent {
-                inner: (*event).pkgdownload,
-            }),
-            #[cfg(not(feature = "git"))]
-            EventType::PkgDownloadFailed => Event::PkgDownload(PkgDownloadEvent {
-                inner: (*event).pkgdownload,
-            }),
             EventType::DiskSpaceStart => Event::Other(event_type),
             EventType::DiskSpaceDone => Event::Other(event_type),
             EventType::OptDepRemoval => Event::OptDepRemoval(OptDepRemovalEvent {
@@ -454,13 +403,10 @@ impl Event {
             EventType::HookDone => Event::Other(event_type),
             EventType::HookRunStart => Event::Other(event_type),
             EventType::HookRunDone => Event::Other(event_type),
-            #[cfg(feature = "git")]
             EventType::PkgDownloadStart => Event::PkgRetrieve(PkgRetrieveEvent {
                 inner: (*event).pkg_retrieve,
             }),
-            #[cfg(feature = "git")]
             EventType::PkgDownloadDone => Event::Other(event_type),
-            #[cfg(feature = "git")]
             EventType::PkgDownloadFailed => Event::Other(event_type),
         }
     }
@@ -480,10 +426,6 @@ impl Event {
                 Event::DatabaseMissing(x) => alpm_event_t {
                     database_missing: x.inner,
                 },
-                #[cfg(not(feature = "git"))]
-                Event::PkgDownload(x) => alpm_event_t {
-                    pkgdownload: x.inner,
-                },
                 Event::PacnewCreated(x) => alpm_event_t {
                     pacnew_created: x.inner,
                 },
@@ -492,7 +434,6 @@ impl Event {
                 },
                 Event::Hook(x) => alpm_event_t { hook: x.inner },
                 Event::HookRun(x) => alpm_event_t { hook_run: x.inner },
-                #[cfg(feature = "git")]
                 Event::PkgRetrieve(x) => alpm_event_t {
                     pkg_retrieve: x.inner,
                 },
@@ -577,17 +518,6 @@ impl DatabaseMissingEvent {
     }
 }
 
-#[cfg(not(feature = "git"))]
-impl PkgDownloadEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
-    pub fn file(&self) -> &str {
-        unsafe { from_cstr(self.inner.file) }
-    }
-}
-
 impl PacnewCreatedEvent {
     pub fn event_type(&self) -> EventType {
         unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
@@ -669,7 +599,6 @@ impl HookRunEvent {
     }
 }
 
-#[cfg(feature = "git")]
 impl PkgRetrieveEvent {
     pub fn event_type(&self) -> EventType {
         unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
@@ -1150,7 +1079,6 @@ impl Backup {
     }
 }
 
-#[cfg(feature = "git")]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum DownloadEvent {
     Init(DownloadEventInit),
@@ -1159,20 +1087,17 @@ pub enum DownloadEvent {
     Completed(DownloadEventCompleted),
 }
 
-#[cfg(feature = "git")]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub struct DownloadEventInit {
     pub optional: bool,
 }
 
-#[cfg(feature = "git")]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub struct DownloadEventProgress {
     pub downloaded: i64,
     pub total: i64,
 }
 
-#[cfg(feature = "git")]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub struct DownloadEventRetry {
     pub resume: bool,
@@ -1185,7 +1110,6 @@ pub struct DownloadEventCompleted {
     pub result: DownloadResult,
 }
 
-#[cfg(feature = "git")]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum DownloadResult {
     Success,

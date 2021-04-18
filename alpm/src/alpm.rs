@@ -111,14 +111,8 @@ mod tests {
     use super::*;
     use crate::{
         log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
-        Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
+        DownloadEvent, Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
     };
-
-    #[cfg(not(feature = "git"))]
-    use crate::set_totaldlcb;
-
-    #[cfg(feature = "git")]
-    use crate::DownloadEvent;
 
     fn logcb(level: LogLevel, msg: &str) {
         if level == LogLevel::ERROR {
@@ -149,12 +143,6 @@ mod tests {
         }
     }
 
-    #[cfg(not(feature = "git"))]
-    fn downloadcb(filename: &str, xfered: u64, total: u64) {
-        println!("download: {} {} {}", filename, xfered, total);
-    }
-
-    #[cfg(feature = "git")]
     fn downloadcb(filename: &str, download: DownloadEvent) {
         match download {
             DownloadEvent::Init(init) => {
@@ -166,11 +154,6 @@ mod tests {
             ),
             _ => (),
         }
-    }
-
-    #[cfg(not(feature = "git"))]
-    fn totaldownloadcb(total: u64) {
-        println!("total: {}", total);
     }
 
     fn progresscb(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize) {
