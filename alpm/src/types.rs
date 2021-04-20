@@ -605,61 +605,75 @@ impl<'a> PkgRetrieveStartEvent<'a> {
 }
 
 #[derive(Debug)]
-pub struct AnyQuestion {
+pub struct AnyQuestion<'a> {
     inner: *mut alpm_question_any_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct InstallIgnorepkgQuestion {
+pub struct InstallIgnorepkgQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_install_ignorepkg_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct ReplaceQuestion {
+pub struct ReplaceQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_replace_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct ConflictQuestion {
+pub struct ConflictQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_conflict_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct CorruptedQuestion {
+pub struct CorruptedQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_corrupted_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct RemovePkgsQuestion {
+pub struct RemovePkgsQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_remove_pkgs_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct SelectProviderQuestion {
+pub struct SelectProviderQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_select_provider_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct ImportKeyQuestion {
+pub struct ImportKeyQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_import_key_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub enum Question {
-    InstallIgnorepkg(InstallIgnorepkgQuestion),
-    Replace(ReplaceQuestion),
-    Conflict(ConflictQuestion),
-    Corrupted(CorruptedQuestion),
-    RemovePkgs(RemovePkgsQuestion),
-    SelectProvider(SelectProviderQuestion),
-    ImportKey(ImportKeyQuestion),
+pub struct Question {
+    handle: *mut alpm_handle_t,
+    inner: *mut alpm_question_t,
+}
+
+#[derive(Debug)]
+pub enum QuestionData<'a> {
+    InstallIgnorepkg(InstallIgnorepkgQuestion<'a>),
+    Replace(ReplaceQuestion<'a>),
+    Conflict(ConflictQuestion<'a>),
+    Corrupted(CorruptedQuestion<'a>),
+    RemovePkgs(RemovePkgsQuestion<'a>),
+    SelectProvider(SelectProviderQuestion<'a>),
+    ImportKey(ImportKeyQuestion<'a>),
 }
 
 #[repr(u32)]
@@ -678,80 +692,79 @@ impl Question {
     /// This is an implementation detail and *should not* be called directly!
     #[doc(hidden)]
     pub unsafe fn new(handle: *mut alpm_handle_t, question: *mut alpm_question_t) -> Question {
-        let question_type = (*question).type_;
-        let question_type = transmute::<alpm_question_type_t, QuestionType>(question_type);
-        let handle = Alpm { handle };
+        Question {
+            inner: question,
+            handle,
+        }
+    }
+
+    pub fn question(&self) -> QuestionData {
+        let question_type = unsafe { (*self.inner).type_ };
+        let question_type =
+            unsafe { transmute::<alpm_question_type_t, QuestionType>(question_type) };
+        let handle = Alpm {
+            handle: self.handle,
+        };
         let handle = ManuallyDrop::new(handle);
 
         match &question_type {
             QuestionType::InstallIgnorepkg => {
-                Question::InstallIgnorepkg(InstallIgnorepkgQuestion {
+                QuestionData::InstallIgnorepkg(InstallIgnorepkgQuestion {
                     handle,
-                    inner: &mut (*question).install_ignorepkg,
+                    inner: &mut unsafe { (*self.inner).install_ignorepkg },
+                    marker: PhantomData,
                 })
             }
-            QuestionType::ReplacePkg => Question::Replace(ReplaceQuestion {
+            QuestionType::ReplacePkg => QuestionData::Replace(ReplaceQuestion {
                 handle,
-                inner: &mut (*question).replace,
+                inner: &mut unsafe { (*self.inner).replace },
+                marker: PhantomData,
             }),
-            QuestionType::ConflictPkg => Question::Conflict(ConflictQuestion {
+            QuestionType::ConflictPkg => QuestionData::Conflict(ConflictQuestion {
                 handle,
-                inner: &mut (*question).conflict,
+                inner: &mut unsafe { (*self.inner).conflict },
+                marker: PhantomData,
             }),
-            QuestionType::CorruptedPkg => Question::Corrupted(CorruptedQuestion {
+            QuestionType::CorruptedPkg => QuestionData::Corrupted(CorruptedQuestion {
                 handle,
-                inner: &mut (*question).corrupted,
+                inner: &mut unsafe { (*self.inner).corrupted },
+                marker: PhantomData,
             }),
-            QuestionType::RemovePkgs => Question::RemovePkgs(RemovePkgsQuestion {
+            QuestionType::RemovePkgs => QuestionData::RemovePkgs(RemovePkgsQuestion {
                 handle,
-                inner: &mut (*question).remove_pkgs,
+                inner: &mut unsafe { (*self.inner).remove_pkgs },
+                marker: PhantomData,
             }),
 
-            QuestionType::SelectProvider => Question::SelectProvider(SelectProviderQuestion {
+            QuestionType::SelectProvider => QuestionData::SelectProvider(SelectProviderQuestion {
                 handle,
-                inner: &mut (*question).select_provider,
+                inner: &mut unsafe { (*self.inner).select_provider },
+                marker: PhantomData,
             }),
-            QuestionType::ImportKey => Question::ImportKey(ImportKeyQuestion {
+            QuestionType::ImportKey => QuestionData::ImportKey(ImportKeyQuestion {
                 handle,
-                inner: &mut (*question).import_key,
+                inner: &mut unsafe { (*self.inner).import_key },
+                marker: PhantomData,
             }),
         }
     }
 
-    pub fn any(self) -> AnyQuestion {
+    pub fn question_type(&self) -> QuestionType {
+        unsafe { transmute((*self.inner).type_) }
+    }
+
+    pub fn any(&self) -> AnyQuestion {
         unsafe {
-            let question = match self {
-                Question::InstallIgnorepkg(x) => x.inner as *mut alpm_question_t,
-                Question::Replace(x) => x.inner as *mut alpm_question_t,
-                Question::Conflict(x) => x.inner as *mut alpm_question_t,
-
-                Question::Corrupted(x) => x.inner as *mut alpm_question_t,
-
-                Question::RemovePkgs(x) => x.inner as *mut alpm_question_t,
-
-                Question::SelectProvider(x) => x.inner as *mut alpm_question_t,
-
-                Question::ImportKey(x) => x.inner as *mut alpm_question_t,
-            };
-
+            let question = &mut (*self.inner).any;
             AnyQuestion {
-                inner: &mut (*question).any,
+                inner: question,
+                marker: PhantomData,
             }
         }
     }
 }
 
-impl Into<AnyQuestion> for Question {
-    fn into(self) -> AnyQuestion {
-        self.any()
-    }
-}
-
-impl AnyQuestion {
-    pub fn question_type(&self) -> QuestionType {
-        unsafe { transmute::<alpm_question_type_t, QuestionType>((*self.inner).type_) }
-    }
-
+impl<'a> AnyQuestion<'a> {
     pub fn set_answer(&mut self, answer: bool) {
         unsafe {
             if answer {
@@ -767,11 +780,7 @@ impl AnyQuestion {
     }
 }
 
-impl InstallIgnorepkgQuestion {
-    pub fn question_type(&self) -> QuestionType {
-        unsafe { transmute::<alpm_question_type_t, QuestionType>((*self.inner).type_) }
-    }
-
+impl<'a> InstallIgnorepkgQuestion<'a> {
     pub fn set_install(&mut self, install: bool) {
         unsafe {
             if install {
@@ -791,11 +800,7 @@ impl InstallIgnorepkgQuestion {
     }
 }
 
-impl ReplaceQuestion {
-    pub fn question_type(&self) -> QuestionType {
-        unsafe { transmute::<alpm_question_type_t, QuestionType>((*self.inner).type_) }
-    }
-
+impl<'a> ReplaceQuestion<'a> {
     pub fn set_replace(&mut self, replace: bool) {
         unsafe {
             if replace {
@@ -828,11 +833,7 @@ impl ReplaceQuestion {
     }
 }
 
-impl ConflictQuestion {
-    pub fn question_type(&self) -> QuestionType {
-        unsafe { transmute::<alpm_question_type_t, QuestionType>((*self.inner).type_) }
-    }
-
+impl<'a> ConflictQuestion<'a> {
     pub fn set_remove(&mut self, remove: bool) {
         unsafe {
             if remove {
@@ -852,11 +853,7 @@ impl ConflictQuestion {
     }
 }
 
-impl CorruptedQuestion {
-    pub fn question_type(&self) -> QuestionType {
-        unsafe { transmute::<alpm_question_type_t, QuestionType>((*self.inner).type_) }
-    }
-
+impl<'a> CorruptedQuestion<'a> {
     pub fn set_remove(&mut self, remove: bool) {
         unsafe {
             if remove {
@@ -880,11 +877,7 @@ impl CorruptedQuestion {
     }
 }
 
-impl RemovePkgsQuestion {
-    pub fn question_type(&self) -> QuestionType {
-        unsafe { transmute::<alpm_question_type_t, QuestionType>((*self.inner).type_) }
-    }
-
+impl<'a> RemovePkgsQuestion<'a> {
     pub fn set_skip(&mut self, skip: bool) {
         unsafe {
             if skip {
@@ -899,17 +892,13 @@ impl RemovePkgsQuestion {
         unsafe { (*self.inner).skip != 0 }
     }
 
-    pub fn packages<'a>(&'a self) -> AlpmList<'a, Package> {
+    pub fn packages(&'a self) -> AlpmList<'a, Package> {
         let list = unsafe { (*self.inner).packages };
         AlpmList::from_parts(&self.handle, list)
     }
 }
 
-impl SelectProviderQuestion {
-    pub fn question_type(&self) -> QuestionType {
-        unsafe { transmute::<alpm_question_type_t, QuestionType>((*self.inner).type_) }
-    }
-
+impl<'a> SelectProviderQuestion<'a> {
     pub fn set_index(&mut self, index: i32) {
         unsafe {
             (*self.inner).use_index = index;
@@ -930,11 +919,7 @@ impl SelectProviderQuestion {
     }
 }
 
-impl ImportKeyQuestion {
-    pub fn question_type(&self) -> QuestionType {
-        unsafe { transmute::<alpm_question_type_t, QuestionType>((*self.inner).type_) }
-    }
-
+impl<'a> ImportKeyQuestion<'a> {
     pub fn set_import(&mut self, import: bool) {
         unsafe {
             if import {

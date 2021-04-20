@@ -111,7 +111,8 @@ mod tests {
     use super::*;
     use crate::{
         log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
-        DownloadEvent, Event, EventData, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
+        DownloadEvent, Event, EventData, FetchCbReturn, LogLevel, Progress, Question, QuestionData,
+        SigLevel,
     };
 
     fn logcb(level: LogLevel, msg: &str) {
@@ -133,8 +134,8 @@ mod tests {
 
     fn questioncb(question: &Question) {
         println!("question {:?}", question);
-        match question {
-            Question::Conflict(x) => {
+        match question.question() {
+            QuestionData::Conflict(x) => {
                 let c = x.conflict();
                 println!("CONFLICT BETWEEN {} AND {}", c.package1(), c.package2(),);
                 println!("conflict: {}", c.reason());
