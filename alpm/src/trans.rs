@@ -112,15 +112,15 @@ impl Alpm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{set_eventcb, set_logcb, Error, Event, EventData, LogLevel, SigLevel};
+    use crate::{set_eventcb, set_logcb, AnyEvent, Error, Event, LogLevel, SigLevel};
 
     fn logcb(_level: LogLevel, msg: &str) {
         print!("{}", msg);
     }
 
-    fn eventcb(event: &Event) {
+    fn eventcb(event: &AnyEvent) {
         match event.event() {
-            EventData::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
+            Event::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
             _ => println!("event: {:?}", event),
         }
     }

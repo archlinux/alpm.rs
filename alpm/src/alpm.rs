@@ -9,13 +9,13 @@ use bitflags::bitflags;
 
 /// Function types expected to be passed into set_*cb macros.
 pub mod macro_callbacks {
-    use crate::{Event, FetchCbReturn, LogLevel, Progress, Question};
+    use crate::{AnyEvent, AnyQuestion, FetchCbReturn, LogLevel, Progress};
     pub type LogCb = fn(level: LogLevel, s: &str);
     pub type DownloadCb = fn(filename: &str, xfered: u64, total: u64);
     pub type FetchCb = fn(url: &str, filename: &str, force: bool) -> FetchCbReturn;
     pub type TotalDownloadCb = fn(total: u64);
-    pub type EventCb = fn(event: &Event);
-    pub type QuestionCb = fn(question: &mut Question);
+    pub type EventCb = fn(event: &AnyEvent);
+    pub type QuestionCb = fn(question: &mut AnyQuestion);
     pub type ProgressCb =
         fn(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize);
 }
@@ -111,7 +111,7 @@ mod tests {
     use super::*;
     use crate::{
         log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
-        DownloadEvent, Event, EventData, FetchCbReturn, LogLevel, Progress, Question, QuestionData,
+        AnyEvent, AnyQuestion, DownloadEvent, Event, FetchCbReturn, LogLevel, Progress, Question,
         SigLevel,
     };
 
@@ -121,9 +121,9 @@ mod tests {
         }
     }
 
-    fn eventcb(event: &Event) {
+    fn eventcb(event: &AnyEvent) {
         match event.event() {
-            EventData::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
+            Event::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
             _ => println!("event: {:?}", event),
         }
     }
@@ -132,10 +132,10 @@ mod tests {
         FetchCbReturn::Ok
     }
 
-    fn questioncb(question: &Question) {
+    fn questioncb(question: &AnyQuestion) {
         println!("question {:?}", question);
         match question.question() {
-            QuestionData::Conflict(x) => {
+            Question::Conflict(x) => {
                 let c = x.conflict();
                 println!("CONFLICT BETWEEN {} AND {}", c.package1(), c.package2(),);
                 println!("conflict: {}", c.reason());

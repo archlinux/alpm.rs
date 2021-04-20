@@ -252,12 +252,6 @@ pub enum EventType {
 }
 
 #[derive(Debug)]
-pub struct AnyEvent<'a> {
-    inner: *const alpm_event_any_t,
-    marker: PhantomData<&'a ()>,
-}
-
-#[derive(Debug)]
 pub enum PackageOperation<'a> {
     Install(Package<'a>),
     Upgrade(Package<'a>, Package<'a>),
@@ -338,13 +332,13 @@ pub struct PkgRetrieveStartEvent<'a> {
 }
 
 #[derive(Debug)]
-pub struct Event {
+pub struct AnyEvent {
     inner: *const alpm_event_t,
     handle: *mut alpm_handle_t,
 }
 
 #[derive(Debug)]
-pub enum EventData<'a> {
+pub enum Event<'a> {
     PackageOperation(PackageOperationEvent<'a>),
     OptDepRemoval(OptDepRemovalEvent<'a>),
     ScriptletInfo(ScriptletInfoEvent<'a>),
@@ -385,21 +379,14 @@ pub enum EventData<'a> {
     HookRunDone,
 }
 
-impl Event {
+impl AnyEvent {
     /// This is an implementation detail and *should not* be called directly!
     #[doc(hidden)]
-    pub unsafe fn new(handle: *mut alpm_handle_t, inner: *const alpm_event_t) -> Event {
-        Event { handle, inner }
+    pub unsafe fn new(handle: *mut alpm_handle_t, inner: *const alpm_event_t) -> AnyEvent {
+        AnyEvent { handle, inner }
     }
 
-    pub fn any(&self) -> AnyEvent {
-        let inner = unsafe { &(*self.inner).any };
-        AnyEvent {
-            inner,
-            marker: PhantomData,
-        }
-    }
-    pub fn event(&self) -> EventData {
+    pub fn event(&self) -> Event {
         let event = self.inner;
         let event_type = self.event_type();
         let handle = Alpm {
@@ -408,75 +395,73 @@ impl Event {
         let handle = ManuallyDrop::new(handle);
 
         match &event_type {
-            EventType::CheckDepsStart => EventData::CheckDepsStart,
-            EventType::CheckDepsDone => EventData::CheckDepsDone,
-            EventType::FileConflictsStart => EventData::FileConflictsStart,
-            EventType::FileConflictsDone => EventData::FileConflictsDone,
-            EventType::ResolveDepsStart => EventData::ResolveDepsStart,
-            EventType::ResolveDepsDone => EventData::ResolveDepsDone,
-            EventType::InterConflictsStart => EventData::InterConflictsStart,
-            EventType::InterConflictsDone => EventData::InterConflictsDone,
-            EventType::TransactionStart => EventData::TransactionStart,
-            EventType::TransactionDone => EventData::TransactionDone,
-            EventType::PackageOperationStart => {
-                EventData::PackageOperation(PackageOperationEvent {
-                    handle,
-                    inner: unsafe { &(*event).package_operation },
+            EventType::CheckDepsStart => Event::CheckDepsStart,
+            EventType::CheckDepsDone => Event::CheckDepsDone,
+            EventType::FileConflictsStart => Event::FileConflictsStart,
+            EventType::FileConflictsDone => Event::FileConflictsDone,
+            EventType::ResolveDepsStart => Event::ResolveDepsStart,
+            EventType::ResolveDepsDone => Event::ResolveDepsDone,
+            EventType::InterConflictsStart => Event::InterConflictsStart,
+            EventType::InterConflictsDone => Event::InterConflictsDone,
+            EventType::TransactionStart => Event::TransactionStart,
+            EventType::TransactionDone => Event::TransactionDone,
+            EventType::PackageOperationStart => Event::PackageOperation(PackageOperationEvent {
+                handle,
+                inner: unsafe { &(*event).package_operation },
 
-                    marker: PhantomData,
-                })
-            }
-            EventType::PackageOperationDone => EventData::PackageOperation(PackageOperationEvent {
+                marker: PhantomData,
+            }),
+            EventType::PackageOperationDone => Event::PackageOperation(PackageOperationEvent {
                 handle,
                 inner: unsafe { &(*event).package_operation },
                 marker: PhantomData,
             }),
-            EventType::IntegrityStart => EventData::IntegrityStart,
-            EventType::IntegrityDone => EventData::InterConflictsDone,
-            EventType::LoadStart => EventData::LoadStart,
-            EventType::LoadDone => EventData::LoadDone,
-            EventType::ScriptletInfo => EventData::ScriptletInfo(ScriptletInfoEvent {
+            EventType::IntegrityStart => Event::IntegrityStart,
+            EventType::IntegrityDone => Event::InterConflictsDone,
+            EventType::LoadStart => Event::LoadStart,
+            EventType::LoadDone => Event::LoadDone,
+            EventType::ScriptletInfo => Event::ScriptletInfo(ScriptletInfoEvent {
                 inner: unsafe { &(*event).scriptlet_info },
                 marker: PhantomData,
             }),
-            EventType::RetrieveStart => EventData::RetrieveStart,
-            EventType::RetrieveDone => EventData::RetrieveDone,
-            EventType::RetrieveFailed => EventData::RetrieveFailed,
-            EventType::DiskSpaceStart => EventData::DiskSpaceStart,
-            EventType::DiskSpaceDone => EventData::DiskSpaceDone,
-            EventType::OptDepRemoval => EventData::OptDepRemoval(OptDepRemovalEvent {
+            EventType::RetrieveStart => Event::RetrieveStart,
+            EventType::RetrieveDone => Event::RetrieveDone,
+            EventType::RetrieveFailed => Event::RetrieveFailed,
+            EventType::DiskSpaceStart => Event::DiskSpaceStart,
+            EventType::DiskSpaceDone => Event::DiskSpaceDone,
+            EventType::OptDepRemoval => Event::OptDepRemoval(OptDepRemovalEvent {
                 handle,
                 inner: unsafe { &(*event).optdep_removal },
                 marker: PhantomData,
             }),
-            EventType::DatabaseMissing => EventData::DatabaseMissing(DatabaseMissingEvent {
+            EventType::DatabaseMissing => Event::DatabaseMissing(DatabaseMissingEvent {
                 inner: unsafe { &(*event).database_missing },
                 marker: PhantomData,
             }),
-            EventType::KeyringStart => EventData::KeyringStart,
-            EventType::KeyringDone => EventData::KeyringDone,
-            EventType::KeyDownloadStart => EventData::KeyDownloadStart,
-            EventType::KeyDownloadDone => EventData::KeyringDone,
-            EventType::PacnewCreated => EventData::PacnewCreated(PacnewCreatedEvent {
+            EventType::KeyringStart => Event::KeyringStart,
+            EventType::KeyringDone => Event::KeyringDone,
+            EventType::KeyDownloadStart => Event::KeyDownloadStart,
+            EventType::KeyDownloadDone => Event::KeyringDone,
+            EventType::PacnewCreated => Event::PacnewCreated(PacnewCreatedEvent {
                 handle,
                 inner: unsafe { &(*event).pacnew_created },
                 marker: PhantomData,
             }),
-            EventType::PacsaveCreated => EventData::PacsaveCreated(PacsaveCreatedEvent {
+            EventType::PacsaveCreated => Event::PacsaveCreated(PacsaveCreatedEvent {
                 handle,
                 inner: unsafe { &(*event).pacsave_created },
                 marker: PhantomData,
             }),
-            EventType::HookStart => EventData::HookStart,
-            EventType::HookDone => EventData::HookDone,
-            EventType::HookRunStart => EventData::HookRunStart,
-            EventType::HookRunDone => EventData::HookRunDone,
-            EventType::PkgRetrieveStart => EventData::PkgRetrieveStart(PkgRetrieveStartEvent {
+            EventType::HookStart => Event::HookStart,
+            EventType::HookDone => Event::HookDone,
+            EventType::HookRunStart => Event::HookRunStart,
+            EventType::HookRunDone => Event::HookRunDone,
+            EventType::PkgRetrieveStart => Event::PkgRetrieveStart(PkgRetrieveStartEvent {
                 inner: unsafe { &(*event).pkg_retrieve },
                 marker: PhantomData,
             }),
-            EventType::PkgRetrieveDone => EventData::PkgRetrieveDone,
-            EventType::PkgRetrieveFailed => EventData::PkgRetrieveFailed,
+            EventType::PkgRetrieveDone => Event::PkgRetrieveDone,
+            EventType::PkgRetrieveFailed => Event::PkgRetrieveFailed,
         }
     }
 
@@ -602,12 +587,6 @@ impl<'a> PkgRetrieveStartEvent<'a> {
 }
 
 #[derive(Debug)]
-pub struct AnyQuestion<'a> {
-    inner: *mut alpm_question_any_t,
-    marker: PhantomData<&'a ()>,
-}
-
-#[derive(Debug)]
 pub struct InstallIgnorepkgQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_install_ignorepkg_t,
@@ -657,13 +636,13 @@ pub struct ImportKeyQuestion<'a> {
 }
 
 #[derive(Debug)]
-pub struct Question {
+pub struct AnyQuestion {
     handle: *mut alpm_handle_t,
     inner: *mut alpm_question_t,
 }
 
 #[derive(Debug)]
-pub enum QuestionData<'a> {
+pub enum Question<'a> {
     InstallIgnorepkg(InstallIgnorepkgQuestion<'a>),
     Replace(ReplaceQuestion<'a>),
     Conflict(ConflictQuestion<'a>),
@@ -685,17 +664,17 @@ pub enum QuestionType {
     ImportKey = ALPM_QUESTION_IMPORT_KEY as u32,
 }
 
-impl Question {
+impl AnyQuestion {
     /// This is an implementation detail and *should not* be called directly!
     #[doc(hidden)]
-    pub unsafe fn new(handle: *mut alpm_handle_t, question: *mut alpm_question_t) -> Question {
-        Question {
+    pub unsafe fn new(handle: *mut alpm_handle_t, question: *mut alpm_question_t) -> AnyQuestion {
+        AnyQuestion {
             inner: question,
             handle,
         }
     }
 
-    pub fn question(&self) -> QuestionData {
+    pub fn question(&self) -> Question {
         let question_type = self.question_type();
         let handle = Alpm {
             handle: self.handle,
@@ -704,39 +683,39 @@ impl Question {
 
         match &question_type {
             QuestionType::InstallIgnorepkg => {
-                QuestionData::InstallIgnorepkg(InstallIgnorepkgQuestion {
+                Question::InstallIgnorepkg(InstallIgnorepkgQuestion {
                     handle,
                     inner: &mut unsafe { (*self.inner).install_ignorepkg },
                     marker: PhantomData,
                 })
             }
-            QuestionType::ReplacePkg => QuestionData::Replace(ReplaceQuestion {
+            QuestionType::ReplacePkg => Question::Replace(ReplaceQuestion {
                 handle,
                 inner: &mut unsafe { (*self.inner).replace },
                 marker: PhantomData,
             }),
-            QuestionType::ConflictPkg => QuestionData::Conflict(ConflictQuestion {
+            QuestionType::ConflictPkg => Question::Conflict(ConflictQuestion {
                 handle,
                 inner: &mut unsafe { (*self.inner).conflict },
                 marker: PhantomData,
             }),
-            QuestionType::CorruptedPkg => QuestionData::Corrupted(CorruptedQuestion {
+            QuestionType::CorruptedPkg => Question::Corrupted(CorruptedQuestion {
                 handle,
                 inner: &mut unsafe { (*self.inner).corrupted },
                 marker: PhantomData,
             }),
-            QuestionType::RemovePkgs => QuestionData::RemovePkgs(RemovePkgsQuestion {
+            QuestionType::RemovePkgs => Question::RemovePkgs(RemovePkgsQuestion {
                 handle,
                 inner: &mut unsafe { (*self.inner).remove_pkgs },
                 marker: PhantomData,
             }),
 
-            QuestionType::SelectProvider => QuestionData::SelectProvider(SelectProviderQuestion {
+            QuestionType::SelectProvider => Question::SelectProvider(SelectProviderQuestion {
                 handle,
                 inner: &mut unsafe { (*self.inner).select_provider },
                 marker: PhantomData,
             }),
-            QuestionType::ImportKey => QuestionData::ImportKey(ImportKeyQuestion {
+            QuestionType::ImportKey => Question::ImportKey(ImportKeyQuestion {
                 handle,
                 inner: &mut unsafe { (*self.inner).import_key },
                 marker: PhantomData,
@@ -744,34 +723,12 @@ impl Question {
         }
     }
 
+    pub fn set_answer(&mut self, answer: bool) {
+        unsafe { (*self.inner).any.answer = answer as _ }
+    }
+
     pub fn question_type(&self) -> QuestionType {
         unsafe { transmute((*self.inner).type_) }
-    }
-
-    pub fn any(&self) -> AnyQuestion {
-        unsafe {
-            let question = &mut (*self.inner).any;
-            AnyQuestion {
-                inner: question,
-                marker: PhantomData,
-            }
-        }
-    }
-}
-
-impl<'a> AnyQuestion<'a> {
-    pub fn set_answer(&mut self, answer: bool) {
-        unsafe {
-            if answer {
-                (*self.inner).answer = 1;
-            } else {
-                (*self.inner).answer = 0;
-            }
-        }
-    }
-
-    pub fn answer(&mut self) -> bool {
-        unsafe { (*self.inner).answer != 0 }
     }
 }
 

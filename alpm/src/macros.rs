@@ -155,18 +155,15 @@ macro_rules! set_eventcb {
         use std::os::raw::c_void;
         use std::ptr;
         use $crate::alpm_sys::*;
-        use $crate::Event;
+        use $crate::AnyEvent;
 
         static mut C_ALPM_HANDLE: *mut alpm_handle_t = ptr::null_mut();
         unsafe {
             C_ALPM_HANDLE = $handle.as_alpm_handle_t();
         }
 
-        unsafe extern "C" fn c_eventcb(
-            #[cfg(feature = "git")] _ctx: *mut c_void,
-            event: *mut alpm_event_t,
-        ) {
-            let event = Event::new(C_ALPM_HANDLE, event);
+        unsafe extern "C" fn c_eventcb(event: *mut alpm_event_t) {
+            let event = AnyEvent::new(C_ALPM_HANDLE, event);
             $f(&event);
         }
 
@@ -190,18 +187,15 @@ macro_rules! set_questioncb {
         use std::os::raw::c_void;
         use std::ptr;
         use $crate::alpm_sys::*;
-        use $crate::Question;
+        use $crate::AnyQuestion;
 
         static mut C_ALPM_HANDLE: *mut alpm_handle_t = ptr::null_mut();
         unsafe {
             C_ALPM_HANDLE = $handle.as_alpm_handle_t();
         }
 
-        unsafe extern "C" fn c_questioncb(
-            #[cfg(feature = "git")] _ctx: *mut c_void,
-            question: *mut alpm_question_t,
-        ) {
-            let mut question = Question::new(C_ALPM_HANDLE, question);
+        unsafe extern "C" fn c_questioncb(question: *mut alpm_question_t) {
+            let mut question = AnyQuestion::new(C_ALPM_HANDLE, question);
             $f(&mut question);
         }
 
