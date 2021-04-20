@@ -401,8 +401,7 @@ impl Event {
     }
     pub fn event(&self) -> EventData {
         let event = self.inner;
-        let event_type = unsafe { (*event).type_ };
-        let event_type = unsafe { transmute::<alpm_event_type_t, EventType>(event_type) };
+        let event_type = self.event_type();
         let handle = Alpm {
             handle: self.handle,
         };
@@ -481,10 +480,8 @@ impl Event {
         }
     }
 
-    pub unsafe fn event_type(&self) -> EventType {
-        let event_type = (*self.inner).type_;
-        let event_type = transmute::<alpm_event_type_t, EventType>(event_type);
-        event_type
+    pub fn event_type(&self) -> EventType {
+        unsafe { transmute((*self.inner).type_) }
     }
 }
 
@@ -699,9 +696,7 @@ impl Question {
     }
 
     pub fn question(&self) -> QuestionData {
-        let question_type = unsafe { (*self.inner).type_ };
-        let question_type =
-            unsafe { transmute::<alpm_question_type_t, QuestionType>(question_type) };
+        let question_type = self.question_type();
         let handle = Alpm {
             handle: self.handle,
         };
