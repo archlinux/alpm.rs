@@ -252,8 +252,9 @@ pub enum EventType {
 }
 
 #[derive(Debug)]
-pub struct AnyEvent {
-    inner: alpm_event_any_t,
+pub struct AnyEvent<'a> {
+    inner: *const alpm_event_any_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
@@ -266,52 +267,61 @@ pub enum PackageOperation<'a> {
 }
 
 #[derive(Debug)]
-pub struct PackageOperationEvent {
+pub struct PackageOperationEvent<'a> {
     handle: ManuallyDrop<Alpm>,
-    inner: alpm_event_package_operation_t,
+    inner: *const alpm_event_package_operation_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct OptDepRemovalEvent {
+pub struct OptDepRemovalEvent<'a> {
     handle: ManuallyDrop<Alpm>,
-    inner: alpm_event_optdep_removal_t,
+    inner: *const alpm_event_optdep_removal_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct ScriptletInfoEvent {
-    inner: alpm_event_scriptlet_info_t,
+pub struct ScriptletInfoEvent<'a> {
+    inner: *const alpm_event_scriptlet_info_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct DatabaseMissingEvent {
-    inner: alpm_event_database_missing_t,
+pub struct DatabaseMissingEvent<'a> {
+    inner: *const alpm_event_database_missing_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct PkgDownloadEvent {
-    inner: alpm_event_pkgdownload_t,
+pub struct PkgDownloadEvent<'a> {
+    inner: *const alpm_event_pkgdownload_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct PacnewCreatedEvent {
+pub struct PacnewCreatedEvent<'a> {
     handle: ManuallyDrop<Alpm>,
-    inner: alpm_event_pacnew_created_t,
+    inner: *const alpm_event_pacnew_created_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct PacsaveCreatedEvent {
+pub struct PacsaveCreatedEvent<'a> {
     handle: ManuallyDrop<Alpm>,
-    inner: alpm_event_pacsave_created_t,
+    inner: *const alpm_event_pacsave_created_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct HookEvent {
-    inner: alpm_event_hook_t,
+pub struct HookEvent<'a> {
+    inner: *const alpm_event_hook_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub struct HookRunEvent {
-    inner: alpm_event_hook_run_t,
+pub struct HookRunEvent<'a> {
+    inner: *const alpm_event_hook_run_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[repr(u32)]
@@ -322,153 +332,169 @@ pub enum HookWhen {
 }
 
 #[derive(Debug)]
-pub struct PkgRetrieveEvent {
-    inner: alpm_event_pkg_retrieve_t,
+pub struct PkgRetrieveStartEvent<'a> {
+    inner: *const alpm_event_pkg_retrieve_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
-pub enum Event {
-    PackageOperation(PackageOperationEvent),
-    OptDepRemoval(OptDepRemovalEvent),
-    ScriptletInfo(ScriptletInfoEvent),
-    DatabaseMissing(DatabaseMissingEvent),
-    PacnewCreated(PacnewCreatedEvent),
-    PacsaveCreated(PacsaveCreatedEvent),
-    Hook(HookEvent),
-    HookRun(HookRunEvent),
-    PkgRetrieve(PkgRetrieveEvent),
-    Other(EventType),
+pub struct Event {
+    inner: *const alpm_event_t,
+    handle: *mut alpm_handle_t,
+}
+
+#[derive(Debug)]
+pub enum EventData<'a> {
+    PackageOperation(PackageOperationEvent<'a>),
+    OptDepRemoval(OptDepRemovalEvent<'a>),
+    ScriptletInfo(ScriptletInfoEvent<'a>),
+    DatabaseMissing(DatabaseMissingEvent<'a>),
+    PacnewCreated(PacnewCreatedEvent<'a>),
+    PacsaveCreated(PacsaveCreatedEvent<'a>),
+    Hook(HookEvent<'a>),
+    HookRun(HookRunEvent<'a>),
+    PkgRetrieveStart(PkgRetrieveStartEvent<'a>),
+    PkgRetrieveDone,
+    PkgRetrieveFailed,
+    CheckDepsStart,
+    CheckDepsDone,
+    FileConflictsStart,
+    FileConflictsDone,
+    ResolveDepsStart,
+    ResolveDepsDone,
+    InterConflictsStart,
+    InterConflictsDone,
+    TransactionStart,
+    TransactionDone,
+    IntegrityStart,
+    IntegrityDone,
+    LoadStart,
+    LoadDone,
+    RetrieveStart,
+    RetrieveDone,
+    RetrieveFailed,
+    DiskSpaceStart,
+    DiskSpaceDone,
+    KeyringStart,
+    KeyringDone,
+    KeyDownloadStart,
+    KeyDownloadDone,
+    HookStart,
+    HookDone,
+    HookRunStart,
+    HookRunDone,
 }
 
 impl Event {
     /// This is an implementation detail and *should not* be called directly!
     #[doc(hidden)]
-    pub unsafe fn new(handle: *mut alpm_handle_t, event: *const alpm_event_t) -> Event {
-        let event_type = (*event).type_;
-        let event_type = transmute::<alpm_event_type_t, EventType>(event_type);
-        let handle = Alpm { handle };
-        let handle = ManuallyDrop::new(handle);
-
-        match &event_type {
-            EventType::CheckDepsStart => Event::Other(event_type),
-            EventType::CheckDepsDone => Event::Other(event_type),
-            EventType::FileConflictsStart => Event::Other(event_type),
-            EventType::FileConflictsDone => Event::Other(event_type),
-            EventType::ResolveDepsStart => Event::Other(event_type),
-            EventType::ResolveDepsDone => Event::Other(event_type),
-            EventType::InterConflictsStart => Event::Other(event_type),
-            EventType::InterConflictsDone => Event::Other(event_type),
-            EventType::TransactionStart => Event::Other(event_type),
-            EventType::TransactionDone => Event::Other(event_type),
-            EventType::PackageOperationStart => Event::PackageOperation(PackageOperationEvent {
-                handle,
-                inner: (*event).package_operation,
-            }),
-            EventType::PackageOperationDone => Event::PackageOperation(PackageOperationEvent {
-                handle,
-                inner: (*event).package_operation,
-            }),
-            EventType::IntegrityStart => Event::Other(event_type),
-            EventType::IntegrityDone => Event::Other(event_type),
-            EventType::LoadStart => Event::Other(event_type),
-            EventType::LoadDone => Event::Other(event_type),
-            EventType::ScriptletInfo => Event::ScriptletInfo(ScriptletInfoEvent {
-                inner: (*event).scriptlet_info,
-            }),
-            EventType::RetrieveStart => Event::Other(event_type),
-            EventType::RetrieveDone => Event::Other(event_type),
-            EventType::RetrieveFailed => Event::Other(event_type),
-            EventType::DiskSpaceStart => Event::Other(event_type),
-            EventType::DiskSpaceDone => Event::Other(event_type),
-            EventType::OptDepRemoval => Event::OptDepRemoval(OptDepRemovalEvent {
-                handle,
-                inner: (*event).optdep_removal,
-            }),
-            EventType::DatabaseMissing => Event::DatabaseMissing(DatabaseMissingEvent {
-                inner: (*event).database_missing,
-            }),
-            EventType::KeyringStart => Event::Other(event_type),
-            EventType::KeyringDone => Event::Other(event_type),
-            EventType::KeyDownloadStart => Event::Other(event_type),
-            EventType::KeyDownloadDone => Event::Other(event_type),
-            EventType::PacnewCreated => Event::PacnewCreated(PacnewCreatedEvent {
-                handle,
-                inner: (*event).pacnew_created,
-            }),
-            EventType::PacsaveCreated => Event::PacsaveCreated(PacsaveCreatedEvent {
-                handle,
-                inner: (*event).pacsave_created,
-            }),
-            EventType::HookStart => Event::Other(event_type),
-            EventType::HookDone => Event::Other(event_type),
-            EventType::HookRunStart => Event::Other(event_type),
-            EventType::HookRunDone => Event::Other(event_type),
-            EventType::PkgRetrieveStart => Event::PkgRetrieve(PkgRetrieveEvent {
-                inner: (*event).pkg_retrieve,
-            }),
-            EventType::PkgRetrieveDone => Event::Other(event_type),
-            EventType::PkgRetrieveFailed => Event::Other(event_type),
-        }
+    pub unsafe fn new(handle: *mut alpm_handle_t, inner: *const alpm_event_t) -> Event {
+        Event { handle, inner }
     }
 
     pub fn any(&self) -> AnyEvent {
-        unsafe {
-            let event = match self {
-                Event::PackageOperation(x) => alpm_event_t {
-                    package_operation: x.inner,
-                },
-                Event::OptDepRemoval(x) => alpm_event_t {
-                    optdep_removal: x.inner,
-                },
-                Event::ScriptletInfo(x) => alpm_event_t {
-                    scriptlet_info: x.inner,
-                },
-                Event::DatabaseMissing(x) => alpm_event_t {
-                    database_missing: x.inner,
-                },
-                Event::PacnewCreated(x) => alpm_event_t {
-                    pacnew_created: x.inner,
-                },
-                Event::PacsaveCreated(x) => alpm_event_t {
-                    pacsave_created: x.inner,
-                },
-                Event::Hook(x) => alpm_event_t { hook: x.inner },
-                Event::HookRun(x) => alpm_event_t { hook_run: x.inner },
-                Event::PkgRetrieve(x) => alpm_event_t {
-                    pkg_retrieve: x.inner,
-                },
-                Event::Other(x) => alpm_event_t {
-                    type_: transmute::<EventType, alpm_event_type_t>(*x),
-                },
-            };
-
-            AnyEvent { inner: event.any }
+        let inner = unsafe { &(*self.inner).any };
+        AnyEvent {
+            inner,
+            marker: PhantomData,
         }
     }
-}
+    pub fn event(&self) -> EventData {
+        let event = self.inner;
+        let event_type = unsafe { (*event).type_ };
+        let event_type = unsafe { transmute::<alpm_event_type_t, EventType>(event_type) };
+        let handle = Alpm {
+            handle: self.handle,
+        };
+        let handle = ManuallyDrop::new(handle);
 
-impl Into<AnyEvent> for Event {
-    fn into(self) -> AnyEvent {
-        self.any()
+        match &event_type {
+            EventType::CheckDepsStart => EventData::CheckDepsStart,
+            EventType::CheckDepsDone => EventData::CheckDepsDone,
+            EventType::FileConflictsStart => EventData::FileConflictsStart,
+            EventType::FileConflictsDone => EventData::FileConflictsDone,
+            EventType::ResolveDepsStart => EventData::ResolveDepsStart,
+            EventType::ResolveDepsDone => EventData::ResolveDepsDone,
+            EventType::InterConflictsStart => EventData::InterConflictsStart,
+            EventType::InterConflictsDone => EventData::InterConflictsDone,
+            EventType::TransactionStart => EventData::TransactionStart,
+            EventType::TransactionDone => EventData::TransactionDone,
+            EventType::PackageOperationStart => {
+                EventData::PackageOperation(PackageOperationEvent {
+                    handle,
+                    inner: unsafe { &(*event).package_operation },
+
+                    marker: PhantomData,
+                })
+            }
+            EventType::PackageOperationDone => EventData::PackageOperation(PackageOperationEvent {
+                handle,
+                inner: unsafe { &(*event).package_operation },
+                marker: PhantomData,
+            }),
+            EventType::IntegrityStart => EventData::IntegrityStart,
+            EventType::IntegrityDone => EventData::InterConflictsDone,
+            EventType::LoadStart => EventData::LoadStart,
+            EventType::LoadDone => EventData::LoadDone,
+            EventType::ScriptletInfo => EventData::ScriptletInfo(ScriptletInfoEvent {
+                inner: unsafe { &(*event).scriptlet_info },
+                marker: PhantomData,
+            }),
+            EventType::RetrieveStart => EventData::RetrieveStart,
+            EventType::RetrieveDone => EventData::RetrieveDone,
+            EventType::RetrieveFailed => EventData::RetrieveFailed,
+            EventType::DiskSpaceStart => EventData::DiskSpaceStart,
+            EventType::DiskSpaceDone => EventData::DiskSpaceDone,
+            EventType::OptDepRemoval => EventData::OptDepRemoval(OptDepRemovalEvent {
+                handle,
+                inner: unsafe { &(*event).optdep_removal },
+                marker: PhantomData,
+            }),
+            EventType::DatabaseMissing => EventData::DatabaseMissing(DatabaseMissingEvent {
+                inner: unsafe { &(*event).database_missing },
+                marker: PhantomData,
+            }),
+            EventType::KeyringStart => EventData::KeyringStart,
+            EventType::KeyringDone => EventData::KeyringDone,
+            EventType::KeyDownloadStart => EventData::KeyDownloadStart,
+            EventType::KeyDownloadDone => EventData::KeyringDone,
+            EventType::PacnewCreated => EventData::PacnewCreated(PacnewCreatedEvent {
+                handle,
+                inner: unsafe { &(*event).pacnew_created },
+                marker: PhantomData,
+            }),
+            EventType::PacsaveCreated => EventData::PacsaveCreated(PacsaveCreatedEvent {
+                handle,
+                inner: unsafe { &(*event).pacsave_created },
+                marker: PhantomData,
+            }),
+            EventType::HookStart => EventData::HookStart,
+            EventType::HookDone => EventData::HookDone,
+            EventType::HookRunStart => EventData::HookRunStart,
+            EventType::HookRunDone => EventData::HookRunDone,
+            EventType::PkgRetrieveStart => EventData::PkgRetrieveStart(PkgRetrieveStartEvent {
+                inner: unsafe { &(*event).pkg_retrieve },
+                marker: PhantomData,
+            }),
+            EventType::PkgRetrieveDone => EventData::PkgRetrieveDone,
+            EventType::PkgRetrieveFailed => EventData::PkgRetrieveFailed,
+        }
+    }
+
+    pub unsafe fn event_type(&self) -> EventType {
+        let event_type = (*self.inner).type_;
+        let event_type = transmute::<alpm_event_type_t, EventType>(event_type);
+        event_type
     }
 }
 
-impl AnyEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-}
-
-impl PackageOperationEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> PackageOperationEvent<'a> {
     pub fn operation(&self) -> PackageOperation {
-        let oldpkg = unsafe { Package::new(&self.handle, self.inner.oldpkg) };
-        let newpkg = unsafe { Package::new(&self.handle, self.inner.newpkg) };
+        let oldpkg = unsafe { Package::new(&self.handle, (*self.inner).oldpkg) };
+        let newpkg = unsafe { Package::new(&self.handle, (*self.inner).newpkg) };
 
-        match self.inner.operation {
+        let op = unsafe { (*self.inner).operation };
+        match op {
             alpm_package_operation_t::ALPM_PACKAGE_INSTALL => PackageOperation::Install(newpkg),
             alpm_package_operation_t::ALPM_PACKAGE_UPGRADE => {
                 PackageOperation::Upgrade(newpkg, oldpkg)
@@ -484,132 +510,97 @@ impl PackageOperationEvent {
     }
 }
 
-impl OptDepRemovalEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> OptDepRemovalEvent<'a> {
     pub fn pkg(&self) -> Package {
-        unsafe { Package::new(&self.handle, self.inner.pkg) }
+        unsafe { Package::new(&self.handle, (*self.inner).pkg) }
     }
 
     pub fn optdep(&self) -> Dep {
-        unsafe { Dep::from_ptr(self.inner.optdep) }
+        unsafe { Dep::from_ptr((*self.inner).optdep) }
     }
 }
 
-impl ScriptletInfoEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> ScriptletInfoEvent<'a> {
     pub fn line(&self) -> &str {
-        unsafe { from_cstr(self.inner.line) }
+        unsafe { from_cstr((*self.inner).line) }
     }
 }
 
-impl DatabaseMissingEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> DatabaseMissingEvent<'a> {
     pub fn dbname(&self) -> &str {
-        unsafe { from_cstr(self.inner.dbname) }
+        unsafe { from_cstr((*self.inner).dbname) }
     }
 }
 
-impl PacnewCreatedEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> PacnewCreatedEvent<'a> {
     #[allow(clippy::wrong_self_convention)]
     pub fn from_noupgrade(&self) -> bool {
-        self.inner.from_noupgrade != 0
+        unsafe { (*self.inner).from_noupgrade != 0 }
     }
 
     pub fn oldpkg(&self) -> Option<Package> {
-        if self.inner.oldpkg.is_null() {
-            None
-        } else {
-            unsafe { Some(Package::new(&self.handle, self.inner.oldpkg)) }
+        unsafe {
+            (*self.inner).oldpkg.as_ref()?;
+            Some(Package::new(&self.handle, (*self.inner).oldpkg))
         }
     }
 
     pub fn newpkg(&self) -> Option<Package> {
-        if self.inner.newpkg.is_null() {
-            None
-        } else {
-            unsafe { Some(Package::new(&self.handle, self.inner.newpkg)) }
+        unsafe {
+            (*self.inner).newpkg.as_ref()?;
+            Some(Package::new(&self.handle, (*self.inner).newpkg))
         }
     }
 
     pub fn file(&self) -> &str {
-        unsafe { from_cstr(self.inner.file) }
+        unsafe { from_cstr((*self.inner).file) }
     }
 }
 
-impl PacsaveCreatedEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> PacsaveCreatedEvent<'a> {
     pub fn oldpkg(&self) -> Option<Package> {
-        if self.inner.oldpkg.is_null() {
-            None
-        } else {
-            unsafe { Some(Package::new(&self.handle, self.inner.oldpkg)) }
+        unsafe {
+            (*self.inner).oldpkg.as_ref()?;
+            Some(Package::new(&self.handle, (*self.inner).oldpkg))
         }
     }
 
     pub fn file(&self) -> &str {
-        unsafe { from_cstr(self.inner.file) }
+        unsafe { from_cstr((*self.inner).file) }
     }
 }
 
-impl HookEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> HookEvent<'a> {
     pub fn when(&self) -> HookWhen {
-        unsafe { transmute::<alpm_hook_when_t, HookWhen>(self.inner.when) }
+        unsafe { transmute::<alpm_hook_when_t, HookWhen>((*self.inner).when) }
     }
 }
 
-impl HookRunEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> HookRunEvent<'a> {
     pub fn name(&self) -> &str {
-        unsafe { from_cstr(self.inner.name) }
+        unsafe { from_cstr((*self.inner).name) }
     }
 
     pub fn desc(&self) -> &str {
-        unsafe { from_cstr(self.inner.desc) }
+        unsafe { from_cstr((*self.inner).desc) }
     }
 
     pub fn position(&self) -> usize {
-        self.inner.position as usize
+        unsafe { (*self.inner).position as usize }
     }
 
     pub fn total(&self) -> usize {
-        self.inner.total as usize
+        unsafe { (*self.inner).total as usize }
     }
 }
 
-impl PkgRetrieveEvent {
-    pub fn event_type(&self) -> EventType {
-        unsafe { transmute::<alpm_event_type_t, EventType>(self.inner.type_) }
-    }
-
+impl<'a> PkgRetrieveStartEvent<'a> {
     pub fn num(&self) -> usize {
-        self.inner.num
+        unsafe { (*self.inner).num }
     }
 
     pub fn total_size(&self) -> i64 {
-        self.inner.total_size
+        unsafe { (*self.inner).total_size }
     }
 }
 

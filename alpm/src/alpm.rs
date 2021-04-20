@@ -111,7 +111,7 @@ mod tests {
     use super::*;
     use crate::{
         log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
-        DownloadEvent, Event, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
+        DownloadEvent, Event, EventData, FetchCbReturn, LogLevel, Progress, Question, SigLevel,
     };
 
     fn logcb(level: LogLevel, msg: &str) {
@@ -121,8 +121,8 @@ mod tests {
     }
 
     fn eventcb(event: &Event) {
-        match event {
-            Event::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
+        match event.event() {
+            EventData::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
             _ => println!("event: {:?}", event),
         }
     }
