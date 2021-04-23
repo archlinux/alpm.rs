@@ -13,6 +13,9 @@ keywords = ["archlinux", "arch", "alpm", "pacman"]
 categories = ["api-bindings"]
 exclude = ["tests"]
 
+[package.metadata.docs.rs]
+no-default-features = true
+
 [features]
 default = ["checkver"]
 mtree = ["libarchive", "libarchive3-sys"]
@@ -28,7 +31,6 @@ alpm-sys = { path = "../alpm-sys", version = "1.1.7" }
 
 [build-dependencies]
 alpm-sys = { path = "../alpm-sys", version = "1.1.5" }
-
 
 [dev-dependencies]
 criterion = "0.2.11"

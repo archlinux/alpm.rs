@@ -1,7 +1,8 @@
-use alpm_sys::alpm_version;
-use std::ffi::CStr;
-
+#[cfg(feature = "checkver")]
 fn main() {
+    use alpm_sys::alpm_version;
+    use std::ffi::CStr;
+
     if cfg!(feature = "checkver") && !cfg!(feature = "git") {
         let ver = unsafe { alpm_version() };
         assert!(!ver.is_null());
@@ -21,3 +22,6 @@ fn main() {
         );
     }
 }
+
+#[cfg(not(feature = "checkver"))]
+fn main() {}
