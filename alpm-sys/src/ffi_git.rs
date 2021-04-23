@@ -4033,14 +4033,32 @@ extern "C" {
 extern "C" {
     #[doc = " Returns the allowed package architecture."]
     #[doc = " @param handle the context handle"]
-    #[doc = " @return the configured package architecture"]
-    pub fn alpm_option_get_arch(handle: *mut alpm_handle_t) -> *const ::std::os::raw::c_char;
+    #[doc = " @return the configured package architectures"]
+    pub fn alpm_option_get_architectures(handle: *mut alpm_handle_t) -> *mut alpm_list_t;
+}
+extern "C" {
+    #[doc = " Adds an allowed package architecture."]
+    #[doc = " @param handle the context handle"]
+    #[doc = " @param arch the architecture to set"]
+    pub fn alpm_option_add_architecture(
+        handle: *mut alpm_handle_t,
+        arch: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     #[doc = " Sets the allowed package architecture."]
     #[doc = " @param handle the context handle"]
-    #[doc = " @param arch the architecture to set"]
-    pub fn alpm_option_set_arch(
+    #[doc = " @param arches the architecture to set"]
+    pub fn alpm_option_set_architectures(
+        handle: *mut alpm_handle_t,
+        arches: *mut alpm_list_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Removes an allowed package architecture."]
+    #[doc = " @param handle the context handle"]
+    #[doc = " @param arch the architecture to remove"]
+    pub fn alpm_option_remove_architecture(
         handle: *mut alpm_handle_t,
         arch: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
