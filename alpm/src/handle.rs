@@ -82,12 +82,6 @@ impl Alpm {
         AlpmList::from_parts(self, list)
     }
 
-    #[cfg(not(feature = "git"))]
-    pub fn arch(&self) -> &str {
-        unsafe { from_cstr(alpm_option_get_arch(self.handle)) }
-    }
-
-    #[cfg(feature = "git")]
     pub fn architectures(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_architectures(self.handle) };
         AlpmList::from_parts(self, list)
@@ -320,20 +314,12 @@ impl Alpm {
         }
     }
 
-    #[cfg(not(feature = "git"))]
-    pub fn set_arch<S: Into<Vec<u8>>>(&self, s: S) {
-        let s = CString::new(s).unwrap();
-        unsafe { alpm_option_set_arch(self.handle, s.as_ptr()) };
-    }
-
-    #[cfg(feature = "git")]
     pub fn add_architecture<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
         let ret = unsafe { alpm_option_add_architecture(self.handle, s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    #[cfg(feature = "git")]
     pub fn set_architectures<'a, T: AsRawAlpmList<'a, String>>(
         &'a mut self,
         list: T,
@@ -343,7 +329,6 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    #[cfg(feature = "git")]
     pub fn remove_architecture<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
         let ret = unsafe { alpm_option_remove_architecture(self.handle, s.as_ptr()) };
