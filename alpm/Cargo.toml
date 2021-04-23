@@ -2,6 +2,7 @@
 name = "alpm"
 version = "1.1.10"
 authors = ["morganamilo <morganamilo@gmail.com>"]
+readme = "../README.md"
 edition = "2018"
 
 description = "Rust bindings for libalpm"
