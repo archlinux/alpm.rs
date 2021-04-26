@@ -45,16 +45,11 @@ macro_rules! set_logcb {
 #[macro_export]
 macro_rules! set_dlcb {
     ( $handle:tt, $f:tt ) => {{
-        use std::cmp::Ordering;
         use std::ffi::{c_void, CStr};
         use std::os::raw::c_char;
         use std::ptr;
-        use $crate::alpm_sys::alpm_download_event_type_t::*;
         use $crate::alpm_sys::*;
-        use $crate::{
-            DownloadEvent, DownloadEventCompleted, DownloadEventInit, DownloadEventProgress,
-            DownloadEventRetry, DownloadResult,
-        };
+        use $crate::AnyDownloadEvent;
 
         unsafe extern "C" fn c_dlcb(
             _ctx: *mut c_void,
@@ -64,45 +59,8 @@ macro_rules! set_dlcb {
         ) {
             let filename = CStr::from_ptr(filename);
             let filename = filename.to_str().unwrap();
-            let cb: fn(filename: &str, event: DownloadEvent) = $f;
-
-            let event = match event {
-                ALPM_DOWNLOAD_INIT => {
-                    let data = data as *const alpm_download_event_init_t;
-                    let event = DownloadEventInit {
-                        optional: (*data).optional != 0,
-                    };
-                    DownloadEvent::Init(event)
-                }
-                ALPM_DOWNLOAD_RETRY => {
-                    let data = data as *const alpm_download_event_retry_t;
-                    let event = DownloadEventRetry {
-                        resume: (*data).resume != 0,
-                    };
-                    DownloadEvent::Retry(event)
-                }
-                ALPM_DOWNLOAD_PROGRESS => {
-                    let data = data as *const alpm_download_event_progress_t;
-                    let event = DownloadEventProgress {
-                        downloaded: (*data).downloaded,
-                        total: (*data).total,
-                    };
-                    DownloadEvent::Progress(event)
-                }
-                ALPM_DOWNLOAD_COMPLETED => {
-                    let data = data as *mut alpm_download_event_completed_t;
-                    let result = match (*data).result.cmp(&0) {
-                        Ordering::Equal => DownloadResult::Success,
-                        Ordering::Greater => DownloadResult::UpToDate,
-                        Ordering::Less => DownloadResult::Failed,
-                    };
-                    let event = DownloadEventCompleted {
-                        total: (*data).total,
-                        result,
-                    };
-                    DownloadEvent::Completed(event)
-                }
-            };
+            let cb: fn(filename: &str, event: AnyDownloadEvent) = $f;
+            let event = AnyDownloadEvent::new(event, data);
             cb(&filename, event);
         }
 

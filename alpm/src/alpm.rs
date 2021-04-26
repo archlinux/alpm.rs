@@ -98,8 +98,8 @@ mod tests {
     use super::*;
     use crate::{
         log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
-        AnyEvent, AnyQuestion, DownloadEvent, Event, FetchCbReturn, LogLevel, Progress, Question,
-        SigLevel,
+        AnyDownloadEvent, AnyEvent, AnyQuestion, DownloadEvent, Event, FetchCbReturn, LogLevel,
+        Progress, Question, SigLevel,
     };
 
     fn logcb(level: LogLevel, msg: &str) {
@@ -131,8 +131,8 @@ mod tests {
         }
     }
 
-    fn downloadcb(filename: &str, download: DownloadEvent) {
-        match download {
+    fn downloadcb(filename: &str, download: AnyDownloadEvent) {
+        match download.event() {
             DownloadEvent::Init(init) => {
                 println!("init: file={} optional={}", filename, init.optional)
             }

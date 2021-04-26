@@ -4,6 +4,7 @@ use crate::{
     OwnedFileConflict, Package, PgpKey,
 };
 
+use std::cmp::Ordering;
 use std::ffi::c_void;
 use std::io::{self, Read};
 use std::marker::PhantomData;
@@ -16,6 +17,7 @@ use std::ptr;
 use std::slice;
 
 use _alpm_db_usage_t::*;
+use _alpm_download_event_type_t::*;
 use _alpm_event_type_t::*;
 use _alpm_hook_when_t::*;
 use _alpm_loglevel_t::*;
@@ -1004,6 +1006,61 @@ impl Backup {
 
     pub fn name(&self) -> &str {
         unsafe { from_cstr((*self.inner).name) }
+    }
+}
+
+pub struct AnyDownloadEvent {
+    event: alpm_download_event_type_t,
+    data: *mut c_void,
+}
+
+#[repr(u32)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub enum DownloadEventType {
+    Init = ALPM_DOWNLOAD_INIT as u32,
+    Progress = ALPM_DOWNLOAD_PROGRESS as u32,
+    Completed = ALPM_DOWNLOAD_COMPLETED as u32,
+}
+
+impl AnyDownloadEvent {
+    /// This is an implementation detail and *should not* be called directly!
+    #[doc(hidden)]
+    pub unsafe fn new(event: alpm_download_event_type_t, data: *mut c_void) -> AnyDownloadEvent {
+        AnyDownloadEvent { event, data }
+    }
+
+    pub fn event(&self) -> DownloadEvent {
+        let event = unsafe { transmute(self.event) };
+        match event {
+            DownloadEventType::Init => {
+                let data = self.data as *const alpm_download_event_init_t;
+                let event = DownloadEventInit {
+                    optional: unsafe { (*data).optional != 0 },
+                };
+                DownloadEvent::Init(event)
+            }
+            DownloadEventType::Progress => {
+                let data = self.data as *const alpm_download_event_progress_t;
+                let event = DownloadEventProgress {
+                    downloaded: unsafe { (*data).downloaded },
+                    total: unsafe { (*data).total },
+                };
+                DownloadEvent::Progress(event)
+            }
+            DownloadEventType::Completed => {
+                let data = self.data as *mut alpm_download_event_completed_t;
+                let result = match unsafe { (*data).result.cmp(&0) } {
+                    Ordering::Equal => DownloadResult::Success,
+                    Ordering::Greater => DownloadResult::UpToDate,
+                    Ordering::Less => DownloadResult::Failed,
+                };
+                let event = DownloadEventCompleted {
+                    total: unsafe { (*data).total },
+                    result,
+                };
+                DownloadEvent::Completed(event)
+            }
+        }
     }
 }
 
