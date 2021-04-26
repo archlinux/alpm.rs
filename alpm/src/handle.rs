@@ -1,16 +1,11 @@
 use crate::utils::*;
-use crate::{
-    Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, DownloadCb, EventCb, FetchCb, LogCb,
-    Match, ProgressCb, QuestionCb, Result, SigLevel,
-};
+use crate::{Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
 
+use alpm_sys::*;
 use std::cmp::Ordering;
 use std::ffi::CString;
 use std::marker::PhantomData;
-#[cfg(feature = "git")]
 use std::ptr;
-
-use alpm_sys::*;
 
 impl Alpm {
     pub fn as_alpm_handle_t(&self) -> *mut alpm_handle_t {
@@ -401,114 +396,6 @@ impl Alpm {
 
     pub fn set_parallel_downloads(&self, n: u32) {
         unsafe { alpm_option_set_parallel_downloads(self.handle, n) };
-    }
-
-    pub fn log_cb(&self) -> LogCb {
-        LogCb {
-            marker: PhantomData,
-            cb: unsafe { alpm_option_get_logcb(self.handle) },
-        }
-    }
-
-    pub fn dl_cb(&self) -> DownloadCb {
-        DownloadCb {
-            marker: PhantomData,
-            cb: unsafe { alpm_option_get_dlcb(self.handle) },
-        }
-    }
-
-    pub fn fetch_cb(&self) -> FetchCb {
-        FetchCb {
-            marker: PhantomData,
-            cb: unsafe { alpm_option_get_fetchcb(self.handle) },
-        }
-    }
-
-    pub fn event_cb(&self) -> EventCb {
-        EventCb {
-            marker: PhantomData,
-            cb: unsafe { alpm_option_get_eventcb(self.handle) },
-        }
-    }
-
-    pub fn question_cb(&self) -> QuestionCb {
-        QuestionCb {
-            marker: PhantomData,
-            cb: unsafe { alpm_option_get_questioncb(self.handle) },
-        }
-    }
-
-    pub fn progress_cb(&self) -> ProgressCb {
-        ProgressCb {
-            marker: PhantomData,
-            cb: unsafe { alpm_option_get_progresscb(self.handle) },
-        }
-    }
-
-    pub fn set_log_cb(&self, cb: LogCb) {
-        #[cfg(not(feature = "git"))]
-        unsafe {
-            alpm_option_set_logcb(self.handle, cb.cb)
-        };
-        #[cfg(feature = "git")]
-        unsafe {
-            alpm_option_set_logcb(self.handle, cb.cb, ptr::null_mut())
-        };
-    }
-
-    pub fn set_dl_cb(&self, cb: DownloadCb) {
-        #[cfg(not(feature = "git"))]
-        unsafe {
-            alpm_option_set_dlcb(self.handle, cb.cb)
-        };
-        #[cfg(feature = "git")]
-        unsafe {
-            alpm_option_set_dlcb(self.handle, cb.cb, ptr::null_mut())
-        };
-    }
-
-    pub fn set_fetch_cb(&self, cb: FetchCb) {
-        #[cfg(not(feature = "git"))]
-        unsafe {
-            alpm_option_set_fetchcb(self.handle, cb.cb)
-        };
-        #[cfg(feature = "git")]
-        unsafe {
-            alpm_option_set_fetchcb(self.handle, cb.cb, ptr::null_mut())
-        };
-    }
-
-    pub fn set_event_cb(&self, cb: EventCb) {
-        #[cfg(not(feature = "git"))]
-        unsafe {
-            alpm_option_set_eventcb(self.handle, cb.cb)
-        };
-        #[cfg(feature = "git")]
-        unsafe {
-            alpm_option_set_eventcb(self.handle, cb.cb, ptr::null_mut())
-        };
-    }
-
-    pub fn set_question_cb(&self, cb: QuestionCb) {
-        #[cfg(not(feature = "git"))]
-        unsafe {
-            alpm_option_set_questioncb(self.handle, cb.cb)
-        };
-        #[cfg(feature = "git")]
-        unsafe {
-            alpm_option_set_questioncb(self.handle, cb.cb, ptr::null_mut())
-        };
-    }
-
-    pub fn set_progress_cb(&self, cb: ProgressCb) {
-        #[cfg(not(feature = "git"))]
-        unsafe {
-            alpm_option_set_progresscb(self.handle, cb.cb)
-        };
-        #[cfg(feature = "git")]
-        unsafe {
-            alpm_option_set_progresscb(self.handle, cb.cb, ptr::null_mut())
-        };
     }
 }
 

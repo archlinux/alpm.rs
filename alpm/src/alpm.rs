@@ -1,5 +1,8 @@
 use crate::utils::*;
-use crate::{Error, Result};
+use crate::{
+    DlCbTrait, Error, EventCbTrait, FetchCbTrait, LogCbTrait, ProgressCbTrait, QuestionCbTrait,
+    Result,
+};
 
 use std::ffi::{c_void, CString};
 use std::os::raw::c_int;
@@ -11,9 +14,20 @@ extern "C" {
     pub(crate) fn free(ptr: *mut c_void);
 }
 
-#[derive(Debug)]
 pub struct Alpm {
     pub(crate) handle: *mut alpm_handle_t,
+    pub(crate) logcb: Option<*mut dyn LogCbTrait>,
+    pub(crate) dlcb: Option<*mut dyn DlCbTrait>,
+    pub(crate) eventcb: Option<*mut dyn EventCbTrait>,
+    pub(crate) progresscb: Option<*mut dyn ProgressCbTrait>,
+    pub(crate) questioncb: Option<*mut dyn QuestionCbTrait>,
+    pub(crate) fetchcb: Option<*mut dyn FetchCbTrait>,
+}
+
+impl std::fmt::Debug for Alpm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Alpm")
+    }
 }
 
 unsafe impl Send for Alpm {}
@@ -22,6 +36,13 @@ impl Drop for Alpm {
     fn drop(&mut self) {
         unsafe { alpm_trans_release(self.handle) };
         unsafe { alpm_release(self.handle) };
+
+        unsafe { self.logcb.map(|cb| Box::from_raw(cb)) };
+        unsafe { self.dlcb.map(|cb| Box::from_raw(cb)) };
+        unsafe { self.eventcb.map(|cb| Box::from_raw(cb)) };
+        unsafe { self.progresscb.map(|cb| Box::from_raw(cb)) };
+        unsafe { self.questioncb.map(|cb| Box::from_raw(cb)) };
+        unsafe { self.fetchcb.map(|cb| Box::from_raw(cb)) };
     }
 }
 
@@ -37,7 +58,27 @@ impl Alpm {
             unsafe { return Err(Error::new(err)) };
         }
 
-        Ok(Alpm { handle })
+        Ok(Alpm {
+            handle,
+            logcb: None,
+            dlcb: None,
+            eventcb: None,
+            progresscb: None,
+            questioncb: None,
+            fetchcb: None,
+        })
+    }
+
+    pub(crate) unsafe fn from_ptr(handle: *mut alpm_handle_t) -> Alpm {
+        Alpm {
+            handle,
+            logcb: None,
+            dlcb: None,
+            eventcb: None,
+            progresscb: None,
+            questioncb: None,
+            fetchcb: None,
+        }
     }
 
     pub(crate) fn check_ret(&self, int: c_int) -> Result<()> {
@@ -97,29 +138,27 @@ impl Capabilities {
 mod tests {
     use super::*;
     use crate::{
-        log_action, set_dlcb, set_eventcb, set_fetchcb, set_logcb, set_progresscb, set_questioncb,
-        AnyDownloadEvent, AnyEvent, AnyQuestion, DownloadEvent, Event, FetchCbReturn, LogLevel,
-        Progress, Question, SigLevel,
+        log_action, AnyDownloadEvent, AnyEvent, AnyQuestion, DownloadEvent, Event, FetchCbReturn,
+        LogLevel, Progress, Question, SigLevel,
     };
 
-    fn logcb(level: LogLevel, msg: &str) {
-        if level == LogLevel::ERROR {
-            print!("log {}", msg);
-        }
+    fn logcb(_level: LogLevel, msg: &str, data: &mut u32) {
+        print!("log {} {}", data, msg);
+        *data += 1;
     }
 
-    fn eventcb(event: &AnyEvent) {
+    fn eventcb(event: AnyEvent, _: &mut ()) {
         match event.event() {
             Event::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
             _ => println!("event: {:?}", event),
         }
     }
 
-    fn fetchcb(_url: &str, _path: &str, _force: bool) -> FetchCbReturn {
+    fn fetchcb(_url: &str, _path: &str, _force: bool, _: &mut ()) -> FetchCbReturn {
         FetchCbReturn::Ok
     }
 
-    fn questioncb(question: &mut AnyQuestion) {
+    fn questioncb(question: AnyQuestion, _: &mut ()) {
         println!("question {:?}", question);
         match question.question() {
             Question::Conflict(x) => {
@@ -131,7 +170,7 @@ mod tests {
         }
     }
 
-    fn downloadcb(filename: &str, download: AnyDownloadEvent) {
+    fn downloadcb(filename: &str, download: AnyDownloadEvent, _: &mut ()) {
         match download.event() {
             DownloadEvent::Init(init) => {
                 println!("init: file={} optional={}", filename, init.optional)
@@ -144,7 +183,14 @@ mod tests {
         }
     }
 
-    fn progresscb(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize) {
+    fn progresscb(
+        progress: Progress,
+        pkgname: &str,
+        percent: i32,
+        howmany: usize,
+        current: usize,
+        _: &mut (),
+    ) {
         println!(
             "progress {:?}, {} {} {} {}",
             progress, pkgname, percent, howmany, current
@@ -169,22 +215,15 @@ mod tests {
     #[test]
     fn test_cb() {
         let mut handle = Alpm::new("/", "tests/db").unwrap();
-        set_logcb!(handle, logcb);
-        set_eventcb!(handle, eventcb);
-        set_fetchcb!(handle, fetchcb);
-        set_questioncb!(handle, questioncb);
-        set_progresscb!(handle, progresscb);
-        set_dlcb!(handle, downloadcb);
-
-        set_logcb!(handle, logcb);
-        set_eventcb!(handle, eventcb);
-        set_fetchcb!(handle, fetchcb);
-        set_questioncb!(handle, questioncb);
-        set_progresscb!(handle, progresscb);
-        set_dlcb!(handle, downloadcb);
 
         handle.set_use_syslog(true);
         handle.set_logfile("tests/log").unwrap();
+        handle.set_logcb(logcb, 0);
+        handle.set_eventcb(eventcb, ());
+        handle.set_fetchcb(fetchcb, ());
+        handle.set_questioncb(questioncb, ());
+        handle.set_dlcb(downloadcb, ());
+        handle.set_progresscb(progresscb, ());
 
         log_action!(handle, "me", "look i am logging an action {}", ":D").unwrap();
 

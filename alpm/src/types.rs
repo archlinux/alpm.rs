@@ -334,9 +334,10 @@ pub struct PkgRetrieveStartEvent<'a> {
 }
 
 #[derive(Debug)]
-pub struct AnyEvent {
+pub struct AnyEvent<'a> {
     inner: *const alpm_event_t,
     handle: *mut alpm_handle_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
@@ -381,19 +382,22 @@ pub enum Event<'a> {
     HookRunDone,
 }
 
-impl AnyEvent {
-    /// This is an implementation detail and *should not* be called directly!
-    #[doc(hidden)]
-    pub unsafe fn new(handle: *mut alpm_handle_t, inner: *const alpm_event_t) -> AnyEvent {
-        AnyEvent { handle, inner }
+impl<'a> AnyEvent<'a> {
+    pub(crate) unsafe fn new(
+        handle: *mut alpm_handle_t,
+        inner: *const alpm_event_t,
+    ) -> AnyEvent<'a> {
+        AnyEvent {
+            handle,
+            inner,
+            marker: PhantomData,
+        }
     }
 
-    pub fn event(&self) -> Event {
+    pub fn event(&self) -> Event<'a> {
         let event = self.inner;
         let event_type = self.event_type();
-        let handle = Alpm {
-            handle: self.handle,
-        };
+        let handle = unsafe { Alpm::from_ptr(self.handle) };
         let handle = ManuallyDrop::new(handle);
 
         match &event_type {
@@ -638,9 +642,10 @@ pub struct ImportKeyQuestion<'a> {
 }
 
 #[derive(Debug)]
-pub struct AnyQuestion {
+pub struct AnyQuestion<'a> {
     handle: *mut alpm_handle_t,
     inner: *mut alpm_question_t,
+    marker: PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
@@ -666,21 +671,21 @@ pub enum QuestionType {
     ImportKey = ALPM_QUESTION_IMPORT_KEY as u32,
 }
 
-impl AnyQuestion {
-    /// This is an implementation detail and *should not* be called directly!
-    #[doc(hidden)]
-    pub unsafe fn new(handle: *mut alpm_handle_t, question: *mut alpm_question_t) -> AnyQuestion {
+impl<'a> AnyQuestion<'a> {
+    pub(crate) unsafe fn new(
+        handle: *mut alpm_handle_t,
+        question: *mut alpm_question_t,
+    ) -> AnyQuestion<'a> {
         AnyQuestion {
             inner: question,
             handle,
+            marker: PhantomData,
         }
     }
 
-    pub fn question(&self) -> Question {
+    pub fn question(&self) -> Question<'a> {
         let question_type = self.question_type();
-        let handle = Alpm {
-            handle: self.handle,
-        };
+        let handle = unsafe { Alpm::from_ptr(self.handle) };
         let handle = ManuallyDrop::new(handle);
 
         match &question_type {
@@ -1009,9 +1014,10 @@ impl Backup {
     }
 }
 
-pub struct AnyDownloadEvent {
+pub struct AnyDownloadEvent<'a> {
     event: alpm_download_event_type_t,
     data: *mut c_void,
+    marker: PhantomData<&'a ()>,
 }
 
 #[repr(u32)]
@@ -1022,11 +1028,16 @@ pub enum DownloadEventType {
     Completed = ALPM_DOWNLOAD_COMPLETED as u32,
 }
 
-impl AnyDownloadEvent {
-    /// This is an implementation detail and *should not* be called directly!
-    #[doc(hidden)]
-    pub unsafe fn new(event: alpm_download_event_type_t, data: *mut c_void) -> AnyDownloadEvent {
-        AnyDownloadEvent { event, data }
+impl<'a> AnyDownloadEvent<'a> {
+    pub(crate) unsafe fn new(
+        event: alpm_download_event_type_t,
+        data: *mut c_void,
+    ) -> AnyDownloadEvent<'a> {
+        AnyDownloadEvent {
+            event,
+            data,
+            marker: PhantomData,
+        }
     }
 
     pub fn event(&self) -> DownloadEvent {

@@ -112,13 +112,13 @@ impl Alpm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{set_eventcb, set_logcb, AnyEvent, Error, Event, LogLevel, SigLevel};
+    use crate::{AnyEvent, Error, Event, LogLevel, SigLevel};
 
-    fn logcb(_level: LogLevel, msg: &str) {
+    fn logcb(_level: LogLevel, msg: &str, _: &mut ()) {
         print!("{}", msg);
     }
 
-    fn eventcb(event: &AnyEvent) {
+    fn eventcb(event: AnyEvent, _: &mut ()) {
         match event.event() {
             Event::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
             _ => println!("event: {:?}", event),
@@ -131,8 +131,8 @@ mod tests {
         let mut handle = Alpm::new("/", "tests/db").unwrap();
         let flags = TransFlag::DB_ONLY;
 
-        set_logcb!(handle, logcb);
-        set_eventcb!(handle, eventcb);
+        handle.set_logcb(logcb, ());
+        handle.set_eventcb(eventcb, ());
 
         let db = handle.register_syncdb_mut("core", SigLevel::NONE).unwrap();
         db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/core/os/x86_64")
