@@ -1,16 +1,30 @@
 fn main() {
     println!("cargo:rustc-link-lib=alpm");
+    println!("cargo:rerun-if-env-changed=ALPM_LIB_DIR");
+
+    if let Some(dir) = option_env!("ALPM_LIB_DIR") {
+        println!("cargo:rustc-link-search={}", dir);
+    }
 
     #[cfg(feature = "generate")]
     {
         use std::env;
         use std::path::Path;
 
+        println!("cargo:rerun-if-env-changed=ALPM_INCLUDE_DIR");
+
         let out_dir = env::var_os("OUT_DIR").unwrap();
         let dest_path = Path::new(&out_dir).join("ffi_generated.rs");
 
+        let alpm_dir = match option_env!("ALPM_INCLUDE_DIR") {
+            Some(dir) => Path::new(dir),
+            None => Path::new("/usr/include"),
+        };
+
+        let header = alpm_dir.join("alpm.h").to_str().unwrap().to_string();
+
         let bindings = bindgen::builder()
-            .header("/usr/include/alpm.h")
+            .header(header)
             .whitelist_type("(alpm|ALPM).*")
             .whitelist_function("(alpm|ALPM).*")
             .rustified_enum("_alpm_[a-z_]+_t")
