@@ -162,7 +162,7 @@ macro_rules! set_eventcb {
             C_ALPM_HANDLE = $handle.as_alpm_handle_t();
         }
 
-        unsafe extern "C" fn c_eventcb(event: *mut alpm_event_t) {
+        unsafe extern "C" fn c_eventcb(_ctx: *mut c_void, event: *mut alpm_event_t) {
             let event = AnyEvent::new(C_ALPM_HANDLE, event);
             $f(&event);
         }
@@ -194,7 +194,7 @@ macro_rules! set_questioncb {
             C_ALPM_HANDLE = $handle.as_alpm_handle_t();
         }
 
-        unsafe extern "C" fn c_questioncb(question: *mut alpm_question_t) {
+        unsafe extern "C" fn c_questioncb(_ctx: *mut c_void, question: *mut alpm_question_t) {
             let mut question = AnyQuestion::new(C_ALPM_HANDLE, question);
             $f(&mut question);
         }
