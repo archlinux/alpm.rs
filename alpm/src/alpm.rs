@@ -175,8 +175,13 @@ mod tests {
         set_questioncb!(handle, questioncb);
         set_progresscb!(handle, progresscb);
         set_dlcb!(handle, downloadcb);
-        #[cfg(not(feature = "git"))]
-        set_totaldlcb!(handle, totaldownloadcb);
+
+        set_logcb!(handle, logcb);
+        set_eventcb!(handle, eventcb);
+        set_fetchcb!(handle, fetchcb);
+        set_questioncb!(handle, questioncb);
+        set_progresscb!(handle, progresscb);
+        set_dlcb!(handle, downloadcb);
 
         handle.set_use_syslog(true);
         handle.set_logfile("tests/log").unwrap();
