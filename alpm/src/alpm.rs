@@ -7,19 +7,6 @@ use std::os::raw::c_int;
 use alpm_sys::*;
 use bitflags::bitflags;
 
-/// Function types expected to be passed into set_*cb macros.
-pub mod macro_callbacks {
-    use crate::{AnyEvent, AnyQuestion, FetchCbReturn, LogLevel, Progress};
-    pub type LogCb = fn(level: LogLevel, s: &str);
-    pub type DownloadCb = fn(filename: &str, xfered: u64, total: u64);
-    pub type FetchCb = fn(url: &str, filename: &str, force: bool) -> FetchCbReturn;
-    pub type TotalDownloadCb = fn(total: u64);
-    pub type EventCb = fn(event: &AnyEvent);
-    pub type QuestionCb = fn(question: &mut AnyQuestion);
-    pub type ProgressCb =
-        fn(progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize);
-}
-
 extern "C" {
     pub(crate) fn free(ptr: *mut c_void);
 }
@@ -132,7 +119,7 @@ mod tests {
         FetchCbReturn::Ok
     }
 
-    fn questioncb(question: &AnyQuestion) {
+    fn questioncb(question: &mut AnyQuestion) {
         println!("question {:?}", question);
         match question.question() {
             Question::Conflict(x) => {

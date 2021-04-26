@@ -23,11 +23,12 @@ macro_rules! set_logcb {
             args: *mut __va_list_tag,
         ) {
             let buff = ptr::null_mut();
+            let cb: fn(level: LogLevel, s: &str) = $f;
             let n = vasprintf(&buff, fmt, args);
             if n != -1 {
                 let s = CStr::from_ptr(buff);
                 let level = LogLevel::from_bits(level).unwrap();
-                $f(level, &s.to_string_lossy());
+                cb(level, &s.to_string_lossy());
                 free(buff as *mut c_void);
             }
         }
@@ -63,6 +64,7 @@ macro_rules! set_dlcb {
         ) {
             let filename = CStr::from_ptr(filename);
             let filename = filename.to_str().unwrap();
+            let cb: fn(filename: &str, event: DownloadEvent) = $f;
 
             let event = match event {
                 ALPM_DOWNLOAD_INIT => {
@@ -101,7 +103,7 @@ macro_rules! set_dlcb {
                     DownloadEvent::Completed(event)
                 }
             };
-            $f(&filename, event);
+            cb(&filename, event);
         }
 
         unsafe { alpm_option_set_dlcb($handle.as_alpm_handle_t(), Some(c_dlcb), ptr::null_mut()) };
@@ -126,7 +128,8 @@ macro_rules! set_fetchcb {
         ) -> c_int {
             let url = CStr::from_ptr(url).to_str().unwrap();
             let localpath = CStr::from_ptr(localpath).to_str().unwrap();
-            let ret = $f(url, localpath, force != 0);
+            let cb: fn(url: &str, filename: &str, force: bool) -> FetchCbReturn = $f;
+            let ret = cb(url, localpath, force != 0);
 
             match ret {
                 FetchCbReturn::Ok => 0,
@@ -164,7 +167,8 @@ macro_rules! set_eventcb {
 
         unsafe extern "C" fn c_eventcb(_ctx: *mut c_void, event: *mut alpm_event_t) {
             let event = AnyEvent::new(C_ALPM_HANDLE, event);
-            $f(&event);
+            let cb: fn(event: &AnyEvent) = $f;
+            cb(&event);
         }
 
         unsafe {
@@ -196,7 +200,8 @@ macro_rules! set_questioncb {
 
         unsafe extern "C" fn c_questioncb(_ctx: *mut c_void, question: *mut alpm_question_t) {
             let mut question = AnyQuestion::new(C_ALPM_HANDLE, question);
-            $f(&mut question);
+            let cb: fn(question: &mut AnyQuestion) = $f;
+            cb(&mut question);
         }
 
         unsafe {
@@ -235,7 +240,14 @@ macro_rules! set_progresscb {
             let pkgname = CStr::from_ptr(pkgname);
             let pkgname = pkgname.to_str().unwrap();
             let progress = transmute::<alpm_progress_t, Progress>(progress);
-            $f(progress, &pkgname, percent as i32, howmany, current);
+            let cb: fn(
+                progress: Progress,
+                pkgname: &str,
+                percent: i32,
+                howmany: usize,
+                current: usize,
+            ) = $f;
+            cb(progress, &pkgname, percent as i32, howmany, current);
         }
 
         unsafe {
