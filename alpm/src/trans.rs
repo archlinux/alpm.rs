@@ -131,8 +131,8 @@ mod tests {
         let mut handle = Alpm::new("/", "tests/db").unwrap();
         let flags = TransFlag::DB_ONLY;
 
-        handle.set_logcb((), logcb);
-        handle.set_eventcb((), eventcb);
+        handle.set_log_cb((), logcb);
+        handle.set_event_cb((), eventcb);
 
         let db = handle.register_syncdb_mut("core", SigLevel::NONE).unwrap();
         db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/core/os/x86_64")

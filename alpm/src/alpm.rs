@@ -213,15 +213,15 @@ mod tests {
 
         handle.set_use_syslog(true);
         handle.set_logfile("tests/log").unwrap();
-        handle.set_logcb(0, |_, msg, data| {
+        handle.set_log_cb(0, |_, msg, data| {
             print!("log {} {}", data, msg);
             *data += 1;
         });
-        handle.set_eventcb((), eventcb);
-        handle.set_fetchcb((), fetchcb);
-        handle.set_questioncb((), questioncb);
-        handle.set_dlcb((), downloadcb);
-        handle.set_progresscb((), progresscb);
+        handle.set_event_cb((), eventcb);
+        handle.set_fetch_cb((), fetchcb);
+        handle.set_question_cb((), questioncb);
+        handle.set_dl_cb((), downloadcb);
+        handle.set_progress_cb((), progresscb);
 
         log_action!(handle, "me", "look i am logging an action {}", ":D").unwrap();
 
