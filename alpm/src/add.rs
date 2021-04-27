@@ -3,7 +3,9 @@ use crate::{Alpm, Error, LoadedPackage, Package};
 use alpm_sys::*;
 
 pub unsafe trait IntoPkgAdd {
+    #[doc(hidden)]
     unsafe fn as_alpm_pkg_t(&self) -> *mut alpm_pkg_t;
+    #[doc(hidden)]
     unsafe fn added(self);
 }
 
@@ -42,8 +44,8 @@ pub struct AddError<P> {
     pub pkg: P,
 }
 
-impl<P> Into<Error> for AddError<P> {
-    fn into(self) -> Error {
-        self.err
+impl<P> From<AddError<P>> for Error {
+    fn from(err: AddError<P>) -> Error {
+        err.err
     }
 }

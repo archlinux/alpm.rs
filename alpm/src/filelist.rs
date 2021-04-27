@@ -17,7 +17,7 @@ impl File {
     }
 
     pub fn size(&self) -> i64 {
-        #[allow(clippy::identity_conversion)]
+        #[allow(clippy::useless_conversion)]
         self.inner.size.into()
     }
 

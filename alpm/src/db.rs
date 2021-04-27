@@ -1,5 +1,7 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, AlpmListMut, AsRawAlpmList, Group, Package, Result, SigLevel, Usage};
+use crate::{
+    Alpm, AlpmList, AlpmListMut, Group, IntoRawAlpmList, Package, Result, SigLevel, Usage,
+};
 
 use std::ffi::CString;
 use std::ops::Deref;
@@ -25,9 +27,9 @@ impl<'a> Deref for DbMut<'a> {
     }
 }
 
-impl<'a> Into<Db<'a>> for DbMut<'a> {
-    fn into(self) -> Db<'a> {
-        self.inner
+impl<'a> From<DbMut<'a>> for Db<'a> {
+    fn from(db: DbMut<'a>) -> Db<'a> {
+        db.inner
     }
 }
 
@@ -67,8 +69,8 @@ impl<'a> DbMut<'a> {
         self.handle.check_ret(ret)
     }
 
-    pub fn set_servers<L: AsRawAlpmList<'a, String>>(&self, list: L) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+    pub fn set_servers<L: IntoRawAlpmList<'a, String>>(&self, list: L) -> Result<()> {
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_db_set_servers(self.db, alpm_list_strdup(list.list())) };
         self.handle.check_ret(ret)
     }
@@ -120,10 +122,10 @@ impl<'a> Db<'a> {
 
     pub fn search<L>(&self, list: L) -> Result<AlpmListMut<'a, Package<'a>>>
     where
-        L: AsRawAlpmList<'a, String>,
+        L: IntoRawAlpmList<'a, String>,
     {
         let mut ret = std::ptr::null_mut();
-        let list = unsafe { list.as_raw_alpm_list() };
+        let list = unsafe { list.into_raw_alpm_list() };
         let ok = unsafe { alpm_db_search(self.db, list.list(), &mut ret) };
         self.handle.check_ret(ok)?;
         Ok(AlpmListMut::from_parts(self.handle, ret))
@@ -238,7 +240,7 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
-        assert!(pkg.version() == "5.1.8.arch1-1");
+        assert!(pkg.version().as_str() == "5.1.8.arch1-1");
     }
 
     #[test]

@@ -450,10 +450,7 @@ extern "C" fn fetchcb<C: FetchCbTrait>(
         }
     });
 
-    match ret {
-        Ok(ret) => ret,
-        Err(_) => -1,
-    }
+    ret.unwrap_or(-1)
 }
 
 extern "C" fn eventcb<C: EventCbTrait>(ctx: *mut c_void, event: *mut alpm_event_t) {

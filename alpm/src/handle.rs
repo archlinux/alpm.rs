@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, AsRawAlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
+use crate::{Alpm, AlpmList, Db, DbMut, Dep, Depend, IntoRawAlpmList, Match, Result, SigLevel};
 
 use alpm_sys::*;
 use std::cmp::Ordering;
@@ -96,8 +96,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_hookdirs<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+    pub fn set_hookdirs<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_hookdirs(self.handle, list.list()) };
         self.check_ret(ret)
     }
@@ -118,8 +118,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_cachedirs<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+    pub fn set_cachedirs<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_cachedirs(self.handle, list.list()) };
         self.check_ret(ret)
     }
@@ -157,8 +157,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_noupgrades<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+    pub fn set_noupgrades<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_noupgrades(self.handle, list.list()) };
         self.check_ret(ret)
     }
@@ -190,8 +190,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_noextracts<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+    pub fn set_noextracts<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_noextracts(self.handle, list.list()) };
         self.check_ret(ret)
     }
@@ -223,8 +223,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignorepkgs<'a, T: AsRawAlpmList<'a, String>>(&mut self, list: T) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+    pub fn set_ignorepkgs<'a, T: IntoRawAlpmList<'a, String>>(&mut self, list: T) -> Result<()> {
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_ignorepkgs(self.handle, list.list()) };
         self.check_ret(ret)
     }
@@ -245,8 +245,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignoregroups<'a, T: AsRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+    pub fn set_ignoregroups<'a, T: IntoRawAlpmList<'a, String>>(
+        &'a mut self,
+        list: T,
+    ) -> Result<()> {
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_ignoregroups(self.handle, list.list()) };
         self.check_ret(ret)
     }
@@ -267,11 +270,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_overwrite_files<'a, T: AsRawAlpmList<'a, String>>(
+    pub fn set_overwrite_files<'a, T: IntoRawAlpmList<'a, String>>(
         &'a mut self,
         list: T,
     ) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_overwrite_files(self.handle, list.list()) };
         self.check_ret(ret)
     }
@@ -291,11 +294,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_assume_installed<'a, T: AsRawAlpmList<'a, Dep<'a>>>(
+    pub fn set_assume_installed<'a, T: IntoRawAlpmList<'a, Dep<'a>>>(
         &'a mut self,
         list: T,
     ) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_assumeinstalled(self.handle, list.list()) };
         self.check_ret(ret)
     }
@@ -315,11 +318,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_architectures<'a, T: AsRawAlpmList<'a, String>>(
+    pub fn set_architectures<'a, T: IntoRawAlpmList<'a, String>>(
         &'a mut self,
         list: T,
     ) -> Result<()> {
-        let list = unsafe { list.as_raw_alpm_list() };
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_option_set_architectures(self.handle, list.list()) };
         self.check_ret(ret)
     }

@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, AlpmListMut, AsRawAlpmList, Db, Package, Ver};
+use crate::{free, Alpm, AlpmList, AlpmListMut, Db, IntoRawAlpmList, Package, Ver};
 
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
@@ -103,10 +103,10 @@ impl<'a> fmt::Display for Dep<'a> {
     }
 }
 
-impl<'a> Into<Vec<u8>> for Dep<'a> {
-    fn into(self) -> Vec<u8> {
+impl<'a> From<Dep<'a>> for Vec<u8> {
+    fn from(dep: Dep<'a>) -> Vec<u8> {
         unsafe {
-            let cs = alpm_dep_compute_string(self.inner);
+            let cs = alpm_dep_compute_string(dep.inner);
             let s = std::ffi::CStr::from_ptr(cs);
             let s = s.to_bytes().to_vec();
             free(cs as *mut c_void);
@@ -300,16 +300,16 @@ impl<'a> AlpmList<'a, Package<'a>> {
 impl Alpm {
     pub fn check_deps<'a>(
         &self,
-        pkgs: impl AsRawAlpmList<'a, Package<'a>>,
-        rem: impl AsRawAlpmList<'a, Package<'a>>,
-        upgrade: impl AsRawAlpmList<'a, Package<'a>>,
+        pkgs: impl IntoRawAlpmList<'a, Package<'a>>,
+        rem: impl IntoRawAlpmList<'a, Package<'a>>,
+        upgrade: impl IntoRawAlpmList<'a, Package<'a>>,
         reverse_deps: bool,
     ) -> AlpmListMut<DependMissing> {
         let reverse_deps = if reverse_deps { 1 } else { 0 };
 
-        let pkgs = unsafe { pkgs.as_raw_alpm_list() };
-        let rem = unsafe { rem.as_raw_alpm_list() };
-        let upgrade = unsafe { upgrade.as_raw_alpm_list() };
+        let pkgs = unsafe { pkgs.into_raw_alpm_list() };
+        let rem = unsafe { rem.into_raw_alpm_list() };
+        let upgrade = unsafe { upgrade.into_raw_alpm_list() };
 
         let ret = unsafe {
             alpm_checkdeps(

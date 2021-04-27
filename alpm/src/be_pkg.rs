@@ -73,7 +73,7 @@ mod tests {
             SigLevel::NONE,
         )?;
         assert_eq!(pkg.name(), "pacman");
-        assert_eq!(pkg.version(), "5.1.3-1");
+        assert_eq!(pkg.version().as_str(), "5.1.3-1");
         assert_eq!(pkg.base(), Some("pacman"));
         assert_eq!(
             pkg.desc(),
@@ -104,7 +104,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(pkg.name(), "pacman");
-        assert_eq!(pkg.version(), "5.1.3-1");
+        assert_eq!(pkg.version().as_str(), "5.1.3-1");
         assert_eq!(pkg.base(), None);
         assert_eq!(pkg.desc(), None);
         assert_eq!(pkg.url(), None);

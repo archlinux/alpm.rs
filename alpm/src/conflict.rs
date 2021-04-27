@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmListMut, AsRawAlpmList, Dep, Package};
+use crate::{Alpm, AlpmListMut, Dep, IntoRawAlpmList, Package};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
@@ -45,14 +45,14 @@ impl Drop for OwnedConflict {
 
 impl<'a> Conflict<'a> {
     pub fn package1_hash(&self) -> u64 {
-        #[allow(clippy::identity_conversion)]
+        #[allow(clippy::useless_conversion)]
         unsafe {
             (*self.inner).package1_hash.into()
         }
     }
 
     pub fn package2_hash(&self) -> u64 {
-        #[allow(clippy::identity_conversion)]
+        #[allow(clippy::useless_conversion)]
         unsafe {
             (*self.inner).package2_hash.into()
         }
@@ -136,11 +136,11 @@ impl Drop for OwnedFileConflict {
 }
 
 impl Alpm {
-    pub fn check_conflicts<'a, L: AsRawAlpmList<'a, Package<'a>>>(
+    pub fn check_conflicts<'a, L: IntoRawAlpmList<'a, Package<'a>>>(
         &self,
         list: L,
     ) -> AlpmListMut<OwnedConflict> {
-        let list = unsafe { list.as_raw_alpm_list() };
+        let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_checkconflicts(self.handle, list.list()) };
         AlpmListMut::from_parts(self, ret)
     }

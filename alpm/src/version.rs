@@ -8,9 +8,9 @@ use std::os::raw::c_char;
 use alpm_sys::*;
 
 pub fn vercmp<S: Into<Vec<u8>>>(a: S, b: S) -> Ordering {
-    let a = CString::new(a).unwrap();
-    let b = CString::new(b).unwrap();
-    unsafe { alpm_pkg_vercmp(a.as_ptr(), b.as_ptr()).cmp(&0) }
+    let a = Version::new(a);
+    let b = Version::new(b);
+    a.vercmp(b)
 }
 
 #[repr(transparent)]
@@ -24,6 +24,10 @@ impl Ver {
 
     pub fn as_str(&self) -> &str {
         self
+    }
+
+    pub fn vercmp<V: AsRef<Ver>>(&self, other: V) -> Ordering {
+        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.as_ref().0.as_ptr()).cmp(&0) }
     }
 
     pub(crate) unsafe fn from_ptr<'a>(s: *const c_char) -> &'a Ver {
@@ -62,26 +66,6 @@ impl PartialOrd for Ver {
     }
 }
 
-impl PartialOrd<Version> for Ver {
-    fn partial_cmp(&self, other: &Version) -> Option<Ordering> {
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
-    }
-}
-
-impl PartialOrd<str> for Ver {
-    fn partial_cmp(&self, other: &str) -> Option<Ordering> {
-        let other = Version::new(other);
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
-    }
-}
-
-impl PartialOrd<String> for Ver {
-    fn partial_cmp(&self, other: &String) -> Option<Ordering> {
-        let other = Version::new(other.as_str());
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
-    }
-}
-
 impl PartialOrd<Version> for &Ver {
     fn partial_cmp(&self, other: &Version) -> Option<Ordering> {
         self.partial_cmp(&other.as_ver())
@@ -106,27 +90,9 @@ impl PartialEq for Ver {
     }
 }
 
-impl PartialEq<Version> for Ver {
-    fn eq(&self, other: &Version) -> bool {
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()) == 0 }
-    }
-}
-
-impl PartialEq<str> for Ver {
-    fn eq(&self, other: &str) -> bool {
-        self.eq(&Version::new(other))
-    }
-}
-
-impl PartialEq<String> for Ver {
-    fn eq(&self, other: &String) -> bool {
-        self.eq(&Version::new(other.as_str()))
-    }
-}
-
 impl PartialEq<Version> for &Ver {
     fn eq(&self, other: &Version) -> bool {
-        (*self).eq(other)
+        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()) == 0 }
     }
 }
 
@@ -163,42 +129,9 @@ impl PartialOrd for Version {
     }
 }
 
-impl PartialOrd<Ver> for Version {
-    fn partial_cmp(&self, other: &Ver) -> Option<Ordering> {
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
-    }
-}
-
-impl PartialOrd<str> for Version {
-    fn partial_cmp(&self, other: &str) -> Option<Ordering> {
-        let other = Version::new(other);
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
-    }
-}
-
-impl PartialOrd<&str> for Version {
-    fn partial_cmp(&self, other: &&str) -> Option<Ordering> {
-        let other = Version::new(*other);
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
-    }
-}
-
-impl PartialOrd<String> for Version {
-    fn partial_cmp(&self, other: &String) -> Option<Ordering> {
-        let other = Version::new(other.as_str());
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
-    }
-}
-
-impl PartialOrd<Ver> for &Version {
-    fn partial_cmp(&self, other: &Ver) -> Option<Ordering> {
-        (*self).partial_cmp(other)
-    }
-}
-
 impl PartialOrd<&Ver> for Version {
     fn partial_cmp(&self, other: &&Ver) -> Option<Ordering> {
-        self.as_ver().partial_cmp(*other)
+        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
     }
 }
 
@@ -220,39 +153,57 @@ impl PartialEq for Version {
     }
 }
 
-impl PartialEq<Ver> for Version {
-    fn eq(&self, other: &Ver) -> bool {
+impl PartialEq<&Ver> for Version {
+    fn eq(&self, other: &&Ver) -> bool {
         unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()) == 0 }
     }
 }
 
-impl PartialEq<str> for Version {
+impl PartialEq<str> for Ver {
     fn eq(&self, other: &str) -> bool {
-        self.eq(&Version::new(other))
+        self.as_str().eq(other)
+    }
+}
+
+impl PartialEq<String> for Ver {
+    fn eq(&self, other: &String) -> bool {
+        self.as_str().eq(other)
     }
 }
 
 impl PartialEq<&str> for Version {
     fn eq(&self, other: &&str) -> bool {
-        self.eq(&Version::new(*other))
+        self.as_str() == *other
     }
 }
 
 impl PartialEq<String> for Version {
     fn eq(&self, other: &String) -> bool {
-        self.eq(&Version::new(other.as_str()))
+        self.as_str().eq(other)
     }
 }
 
-impl PartialEq<Ver> for &Version {
+impl PartialEq<Ver> for str {
     fn eq(&self, other: &Ver) -> bool {
-        (*self).eq(other)
+        self == other.as_str()
     }
 }
 
-impl PartialEq<&Ver> for Version {
+impl PartialEq<&Ver> for String {
     fn eq(&self, other: &&Ver) -> bool {
-        self.as_ver().eq(*other)
+        self == other.as_str()
+    }
+}
+
+impl PartialEq<Version> for &str {
+    fn eq(&self, other: &Version) -> bool {
+        *self == other.as_str()
+    }
+}
+
+impl PartialEq<Version> for String {
+    fn eq(&self, other: &Version) -> bool {
+        self == other.as_str()
     }
 }
 
@@ -271,12 +222,15 @@ mod tests {
         assert!(Version::new("2") >= Version::new("1"));
         assert!(Version::new("2") >= Version::new("2"));
         assert!(Version::new("2") == Version::new("2"));
+
         assert!(Version::new("2") == "2");
-        assert!(Version::new("2-1") != "2-2");
-        assert!(Version::new("2-1") == "2");
+        assert!("2" == Version::new("2"));
 
         let dep1 = Depend::new("foo=20");
         let dep2 = Depend::new("foo=34");
+
+        assert!(Version::new("1").vercmp(&Version::new("2")) == Ordering::Less);
+        assert!(Version::new("2-1").vercmp(&Version::new("2")) == Ordering::Equal);
 
         assert!(dep1.version() != dep2.version());
         assert!(dep1.version() < dep2.version());

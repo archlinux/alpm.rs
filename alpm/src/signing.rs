@@ -7,15 +7,28 @@ use alpm_sys::*;
 
 use std::ffi::{c_void, CString};
 use std::mem::transmute;
-use std::{ptr, slice};
+use std::{fmt, ptr, slice};
 
-pub fn decode_signature<S: Into<Vec<u8>>>(b64: S) -> std::result::Result<Vec<u8>, ()> {
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub struct SignatureDecodeError;
+
+impl fmt::Display for SignatureDecodeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Failed to decode signature")
+    }
+}
+
+impl std::error::Error for SignatureDecodeError {}
+
+pub fn decode_signature<S: Into<Vec<u8>>>(
+    b64: S,
+) -> std::result::Result<Vec<u8>, SignatureDecodeError> {
     let b64 = CString::new(b64).unwrap();
     let mut data = ptr::null_mut();
     let mut len = 0;
     let ret = unsafe { alpm_decode_signature(b64.as_ptr(), &mut data, &mut len) };
     if ret != 0 {
-        return Err(());
+        return Err(SignatureDecodeError);
     }
 
     let buff = unsafe { slice::from_raw_parts(data, len) };
