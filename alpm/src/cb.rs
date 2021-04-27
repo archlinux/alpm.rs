@@ -172,8 +172,8 @@ pub struct RawFetchCb<'a> {
 impl Alpm {
     pub fn set_logcb<T: Send + 'static, F: FnMut(LogLevel, &str, &mut T) + Send + 'static>(
         &mut self,
-        f: F,
         data: T,
+        f: F,
     ) {
         let ctx = LogCbImpl { cb: f, data };
         let ctx = Box::leak(Box::new(ctx));
@@ -187,8 +187,8 @@ impl Alpm {
         F: FnMut(&str, AnyDownloadEvent, &mut T) + Send + 'static,
     >(
         &mut self,
-        f: F,
         data: T,
+        f: F,
     ) {
         let ctx = DlCbImpl { cb: f, data };
         let ctx = Box::leak(Box::new(ctx));
@@ -199,8 +199,8 @@ impl Alpm {
 
     pub fn set_eventcb<T: Send + 'static, F: FnMut(AnyEvent, &mut T) + Send + 'static>(
         &mut self,
-        f: F,
         data: T,
+        f: F,
     ) {
         let ctx = EventCbImpl {
             cb: f,
@@ -218,8 +218,8 @@ impl Alpm {
         F: FnMut(Progress, &str, i32, usize, usize, &mut T) + Send + 'static,
     >(
         &mut self,
-        f: F,
         data: T,
+        f: F,
     ) {
         let ctx = ProgressCbImpl { cb: f, data };
         let ctx = Box::leak(Box::new(ctx));
@@ -230,8 +230,8 @@ impl Alpm {
 
     pub fn set_questioncb<T: Send + 'static, F: FnMut(AnyQuestion, &mut T) + Send + 'static>(
         &mut self,
-        f: F,
         data: T,
+        f: F,
     ) {
         let ctx = QuestionCbImpl {
             cb: f,
@@ -249,8 +249,8 @@ impl Alpm {
         F: FnMut(&str, &str, bool, &mut T) -> FetchResult + Send + 'static,
     >(
         &mut self,
-        f: F,
         data: T,
+        f: F,
     ) {
         let ctx = FetchCbImpl { cb: f, data };
         let ctx = Box::leak(Box::new(ctx));

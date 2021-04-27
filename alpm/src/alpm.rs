@@ -218,12 +218,12 @@ mod tests {
 
         handle.set_use_syslog(true);
         handle.set_logfile("tests/log").unwrap();
-        handle.set_logcb(logcb, 0);
-        handle.set_eventcb(eventcb, ());
-        handle.set_fetchcb(fetchcb, ());
-        handle.set_questioncb(questioncb, ());
-        handle.set_dlcb(downloadcb, ());
-        handle.set_progresscb(progresscb, ());
+        handle.set_logcb(0, logcb);
+        handle.set_eventcb((), eventcb);
+        handle.set_fetchcb((), fetchcb);
+        handle.set_questioncb((), questioncb);
+        handle.set_dlcb((), downloadcb);
+        handle.set_progresscb((), progresscb);
 
         log_action!(handle, "me", "look i am logging an action {}", ":D").unwrap();
 
