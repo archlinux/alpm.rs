@@ -139,13 +139,8 @@ mod tests {
     use super::*;
     use crate::{
         log_action, AnyDownloadEvent, AnyEvent, AnyQuestion, DownloadEvent, Event, FetchResult,
-        LogLevel, Progress, Question, SigLevel,
+        Progress, Question, SigLevel,
     };
-
-    fn logcb(_level: LogLevel, msg: &str, data: &mut u32) {
-        print!("log {} {}", data, msg);
-        *data += 1;
-    }
 
     fn eventcb(event: AnyEvent, _: &mut ()) {
         match event.event() {
@@ -218,7 +213,10 @@ mod tests {
 
         handle.set_use_syslog(true);
         handle.set_logfile("tests/log").unwrap();
-        handle.set_logcb(0, logcb);
+        handle.set_logcb(0, |_, msg, data| {
+            print!("log {} {}", data, msg);
+            *data += 1;
+        });
         handle.set_eventcb((), eventcb);
         handle.set_fetchcb((), fetchcb);
         handle.set_questioncb((), questioncb);
