@@ -236,7 +236,7 @@ impl Alpm {
         f: F,
     ) {
         let ctx = LogCbImpl { cb: f, data };
-        let ctx = Box::leak(Box::new(ctx));
+        let ctx = Box::into_raw(Box::new(ctx));
         let cb = logcb::<LogCbImpl<T, F>>;
         unsafe { alpm_option_set_logcb(self.handle, Some(cb), ctx as *mut _ as *mut _) };
         self.logcb = Some(ctx);
@@ -251,7 +251,7 @@ impl Alpm {
         f: F,
     ) {
         let ctx = DlCbImpl { cb: f, data };
-        let ctx = Box::leak(Box::new(ctx));
+        let ctx = Box::into_raw(Box::new(ctx));
         let cb = dlcb::<DlCbImpl<T, F>>;
         unsafe { alpm_option_set_dlcb(self.handle, Some(cb), ctx as *mut _ as *mut _) };
         self.dlcb = Some(ctx);
@@ -267,7 +267,7 @@ impl Alpm {
             data,
             handle: self.handle,
         };
-        let ctx = Box::leak(Box::new(ctx));
+        let ctx = Box::into_raw(Box::new(ctx));
         let cb = eventcb::<EventCbImpl<T, F>>;
         unsafe { alpm_option_set_eventcb(self.handle, Some(cb), ctx as *mut _ as *mut _) };
         self.eventcb = Some(ctx);
@@ -282,7 +282,7 @@ impl Alpm {
         f: F,
     ) {
         let ctx = ProgressCbImpl { cb: f, data };
-        let ctx = Box::leak(Box::new(ctx));
+        let ctx = Box::into_raw(Box::new(ctx));
         let cb = progresscb::<ProgressCbImpl<T, F>>;
         unsafe { alpm_option_set_progresscb(self.handle, Some(cb), ctx as *mut _ as *mut _) };
         self.progresscb = Some(ctx);
@@ -298,7 +298,7 @@ impl Alpm {
             data,
             handle: self.handle,
         };
-        let ctx = Box::leak(Box::new(ctx));
+        let ctx = Box::into_raw(Box::new(ctx));
         let cb = questioncb::<QuestionCbImpl<T, F>>;
         unsafe { alpm_option_set_questioncb(self.handle, Some(cb), ctx as *mut _ as *mut _) };
         self.questioncb = Some(ctx);
@@ -313,7 +313,7 @@ impl Alpm {
         f: F,
     ) {
         let ctx = FetchCbImpl { cb: f, data };
-        let ctx = Box::leak(Box::new(ctx));
+        let ctx = Box::into_raw(Box::new(ctx));
         let cb = fetchcb::<FetchCbImpl<T, F>>;
         unsafe { alpm_option_set_fetchcb(self.handle, Some(cb), ctx as *mut _ as *mut _) };
         self.fetchcb = Some(ctx)
