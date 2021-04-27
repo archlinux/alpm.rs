@@ -28,7 +28,7 @@ pub struct Alpm {
 
 impl std::fmt::Debug for Alpm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("Alpm")
+        write!(f, "{:?}", self.handle)
     }
 }
 
