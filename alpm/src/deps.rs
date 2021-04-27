@@ -6,7 +6,6 @@ use alpm_sys::*;
 
 use std::ffi::{c_void, CString};
 use std::fmt;
-use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::mem::transmute;
 
@@ -19,7 +18,7 @@ pub struct Dep<'a> {
 unsafe impl<'a> Send for Dep<'a> {}
 unsafe impl<'a> Sync for Dep<'a> {}
 
-#[derive(Debug, Hash, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Depend {
     dep: Dep<'static>,
 }
@@ -69,14 +68,6 @@ impl<'a> AsDep for &Dep<'a> {
 impl Drop for Depend {
     fn drop(&mut self) {
         unsafe { alpm_dep_free(self.dep.inner) }
-    }
-}
-
-impl<'a> Hash for Dep<'a> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.name().hash(state);
-        self.depmod().hash(state);
-        self.version().hash(state);
     }
 }
 
@@ -187,7 +178,7 @@ impl<'a> Dep<'a> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd)]
 pub enum DepModVer<'a> {
     Any,
     Eq(&'a Ver),

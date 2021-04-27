@@ -14,7 +14,7 @@ pub fn vercmp<S: Into<Vec<u8>>>(a: S, b: S) -> Ordering {
 }
 
 #[repr(transparent)]
-#[derive(Debug, Eq, Hash)]
+#[derive(Debug, Eq)]
 pub struct Ver(CStr);
 
 impl Ver {
@@ -96,7 +96,7 @@ impl PartialEq<Version> for &Ver {
     }
 }
 
-#[derive(Debug, Eq, Hash, Clone)]
+#[derive(Debug, Eq, Clone)]
 pub struct Version(CString);
 
 impl Version {

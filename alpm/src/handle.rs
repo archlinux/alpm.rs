@@ -4,8 +4,6 @@ use crate::{Alpm, AlpmList, Db, DbMut, Dep, Depend, IntoRawAlpmList, Match, Resu
 use alpm_sys::*;
 use std::cmp::Ordering;
 use std::ffi::CString;
-use std::marker::PhantomData;
-use std::ptr;
 
 impl Alpm {
     pub fn as_alpm_handle_t(&self) -> *mut alpm_handle_t {
