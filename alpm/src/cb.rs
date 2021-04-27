@@ -170,7 +170,7 @@ pub struct RawFetchCb<'a> {
 }
 
 impl Alpm {
-    pub fn set_logcb<T: 'static, F: FnMut(LogLevel, &str, &mut T) + 'static>(
+    pub fn set_logcb<T: Send + 'static, F: FnMut(LogLevel, &str, &mut T) + Send + 'static>(
         &mut self,
         f: F,
         data: T,
@@ -182,7 +182,10 @@ impl Alpm {
         self.logcb = Some(ctx);
     }
 
-    pub fn set_dlcb<T: 'static, F: FnMut(&str, AnyDownloadEvent, &mut T) + 'static>(
+    pub fn set_dlcb<
+        T: Send + 'static,
+        F: FnMut(&str, AnyDownloadEvent, &mut T) + Send + 'static,
+    >(
         &mut self,
         f: F,
         data: T,
@@ -194,7 +197,11 @@ impl Alpm {
         self.dlcb = Some(ctx);
     }
 
-    pub fn set_eventcb<T: 'static, F: FnMut(AnyEvent, &mut T) + 'static>(&mut self, f: F, data: T) {
+    pub fn set_eventcb<T: Send + 'static, F: FnMut(AnyEvent, &mut T) + Send + 'static>(
+        &mut self,
+        f: F,
+        data: T,
+    ) {
         let ctx = EventCbImpl {
             cb: f,
             data,
@@ -207,8 +214,8 @@ impl Alpm {
     }
 
     pub fn set_progresscb<
-        T: 'static,
-        F: FnMut(Progress, &str, i32, usize, usize, &mut T) + 'static,
+        T: Send + 'static,
+        F: FnMut(Progress, &str, i32, usize, usize, &mut T) + Send + 'static,
     >(
         &mut self,
         f: F,
@@ -221,7 +228,7 @@ impl Alpm {
         self.progresscb = Some(ctx);
     }
 
-    pub fn set_questioncb<T: 'static, F: FnMut(AnyQuestion, &mut T) + 'static>(
+    pub fn set_questioncb<T: Send + 'static, F: FnMut(AnyQuestion, &mut T) + Send + 'static>(
         &mut self,
         f: F,
         data: T,
@@ -237,7 +244,10 @@ impl Alpm {
         self.questioncb = Some(ctx);
     }
 
-    pub fn set_fetchcb<T: 'static, F: FnMut(&str, &str, bool, &mut T) -> FetchResult + 'static>(
+    pub fn set_fetchcb<
+        T: Send + 'static,
+        F: FnMut(&str, &str, bool, &mut T) -> FetchResult + Send + 'static,
+    >(
         &mut self,
         f: F,
         data: T,
