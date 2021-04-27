@@ -1,4 +1,4 @@
-use crate::{Alpm, AlpmList, AlpmListMut, CommitReturn, Error, Package, PrepareReturn, Result};
+use crate::{Alpm, AlpmList, AlpmListMut, CommitResult, Error, Package, PrepareResult, Result};
 
 use alpm_sys::_alpm_transflag_t::*;
 use alpm_sys::*;
@@ -34,7 +34,7 @@ impl Alpm {
         TransFlag::from_bits(flags as u32).unwrap()
     }
 
-    pub fn trans_prepare(&mut self) -> std::result::Result<(), (PrepareReturn, Error)> {
+    pub fn trans_prepare(&mut self) -> std::result::Result<(), (PrepareResult, Error)> {
         let mut list = ptr::null_mut();
         let ret = unsafe { alpm_trans_prepare(self.handle, &mut list) };
         let err = self.check_ret(ret);
@@ -42,15 +42,15 @@ impl Alpm {
         if let Err(err) = err {
             let ret = match err {
                 Error::PkgInvalidArch => {
-                    PrepareReturn::PkgInvalidArch(AlpmListMut::from_parts(self, list))
+                    PrepareResult::PkgInvalidArch(AlpmListMut::from_parts(self, list))
                 }
                 Error::UnsatisfiedDeps => {
-                    PrepareReturn::UnsatisfiedDeps(AlpmListMut::from_parts(self, list))
+                    PrepareResult::UnsatisfiedDeps(AlpmListMut::from_parts(self, list))
                 }
                 Error::ConflictingDeps => {
-                    PrepareReturn::ConflictingDeps(AlpmListMut::from_parts(self, list))
+                    PrepareResult::ConflictingDeps(AlpmListMut::from_parts(self, list))
                 }
-                _ => PrepareReturn::None,
+                _ => PrepareResult::Ok,
             };
 
             Err((ret, err))
@@ -59,7 +59,7 @@ impl Alpm {
         }
     }
 
-    pub fn trans_commit(&mut self) -> std::result::Result<(), (CommitReturn, Error)> {
+    pub fn trans_commit(&mut self) -> std::result::Result<(), (CommitResult, Error)> {
         let mut list = ptr::null_mut();
         let ret = unsafe { alpm_trans_commit(self.handle, &mut list) };
         let err = self.check_ret(ret);
@@ -67,12 +67,12 @@ impl Alpm {
         if let Err(err) = err {
             let ret = match err {
                 Error::FileConflicts => {
-                    CommitReturn::FileConflict(AlpmListMut::from_parts(self, list))
+                    CommitResult::FileConflict(AlpmListMut::from_parts(self, list))
                 }
                 Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => {
-                    CommitReturn::PkgInvalid(AlpmListMut::from_parts(self, list))
+                    CommitResult::PkgInvalid(AlpmListMut::from_parts(self, list))
                 }
-                _ => CommitReturn::None,
+                _ => CommitResult::Ok,
             };
 
             Err((ret, err))

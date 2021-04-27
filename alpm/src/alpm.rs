@@ -138,7 +138,7 @@ impl Capabilities {
 mod tests {
     use super::*;
     use crate::{
-        log_action, AnyDownloadEvent, AnyEvent, AnyQuestion, DownloadEvent, Event, FetchCbReturn,
+        log_action, AnyDownloadEvent, AnyEvent, AnyQuestion, DownloadEvent, Event, FetchResult,
         LogLevel, Progress, Question, SigLevel,
     };
 
@@ -154,8 +154,8 @@ mod tests {
         }
     }
 
-    fn fetchcb(_url: &str, _path: &str, _force: bool, _: &mut ()) -> FetchCbReturn {
-        FetchCbReturn::Ok
+    fn fetchcb(_url: &str, _path: &str, _force: bool, _: &mut ()) -> FetchResult {
+        FetchResult::Ok
     }
 
     fn questioncb(question: AnyQuestion, _: &mut ()) {

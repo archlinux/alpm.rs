@@ -1,6 +1,4 @@
-use crate::{
-    free, Alpm, AnyDownloadEvent, AnyEvent, AnyQuestion, FetchCbReturn, LogLevel, Progress,
-};
+use crate::{free, Alpm, AnyDownloadEvent, AnyEvent, AnyQuestion, FetchResult, LogLevel, Progress};
 use alpm_sys::*;
 use std::ffi::{c_void, CStr};
 use std::marker::PhantomData;
@@ -43,7 +41,7 @@ pub(crate) trait QuestionCbTrait {
 }
 
 pub(crate) trait FetchCbTrait {
-    fn call(&mut self, url: &str, filename: &str, force: bool) -> FetchCbReturn;
+    fn call(&mut self, url: &str, filename: &str, force: bool) -> FetchResult;
 }
 
 struct LogCbImpl<T, F> {
@@ -123,8 +121,8 @@ struct FetchCbImpl<T, F> {
     data: T,
 }
 
-impl<T, F: FnMut(&str, &str, bool, &mut T) -> FetchCbReturn> FetchCbTrait for FetchCbImpl<T, F> {
-    fn call(&mut self, url: &str, filename: &str, force: bool) -> FetchCbReturn {
+impl<T, F: FnMut(&str, &str, bool, &mut T) -> FetchResult> FetchCbTrait for FetchCbImpl<T, F> {
+    fn call(&mut self, url: &str, filename: &str, force: bool) -> FetchResult {
         (self.cb)(url, filename, force, &mut self.data)
     }
 }
@@ -239,10 +237,7 @@ impl Alpm {
         self.questioncb = Some(ctx);
     }
 
-    pub fn set_fetchcb<
-        T: 'static,
-        F: FnMut(&str, &str, bool, &mut T) -> FetchCbReturn + 'static,
-    >(
+    pub fn set_fetchcb<T: 'static, F: FnMut(&str, &str, bool, &mut T) -> FetchResult + 'static>(
         &mut self,
         f: F,
         data: T,
@@ -374,9 +369,9 @@ extern "C" fn fetchcb<C: FetchCbTrait>(
         let ret = cb.call(url, localpath, force != 0);
 
         match ret {
-            FetchCbReturn::Ok => 0,
-            FetchCbReturn::Err => -1,
-            FetchCbReturn::FileExists => 1,
+            FetchResult::Ok => 0,
+            FetchResult::Err => -1,
+            FetchResult::FileExists => 1,
         }
     });
 

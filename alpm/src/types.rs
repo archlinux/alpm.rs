@@ -38,98 +38,9 @@ use libarchive3_sys::ffi::*;
 
 use bitflags::bitflags;
 
-#[derive(Debug)]
-pub struct LogCb<'a> {
-    pub(crate) cb: alpm_cb_log,
-    pub(crate) marker: PhantomData<&'a ()>,
-}
-
-#[derive(Debug)]
-pub struct DownloadCb<'a> {
-    pub(crate) cb: alpm_cb_download,
-    pub(crate) marker: PhantomData<&'a ()>,
-}
-
-#[derive(Debug)]
-pub struct FetchCb<'a> {
-    pub(crate) cb: alpm_cb_fetch,
-    pub(crate) marker: PhantomData<&'a ()>,
-}
-
-#[derive(Debug)]
-pub struct EventCb<'a> {
-    pub(crate) cb: alpm_cb_event,
-    pub(crate) marker: PhantomData<&'a ()>,
-}
-
-#[derive(Debug)]
-pub struct QuestionCb<'a> {
-    pub(crate) cb: alpm_cb_question,
-    pub(crate) marker: PhantomData<&'a ()>,
-}
-
-#[derive(Debug)]
-pub struct ProgressCb<'a> {
-    pub(crate) cb: alpm_cb_progress,
-    pub(crate) marker: PhantomData<&'a ()>,
-}
-
-impl<'a> LogCb<'a> {
-    pub fn none() -> LogCb<'static> {
-        LogCb {
-            marker: PhantomData,
-            cb: None,
-        }
-    }
-}
-
-impl<'a> DownloadCb<'a> {
-    pub fn none() -> DownloadCb<'static> {
-        DownloadCb {
-            marker: PhantomData,
-            cb: None,
-        }
-    }
-}
-
-impl<'a> FetchCb<'a> {
-    pub fn none() -> FetchCb<'static> {
-        FetchCb {
-            marker: PhantomData,
-            cb: None,
-        }
-    }
-}
-
-impl<'a> EventCb<'a> {
-    pub fn none() -> EventCb<'static> {
-        EventCb {
-            marker: PhantomData,
-            cb: None,
-        }
-    }
-}
-
-impl<'a> QuestionCb<'a> {
-    pub fn none() -> QuestionCb<'static> {
-        QuestionCb {
-            marker: PhantomData,
-            cb: None,
-        }
-    }
-}
-
-impl<'a> ProgressCb<'a> {
-    pub fn none() -> ProgressCb<'static> {
-        ProgressCb {
-            marker: PhantomData,
-            cb: None,
-        }
-    }
-}
-
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
-pub enum FetchCbReturn {
+#[must_use]
+pub enum FetchResult {
     Ok,
     Err,
     FileExists,
@@ -985,18 +896,20 @@ pub enum Match {
 }
 
 #[derive(Debug)]
-pub enum PrepareReturn<'a> {
+#[must_use]
+pub enum PrepareResult<'a> {
     PkgInvalidArch(AlpmListMut<'a, Package<'a>>),
     UnsatisfiedDeps(AlpmListMut<'a, DependMissing>),
     ConflictingDeps(AlpmListMut<'a, OwnedConflict>),
-    None,
+    Ok,
 }
 
 #[derive(Debug)]
-pub enum CommitReturn<'a> {
+#[must_use]
+pub enum CommitResult<'a> {
     FileConflict(AlpmListMut<'a, OwnedFileConflict>),
     PkgInvalid(AlpmListMut<'a, String>),
-    None,
+    Ok,
 }
 
 #[derive(Debug)]
@@ -1107,6 +1020,7 @@ pub struct DownloadEventCompleted {
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+#[must_use]
 pub enum DownloadResult {
     Success,
     UpToDate,
