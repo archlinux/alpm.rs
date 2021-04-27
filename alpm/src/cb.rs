@@ -169,6 +169,66 @@ pub struct RawFetchCb<'a> {
     pub(crate) marker: PhantomData<&'a ()>,
 }
 
+impl RawLogCb<'static> {
+    pub fn none() -> Self {
+        RawLogCb {
+            cb: None,
+            ctx: ptr::null_mut(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl RawDlCb<'static> {
+    pub fn none() -> Self {
+        RawDlCb {
+            cb: None,
+            ctx: ptr::null_mut(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl RawEventCb<'static> {
+    pub fn none() -> Self {
+        RawEventCb {
+            cb: None,
+            ctx: ptr::null_mut(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl RawProgressCb<'static> {
+    pub fn none() -> Self {
+        RawProgressCb {
+            cb: None,
+            ctx: ptr::null_mut(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl RawQuestionCb<'static> {
+    pub fn none() -> Self {
+        RawQuestionCb {
+            cb: None,
+            ctx: ptr::null_mut(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl RawFetchCb<'static> {
+    pub fn none() -> Self {
+        RawFetchCb {
+            cb: None,
+            ctx: ptr::null_mut(),
+            marker: PhantomData,
+        }
+    }
+}
+
 impl Alpm {
     pub fn set_logcb<T: Send + 'static, F: FnMut(LogLevel, &str, &mut T) + Send + 'static>(
         &mut self,
