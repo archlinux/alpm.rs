@@ -327,7 +327,7 @@ impl Alpm {
         }
     }
 
-    pub fn set_raw_log_cb(&mut self, cb: RawLogCb) {
+    pub fn set_raw_log_cb(&self, cb: RawLogCb) {
         unsafe { alpm_option_set_logcb(self.handle, cb.cb, cb.ctx) };
     }
 
@@ -339,7 +339,7 @@ impl Alpm {
         }
     }
 
-    pub fn set_raw_dl_cb(&mut self, cb: RawDlCb) {
+    pub fn set_raw_dl_cb(&self, cb: RawDlCb) {
         unsafe { alpm_option_set_dlcb(self.handle, cb.cb, cb.ctx) };
     }
 
@@ -351,7 +351,7 @@ impl Alpm {
         }
     }
 
-    pub fn set_rrw_event_cb(&mut self, cb: RawEventCb) {
+    pub fn set_rrw_event_cb(&self, cb: RawEventCb) {
         unsafe { alpm_option_set_eventcb(self.handle, cb.cb, cb.ctx) };
     }
 
@@ -363,7 +363,7 @@ impl Alpm {
         }
     }
 
-    pub fn set_raw_progress_cb(&mut self, cb: RawProgressCb) {
+    pub fn set_raw_progress_cb(&self, cb: RawProgressCb) {
         unsafe { alpm_option_set_progresscb(self.handle, cb.cb, cb.ctx) };
     }
 
@@ -375,7 +375,7 @@ impl Alpm {
         }
     }
 
-    pub fn set_raw_question_cb(&mut self, cb: RawQuestionCb) {
+    pub fn set_raw_question_cb(&self, cb: RawQuestionCb) {
         unsafe { alpm_option_set_questioncb(self.handle, cb.cb, cb.ctx) };
     }
 
@@ -387,7 +387,7 @@ impl Alpm {
         }
     }
 
-    pub fn set_raw_fetch_cb(&mut self, cb: RawFetchCb) {
+    pub fn set_raw_fetch_cb(&self, cb: RawFetchCb) {
         unsafe { alpm_option_set_fetchcb(self.handle, cb.cb, cb.ctx) };
     }
 }
