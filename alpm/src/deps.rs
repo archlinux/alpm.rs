@@ -243,10 +243,19 @@ pub enum DepMod {
 unsafe impl<'a> Send for DepMissing<'a> {}
 unsafe impl<'a> Sync for DepMissing<'a> {}
 
-#[derive(Debug)]
 pub struct DepMissing<'a> {
     pub(crate) inner: *mut alpm_depmissing_t,
     pub(crate) phantom: PhantomData<&'a ()>,
+}
+
+impl<'a> fmt::Debug for DepMissing<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DepMissing")
+            .field("target", &self.target())
+            .field("depend", &self.depend())
+            .field("causing_pkg", &self.causing_pkg())
+            .finish()
+    }
 }
 
 impl std::ops::Deref for DependMissing {
@@ -257,9 +266,18 @@ impl std::ops::Deref for DependMissing {
     }
 }
 
-#[derive(Debug)]
 pub struct DependMissing {
     pub(crate) inner: DepMissing<'static>,
+}
+
+impl fmt::Debug for DependMissing {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DependMissing")
+            .field("target", &self.target())
+            .field("depend", &self.depend())
+            .field("causing_pkg", &self.causing_pkg())
+            .finish()
+    }
 }
 
 impl Drop for DependMissing {
