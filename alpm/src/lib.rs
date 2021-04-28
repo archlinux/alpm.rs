@@ -13,6 +13,8 @@ mod filelist;
 mod handle;
 mod list;
 mod log;
+#[cfg(feature = "mtree")]
+mod mtree;
 mod package;
 mod remove;
 mod signing;
@@ -21,6 +23,7 @@ mod trans;
 mod types;
 mod util;
 mod utils;
+
 mod version;
 
 pub use crate::add::*;
@@ -37,6 +40,8 @@ pub use crate::error::*;
 pub use crate::filelist::*;
 pub use crate::handle::*;
 pub use crate::list::*;
+#[cfg(feature = "mtree")]
+pub use crate::mtree::*;
 pub use crate::package::*;
 pub use crate::remove::*;
 pub use crate::signing::*;
