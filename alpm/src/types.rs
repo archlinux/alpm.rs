@@ -6,6 +6,7 @@ use crate::{
 
 use std::cmp::Ordering;
 use std::ffi::c_void;
+use std::fmt;
 use std::io::{self, Read};
 use std::marker::PhantomData;
 use std::mem::{transmute, ManuallyDrop};
@@ -173,62 +174,133 @@ pub enum PackageOperation<'a> {
     Remove(Package<'a>),
 }
 
-#[derive(Debug)]
 pub struct PackageOperationEvent<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *const alpm_event_package_operation_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for PackageOperationEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PackageOperationEvent")
+            .field("operation", &self.operation())
+            .finish()
+    }
+}
+
 pub struct OptDepRemovalEvent<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *const alpm_event_optdep_removal_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for OptDepRemovalEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("OptDepRemovalEvent")
+            .field("pkg", &self.pkg())
+            .field("optdep", &self.optdep())
+            .finish()
+    }
+}
+
 pub struct ScriptletInfoEvent<'a> {
     inner: *const alpm_event_scriptlet_info_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for ScriptletInfoEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ScriptletInfoEvent")
+            .field("line", &self.line())
+            .finish()
+    }
+}
+
 pub struct DatabaseMissingEvent<'a> {
     inner: *const alpm_event_database_missing_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for DatabaseMissingEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DatabaseMissingEvent")
+            .field("dbname", &self.dbname())
+            .finish()
+    }
+}
+
 pub struct PkgDownloadEvent<'a> {
     inner: *const alpm_event_pkgdownload_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for PkgDownloadEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PkgDownloadEvent")
+            .field("file", &self.file())
+            .finish()
+    }
+}
+
 pub struct PacnewCreatedEvent<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *const alpm_event_pacnew_created_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for PacnewCreatedEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PacnewCreatedEvent")
+            .field("from_noupgrade", &self.from_noupgrade())
+            .field("oldpkg", &self.oldpkg())
+            .field("oldnew", &self.oldpkg())
+            .field("file", &self.file())
+            .finish()
+    }
+}
+
 pub struct PacsaveCreatedEvent<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *const alpm_event_pacsave_created_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for PacsaveCreatedEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PacsaveCreatedEvent")
+            .field("oldpkg", &self.oldpkg())
+            .field("file", &self.file())
+            .finish()
+    }
+}
+
 pub struct HookEvent<'a> {
     inner: *const alpm_event_hook_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for HookEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("HookEvent")
+            .field("when", &self.when())
+            .finish()
+    }
+}
+
 pub struct HookRunEvent<'a> {
     inner: *const alpm_event_hook_run_t,
     marker: PhantomData<&'a ()>,
+}
+
+impl<'a> fmt::Debug for HookRunEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("HookRunEvent")
+            .field("name", &self.name())
+            .field("desc", &self.desc())
+            .field("position", &self.position())
+            .field("total", &self.total())
+            .finish()
+    }
 }
 
 #[repr(u32)]
@@ -238,17 +310,32 @@ pub enum HookWhen {
     PostTransaction = ALPM_HOOK_POST_TRANSACTION as u32,
 }
 
-#[derive(Debug)]
 pub struct PkgRetrieveStartEvent<'a> {
     inner: *const alpm_event_pkg_retrieve_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for PkgRetrieveStartEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PkgRetrieveStartEvent")
+            .field("num", &self.num())
+            .field("total_size", &self.total_size())
+            .finish()
+    }
+}
+
 pub struct AnyEvent<'a> {
     inner: *const alpm_event_t,
     handle: *mut alpm_handle_t,
     marker: PhantomData<&'a ()>,
+}
+
+impl<'a> fmt::Debug for AnyEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AnyEvent")
+            .field("event", &self.event())
+            .finish()
+    }
 }
 
 #[derive(Debug)]
@@ -431,6 +518,12 @@ impl<'a> DatabaseMissingEvent<'a> {
     }
 }
 
+impl<'a> PkgDownloadEvent<'a> {
+    pub fn file(&self) -> &str {
+        unsafe { from_cstr((*self.inner).file) }
+    }
+}
+
 impl<'a> PacnewCreatedEvent<'a> {
     #[allow(clippy::wrong_self_convention)]
     pub fn from_noupgrade(&self) -> bool {
@@ -503,60 +596,124 @@ impl<'a> PkgRetrieveStartEvent<'a> {
     }
 }
 
-#[derive(Debug)]
 pub struct InstallIgnorepkgQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_install_ignorepkg_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for InstallIgnorepkgQuestion<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("InstallIgnorepkgQuestion")
+            .field("install", &self.install())
+            .field("pkg", &self.pkg())
+            .finish()
+    }
+}
+
 pub struct ReplaceQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_replace_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for ReplaceQuestion<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ReplaceQuestion")
+            .field("replace", &self.replace())
+            .field("oldpkg", &self.oldpkg())
+            .field("newpkg", &self.newpkg())
+            .field("newdb", &self.newdb())
+            .finish()
+    }
+}
+
 pub struct ConflictQuestion<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_conflict_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for ConflictQuestion<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ConflictQuestion")
+            .field("remove", &self.remove())
+            .field("conflict", &self.conflict())
+            .finish()
+    }
+}
+
 pub struct CorruptedQuestion<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_corrupted_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for CorruptedQuestion<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("CorruptedQuestion")
+            .field("remove", &self.remove())
+            .field("filepath", &self.filepath())
+            .field("reason", &self.reason())
+            .finish()
+    }
+}
+
 pub struct RemovePkgsQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_remove_pkgs_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for RemovePkgsQuestion<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RemovePkgsQuestion")
+            .field("skip", &self.skip())
+            .field("packages", &self.packages())
+            .finish()
+    }
+}
+
 pub struct SelectProviderQuestion<'a> {
     handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_select_provider_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for SelectProviderQuestion<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SelectProviderQuestion")
+            .field("index", &self.index())
+            .field("providers", &self.providers())
+            .field("depend", &self.depend())
+            .finish()
+    }
+}
+
 pub struct ImportKeyQuestion<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_import_key_t,
     marker: PhantomData<&'a ()>,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for ImportKeyQuestion<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ImportKeyQuestion")
+            .field("import", &self.import())
+            .field("key", &self.key())
+            .finish()
+    }
+}
+
 pub struct AnyQuestion<'a> {
     handle: *mut alpm_handle_t,
     inner: *mut alpm_question_t,
     marker: PhantomData<&'a ()>,
+}
+
+impl<'a> fmt::Debug for AnyQuestion<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AnyQuestion")
+            .field("question", &self.question())
+            .finish()
+    }
 }
 
 #[derive(Debug)]
@@ -613,12 +770,10 @@ impl<'a> AnyQuestion<'a> {
                 marker: PhantomData,
             }),
             QuestionType::ConflictPkg => Question::Conflict(ConflictQuestion {
-                handle,
                 inner: &mut unsafe { (*self.inner).conflict },
                 marker: PhantomData,
             }),
             QuestionType::CorruptedPkg => Question::Corrupted(CorruptedQuestion {
-                handle,
                 inner: &mut unsafe { (*self.inner).corrupted },
                 marker: PhantomData,
             }),
@@ -634,7 +789,6 @@ impl<'a> AnyQuestion<'a> {
                 marker: PhantomData,
             }),
             QuestionType::ImportKey => Question::ImportKey(ImportKeyQuestion {
-                handle,
                 inner: &mut unsafe { (*self.inner).import_key },
                 marker: PhantomData,
             }),
@@ -661,7 +815,7 @@ impl<'a> InstallIgnorepkgQuestion<'a> {
         }
     }
 
-    pub fn install(&mut self) -> bool {
+    pub fn install(&self) -> bool {
         unsafe { (*self.inner).install != 0 }
     }
 
@@ -671,7 +825,7 @@ impl<'a> InstallIgnorepkgQuestion<'a> {
 }
 
 impl<'a> ReplaceQuestion<'a> {
-    pub fn set_replace(&mut self, replace: bool) {
+    pub fn set_replace(&self, replace: bool) {
         unsafe {
             if replace {
                 (*self.inner).replace = 1;
@@ -681,7 +835,7 @@ impl<'a> ReplaceQuestion<'a> {
         }
     }
 
-    pub fn replace(&mut self) -> bool {
+    pub fn replace(&self) -> bool {
         unsafe { (*self.inner).replace != 0 }
     }
 
@@ -714,7 +868,7 @@ impl<'a> ConflictQuestion<'a> {
         }
     }
 
-    pub fn remove(&mut self) -> bool {
+    pub fn remove(&self) -> bool {
         unsafe { (*self.inner).remove != 0 }
     }
 
@@ -734,7 +888,7 @@ impl<'a> CorruptedQuestion<'a> {
         }
     }
 
-    pub fn remove(&mut self) -> bool {
+    pub fn remove(&self) -> bool {
         unsafe { (*self.inner).remove != 0 }
     }
 
@@ -758,7 +912,7 @@ impl<'a> RemovePkgsQuestion<'a> {
         }
     }
 
-    pub fn skip(&mut self) -> bool {
+    pub fn skip(&self) -> bool {
         unsafe { (*self.inner).skip != 0 }
     }
 
@@ -775,7 +929,7 @@ impl<'a> SelectProviderQuestion<'a> {
         }
     }
 
-    pub fn index(&mut self) -> i32 {
+    pub fn index(&self) -> i32 {
         unsafe { (*self.inner).use_index }
     }
 
@@ -800,7 +954,7 @@ impl<'a> ImportKeyQuestion<'a> {
         }
     }
 
-    pub fn import(&mut self) -> bool {
+    pub fn import(&self) -> bool {
         unsafe { (*self.inner).import != 0 }
     }
 
@@ -810,10 +964,18 @@ impl<'a> ImportKeyQuestion<'a> {
     }
 }
 
-#[derive(Debug)]
 pub struct Group<'a> {
     pub(crate) handle: &'a Alpm,
     pub(crate) inner: *mut alpm_group_t,
+}
+
+impl<'a> fmt::Debug for Group<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Group")
+            .field("name", &self.name())
+            .field("packages", &self.packages())
+            .finish()
+    }
 }
 
 impl<'a> Group<'a> {
@@ -868,6 +1030,12 @@ pub struct ChangeLog<'a> {
     pub(crate) stream: *mut c_void,
 }
 
+impl<'a> fmt::Debug for ChangeLog<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ChangeLog").field("pkg", &self.pkg).finish()
+    }
+}
+
 impl<'a> Drop for ChangeLog<'a> {
     fn drop(&mut self) {
         unsafe { alpm_pkg_changelog_close(self.pkg.pkg, self.stream) };
@@ -912,9 +1080,17 @@ pub enum CommitResult<'a> {
     Ok,
 }
 
-#[derive(Debug)]
 pub struct Backup {
     pub(crate) inner: *mut alpm_backup_t,
+}
+
+impl fmt::Debug for Backup {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Backup")
+            .field("hash", &self.hash())
+            .field("name", &self.name())
+            .finish()
+    }
 }
 
 impl Backup {
@@ -931,6 +1107,14 @@ pub struct AnyDownloadEvent<'a> {
     event: alpm_download_event_type_t,
     data: *mut c_void,
     marker: PhantomData<&'a ()>,
+}
+
+impl<'a> fmt::Debug for AnyDownloadEvent<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AnyDownloadEvent")
+            .field("event", &self.event())
+            .finish()
+    }
 }
 
 #[repr(u32)]
