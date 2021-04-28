@@ -43,13 +43,7 @@ impl Clone for Depend {
 
 impl fmt::Debug for Depend {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Depend")
-            .field("name", &self.name())
-            .field("version", &self.version())
-            .field("desc", &self.desc())
-            .field("depmod", &self.depmod())
-            .field("name_hash", &self.name_hash())
-            .finish()
+        fmt::Debug::fmt(self.as_dep(), f)
     }
 }
 
@@ -272,11 +266,7 @@ pub struct DependMissing {
 
 impl fmt::Debug for DependMissing {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DependMissing")
-            .field("target", &self.target())
-            .field("depend", &self.depend())
-            .field("causing_pkg", &self.causing_pkg())
-            .finish()
+        fmt::Debug::fmt(&self.inner, f)
     }
 }
 

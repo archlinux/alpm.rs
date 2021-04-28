@@ -29,9 +29,7 @@ pub struct DbMut<'a> {
 
 impl<'a> fmt::Debug for DbMut<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Db")
-            .field("name", &self.name())
-            .finish_non_exhaustive()
+        fmt::Debug::fmt(&self.inner, f)
     }
 }
 
