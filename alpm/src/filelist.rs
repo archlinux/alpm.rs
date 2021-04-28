@@ -4,11 +4,21 @@ use crate::Result;
 use alpm_sys::*;
 
 use std::ffi::CString;
+use std::fmt;
 use std::slice;
 
-#[derive(Debug)]
 pub struct File {
     inner: alpm_file_t,
+}
+
+impl fmt::Debug for File {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("File")
+            .field("name", &self.name())
+            .field("size", &self.size())
+            .field("mode", &self.mode())
+            .finish()
+    }
 }
 
 impl File {
@@ -26,9 +36,14 @@ impl File {
     }
 }
 
-#[derive(Debug)]
 pub struct FileList {
     pub(crate) inner: alpm_filelist_t,
+}
+
+impl fmt::Debug for FileList {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list().entries(self.files()).finish()
+    }
 }
 
 impl FileList {
