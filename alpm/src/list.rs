@@ -912,7 +912,7 @@ mod tests {
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
         let depends = pkg.depends();
-        println!("{:?}", depends);
+        println!("{:#?}", depends);
         println!("{:?}", depends.iter());
         assert_eq!(depends.first().unwrap().to_string(), "coreutils");
     }

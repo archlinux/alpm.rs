@@ -9,16 +9,28 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::mem::transmute;
 
-#[derive(Debug)]
+#[derive(Eq)]
 pub struct Dep<'a> {
     pub(crate) inner: *mut alpm_depend_t,
     pub(crate) phantom: PhantomData<&'a ()>,
 }
 
+impl<'a> fmt::Debug for Dep<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Dep")
+            .field("name", &self.name())
+            .field("version", &self.version())
+            .field("desc", &self.desc())
+            .field("depmod", &self.depmod())
+            .field("name_hash", &self.name_hash())
+            .finish()
+    }
+}
+
 unsafe impl<'a> Send for Dep<'a> {}
 unsafe impl<'a> Sync for Dep<'a> {}
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq)]
 pub struct Depend {
     dep: Dep<'static>,
 }
@@ -26,6 +38,18 @@ pub struct Depend {
 impl Clone for Depend {
     fn clone(&self) -> Self {
         Depend::new(self.to_string())
+    }
+}
+
+impl fmt::Debug for Depend {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Depend")
+            .field("name", &self.name())
+            .field("version", &self.version())
+            .field("desc", &self.desc())
+            .field("depmod", &self.depmod())
+            .field("name_hash", &self.name_hash())
+            .finish()
     }
 }
 
@@ -79,8 +103,6 @@ impl<'a> PartialEq for Dep<'a> {
             && self.desc() == other.desc()
     }
 }
-
-impl<'a> Eq for Dep<'a> {}
 
 impl<'a> fmt::Display for Dep<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
