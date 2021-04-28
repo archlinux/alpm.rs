@@ -58,9 +58,24 @@ pub enum SigValidity {
     Unknown = ALPM_SIGVALIDITY_UNKNOWN as u32,
 }
 
-#[derive(Debug)]
 pub struct PgpKey {
     pub(crate) inner: alpm_pgpkey_t,
+}
+
+impl fmt::Debug for PgpKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PgpKey")
+            .field("name", &self.name())
+            .field("email", &self.email())
+            .field("uid", &self.uid())
+            .field("fingerprint", &self.fingerprint())
+            .field("created", &self.created())
+            .field("expires", &self.expires())
+            .field("length", &self.length())
+            .field("revoked", &self.revoked())
+            .field("pubkey_algo", &self.pubkey_algo())
+            .finish()
+    }
 }
 
 impl PgpKey {
@@ -103,9 +118,18 @@ impl PgpKey {
     }
 }
 
-#[derive(Debug)]
 pub struct SigResult {
     inner: alpm_sigresult_t,
+}
+
+impl fmt::Debug for SigResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SigResult")
+            .field("key", &self.key())
+            .field("status", &self.status())
+            .field("validity", &self.validity())
+            .finish()
+    }
 }
 
 impl SigResult {
@@ -124,9 +148,14 @@ impl SigResult {
     }
 }
 
-#[derive(Debug)]
 pub struct SigList {
     inner: alpm_siglist_t,
+}
+
+impl fmt::Debug for SigList {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list().entries(self.results()).finish()
+    }
 }
 
 impl Drop for SigList {
