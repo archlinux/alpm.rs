@@ -4,19 +4,35 @@ use crate::{
 };
 
 use std::ffi::CString;
+use std::fmt;
 use std::ops::Deref;
 
 use alpm_sys::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct Db<'a> {
     pub(crate) db: *mut alpm_db_t,
     pub(crate) handle: &'a Alpm,
 }
 
-#[derive(Debug)]
+impl<'a> fmt::Debug for Db<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Db")
+            .field("name", &self.name())
+            .finish_non_exhaustive()
+    }
+}
+
 pub struct DbMut<'a> {
     pub(crate) inner: Db<'a>,
+}
+
+impl<'a> fmt::Debug for DbMut<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Db")
+            .field("name", &self.name())
+            .finish_non_exhaustive()
+    }
 }
 
 impl<'a> Deref for DbMut<'a> {
