@@ -25,7 +25,7 @@ unsafe impl<'a> IntoPkgAdd for LoadedPackage<'a> {
 }
 
 impl Alpm {
-    pub fn trans_add_pkg<P: IntoPkgAdd>(&self, pkg: P) -> std::result::Result<(), AddError<P>> {
+    pub fn trans_add_pkg<P: IntoPkgAdd>(&self, pkg: P) -> Result<(), AddError<P>> {
         let ret = unsafe { alpm_add_pkg(self.handle, pkg.as_alpm_pkg_t()) };
         let ok = self.check_ret(ret);
         match ok {

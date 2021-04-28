@@ -910,8 +910,10 @@ mod tests {
     fn test_depends_list_debug() {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        let pkg = db.pkg("linux").unwrap();
 
         println!("{:#?}", db.pkgs());
+        println!("{:#?}", pkg.depends());
     }
 
     #[test]
