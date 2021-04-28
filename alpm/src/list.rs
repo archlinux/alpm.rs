@@ -4,6 +4,7 @@ use crate::{
 };
 
 use std::ffi::{c_void, CStr};
+use std::fmt;
 use std::iter::{ExactSizeIterator, Iterator};
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
@@ -17,7 +18,7 @@ extern "C" {
 }
 
 pub unsafe trait IntoAlpmListItem<'a, 'b> {
-    type Borrow;
+    type Borrow: fmt::Debug;
     #[doc(hidden)]
     unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self;
     #[doc(hidden)]
@@ -156,11 +157,20 @@ where
     }
 }
 
-#[derive(Debug)]
 pub struct AlpmList<'a, T> {
     pub(crate) handle: &'a Alpm,
     pub(crate) list: *mut alpm_list_t,
     pub(crate) _marker: PhantomData<T>,
+}
+
+impl<'a, T> fmt::Debug for AlpmList<'a, T>
+where
+    for<'b> T: IntoAlpmListItem<'a, 'b>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("AlpmList ")?;
+        f.debug_list().entries(self).finish()
+    }
 }
 
 impl<'a, T> Clone for AlpmList<'a, T> {
@@ -175,12 +185,20 @@ impl<'a, T> Clone for AlpmList<'a, T> {
 
 impl<'a, T> Copy for AlpmList<'a, T> {}
 
-#[derive(Debug)]
 pub struct AlpmListMut<'a, T>
 where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
     list: AlpmList<'a, T>,
+}
+
+impl<'a, T> fmt::Debug for AlpmListMut<'a, T>
+where
+    for<'b> T: IntoAlpmListItem<'a, 'b>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&self.as_alpm_list(), f)
+    }
 }
 
 impl<'a, T> std::ops::Deref for AlpmListMut<'a, T>
@@ -412,7 +430,7 @@ where
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct Iter<'a, 'b, T>
 where
     T: IntoAlpmListItem<'a, 'b>,
@@ -421,13 +439,31 @@ where
     current: *mut alpm_list_t,
 }
 
-#[derive(Debug, Copy, Clone)]
+impl<'a, 'b, T> fmt::Debug for Iter<'a, 'b, T>
+where
+    for<'c> T: IntoAlpmListItem<'a, 'c>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Iter").field("list", self.list).finish()
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct IntoIter<'a, T>
 where
     T: IntoAlpmListItem<'a, 'a>,
 {
     list: AlpmList<'a, T>,
     current: *mut alpm_list_t,
+}
+
+impl<'a, T> fmt::Debug for IntoIter<'a, T>
+where
+    for<'b> T: IntoAlpmListItem<'a, 'b>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Iter").field("list", &self.list).finish()
+    }
 }
 
 impl<'a, 'b, T> Iter<'a, 'b, T>
@@ -446,13 +482,21 @@ where
     }
 }
 
-#[derive(Debug)]
 pub struct IntoIterMut<'a, T>
 where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
     list: ManuallyDrop<AlpmListMut<'a, T>>,
     current: *mut alpm_list_t,
+}
+
+impl<'a, T> fmt::Debug for IntoIterMut<'a, T>
+where
+    for<'b> T: IntoAlpmListItem<'a, 'b>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Iter").field("list", &self.list).finish()
+    }
 }
 
 impl<'a, T> Drop for IntoIterMut<'a, T>
@@ -868,6 +912,8 @@ mod tests {
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
         let depends = pkg.depends();
+        println!("{:?}", depends);
+        println!("{:?}", depends.iter());
         assert_eq!(depends.first().unwrap().to_string(), "coreutils");
     }
 
