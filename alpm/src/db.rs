@@ -17,9 +17,7 @@ pub struct Db<'a> {
 
 impl<'a> fmt::Debug for Db<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Db")
-            .field("name", &self.name())
-            .finish_non_exhaustive()
+        f.debug_struct("Db").field("name", &self.name()).finish()
     }
 }
 

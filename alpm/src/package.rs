@@ -28,7 +28,7 @@ impl<'a> fmt::Debug for Package<'a> {
         f.debug_struct("Package")
             .field("name", &self.name())
             .field("version", &self.version())
-            .finish_non_exhaustive()
+            .finish()
     }
 }
 
