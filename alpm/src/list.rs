@@ -907,13 +907,19 @@ mod tests {
     use crate::SigLevel;
 
     #[test]
+    fn test_depends_list_debug() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+
+        println!("{:#?}", db.pkgs());
+    }
+
+    #[test]
     fn test_depends_list_free() {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
         let depends = pkg.depends();
-        println!("{:#?}", depends);
-        println!("{:?}", depends.iter());
         assert_eq!(depends.first().unwrap().to_string(), "coreutils");
     }
 

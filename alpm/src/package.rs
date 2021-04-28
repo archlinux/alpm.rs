@@ -12,14 +12,24 @@ use std::ptr;
 #[cfg(feature = "mtree")]
 use crate::MTree;
 
+use std::fmt;
 use std::mem::transmute;
 
 use alpm_sys::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct Package<'a> {
     pub(crate) handle: &'a Alpm,
     pub(crate) pkg: *mut alpm_pkg_t,
+}
+
+impl<'a> fmt::Debug for Package<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Package")
+            .field("name", &self.name())
+            .field("version", &self.version())
+            .finish_non_exhaustive()
+    }
 }
 
 impl<'a> Package<'a> {
