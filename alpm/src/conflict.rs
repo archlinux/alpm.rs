@@ -4,10 +4,10 @@ use crate::{Alpm, AlpmListMut, Dep, IntoRawAlpmList, Package};
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
 
+use std::fmt;
 use std::marker::PhantomData;
 use std::mem::transmute;
 
-#[derive(Debug)]
 pub struct OwnedConflict {
     conflict: Conflict<'static>,
 }
@@ -23,10 +23,27 @@ impl OwnedConflict {
     }
 }
 
-#[derive(Debug)]
+impl fmt::Debug for OwnedConflict {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&self.conflict, f)
+    }
+}
+
 pub struct Conflict<'a> {
     pub(crate) inner: *mut alpm_conflict_t,
     pub(crate) phantom: PhantomData<&'a ()>,
+}
+
+impl<'a> fmt::Debug for Conflict<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Conflict")
+            .field("package1", &self.package1())
+            .field("package1_hash", &self.package1_hash())
+            .field("package2", &self.package2())
+            .field("package2_hash", &self.package2_hash())
+            .field("reason", &self.reason())
+            .finish()
+    }
 }
 
 impl std::ops::Deref for OwnedConflict {
@@ -85,10 +102,20 @@ pub enum FileConflictType {
     Filesystem = ALPM_FILECONFLICT_FILESYSTEM as u32,
 }
 
-#[derive(Debug)]
 pub struct FileConflict<'a> {
     pub(crate) inner: *mut alpm_fileconflict_t,
     pub(crate) phantom: PhantomData<&'a ()>,
+}
+
+impl<'a> fmt::Debug for FileConflict<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FileConflict")
+            .field("target", &self.target())
+            .field("conflict_type", &self.conflict_type())
+            .field("file", &self.file())
+            .field("conflicting_target", &self.conflicting_target())
+            .finish()
+    }
 }
 
 impl std::ops::Deref for OwnedFileConflict {
@@ -99,9 +126,14 @@ impl std::ops::Deref for OwnedFileConflict {
     }
 }
 
-#[derive(Debug)]
 pub struct OwnedFileConflict {
     pub(crate) inner: FileConflict<'static>,
+}
+
+impl fmt::Debug for OwnedFileConflict {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&self.inner, f)
+    }
 }
 
 impl<'a> FileConflict<'a> {
