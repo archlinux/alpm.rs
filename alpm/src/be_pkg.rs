@@ -6,6 +6,7 @@ use std::ffi::CString;
 use std::os::raw::c_int;
 use std::ptr;
 
+#[derive(Debug)]
 pub struct LoadedPackage<'a> {
     pub(crate) pkg: Package<'a>,
 }
