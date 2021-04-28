@@ -72,12 +72,6 @@ impl PartialOrd<Version> for &Ver {
     }
 }
 
-impl Ord for Ver {
-    fn cmp(&self, other: &Self) -> Ordering {
-        unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).cmp(&0) }
-    }
-}
-
 impl AsRef<str> for Ver {
     fn as_ref(&self) -> &str {
         self
@@ -132,12 +126,6 @@ impl PartialOrd for Version {
 impl PartialOrd<&Ver> for Version {
     fn partial_cmp(&self, other: &&Ver) -> Option<Ordering> {
         unsafe { alpm_pkg_vercmp(self.0.as_ptr(), other.0.as_ptr()).partial_cmp(&0) }
-    }
-}
-
-impl Ord for Version {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.as_ver().cmp(other.as_ver())
     }
 }
 

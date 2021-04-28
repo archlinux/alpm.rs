@@ -200,7 +200,7 @@ impl<'a> Dep<'a> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, PartialOrd)]
 pub enum DepModVer<'a> {
     Any,
     Eq(&'a Ver),
