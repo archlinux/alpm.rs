@@ -464,3 +464,128 @@ extern "C" fn progresscb<C: ProgressCbTrait>(
         cb.call(progress, &pkgname, percent as i32, howmany, current);
     });
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        log_action, version, AnyDownloadEvent, AnyEvent, AnyQuestion, Capabilities, DownloadEvent,
+        Event, FetchResult, Progress, Question, SigLevel,
+    };
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    fn eventcb(event: AnyEvent, _: &mut ()) {
+        match event.event() {
+            Event::DatabaseMissing(x) => println!("missing database: {}", x.dbname()),
+            _ => println!("event: {:?}", event),
+        }
+    }
+
+    fn fetchcb(_url: &str, _path: &str, _force: bool, _: &mut ()) -> FetchResult {
+        FetchResult::Ok
+    }
+
+    fn questioncb(question: AnyQuestion, _: &mut ()) {
+        println!("question {:?}", question);
+        match question.question() {
+            Question::Conflict(x) => {
+                let c = x.conflict();
+                println!("CONFLICT BETWEEN {} AND {}", c.package1(), c.package2(),);
+                println!("conflict: {}", c.reason());
+            }
+            _ => (),
+        }
+    }
+
+    fn downloadcb(filename: &str, download: AnyDownloadEvent, _: &mut ()) {
+        match download.event() {
+            DownloadEvent::Init(init) => {
+                println!("init: file={} optional={}", filename, init.optional)
+            }
+            DownloadEvent::Completed(comp) => println!(
+                "complete: file={} total={} result={:?}",
+                filename, comp.total, comp.result
+            ),
+            _ => (),
+        }
+    }
+
+    fn progresscb(
+        progress: Progress,
+        pkgname: &str,
+        percent: i32,
+        howmany: usize,
+        current: usize,
+        _: &mut (),
+    ) {
+        println!(
+            "progress {:?}, {} {} {} {}",
+            progress, pkgname, percent, howmany, current
+        );
+    }
+
+    #[test]
+    fn test_capabilities() {
+        let _caps = Capabilities::new();
+    }
+
+    #[test]
+    fn test_init() {
+        let _handle = Alpm::new("/", "tests/db").unwrap();
+    }
+
+    #[test]
+    fn test_version() {
+        assert!(!version().is_empty());
+    }
+
+    #[test]
+    fn test_cb() {
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
+
+        handle.set_use_syslog(true);
+        handle.set_logfile("tests/log").unwrap();
+        handle.set_log_cb(0, |_, msg, data| {
+            print!("log {} {}", data, msg);
+            *data += 1;
+        });
+        handle.set_event_cb((), eventcb);
+        handle.set_fetch_cb((), fetchcb);
+        handle.set_question_cb((), questioncb);
+        handle.set_dl_cb((), downloadcb);
+        handle.set_progress_cb((), progresscb);
+
+        log_action!(handle, "me", "look i am logging an action {}", ":D").unwrap();
+
+        let db = handle.register_syncdb_mut("core", SigLevel::NONE).unwrap();
+        db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/core/os/x86_64")
+            .unwrap();
+        db.pkg("filesystem").unwrap();
+    }
+
+    #[test]
+    fn test_cb_data() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+
+        let data = Rc::new(Cell::new(0));
+
+        handle.set_log_cb(data.clone(), |_, _, data| data.set(7));
+        handle.register_syncdb("core", SigLevel::NONE).unwrap();
+
+        assert_eq!(data.get(), 7);
+    }
+
+    #[test]
+    fn test_cb_move() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+
+        let handle = Rc::new(handle);
+
+        handle.set_log_cb(handle.clone(), |_, msg, data| {
+            println!("{} {:?}", msg, data);
+            data.take_raw_log_cb();
+        });
+        handle.register_syncdb("core", SigLevel::NONE).unwrap();
+    }
+}
