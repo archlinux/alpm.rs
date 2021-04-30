@@ -196,66 +196,6 @@ impl fmt::Debug for RawFetchCb {
     }
 }
 
-impl RawLogCb {
-    pub fn none() -> Self {
-        RawLogCb {
-            raw: None,
-            ctx: ptr::null_mut(),
-            cb: None,
-        }
-    }
-}
-
-impl RawDlCb {
-    pub fn none() -> Self {
-        RawDlCb {
-            raw: None,
-            ctx: ptr::null_mut(),
-            cb: None,
-        }
-    }
-}
-
-impl RawEventCb {
-    pub fn none() -> Self {
-        RawEventCb {
-            raw: None,
-            ctx: ptr::null_mut(),
-            cb: None,
-        }
-    }
-}
-
-impl RawProgressCb {
-    pub fn none() -> Self {
-        RawProgressCb {
-            raw: None,
-            ctx: ptr::null_mut(),
-            cb: None,
-        }
-    }
-}
-
-impl RawQuestionCb {
-    pub fn none() -> Self {
-        RawQuestionCb {
-            raw: None,
-            ctx: ptr::null_mut(),
-            cb: None,
-        }
-    }
-}
-
-impl RawFetchCb {
-    pub fn none() -> Self {
-        RawFetchCb {
-            raw: None,
-            ctx: ptr::null_mut(),
-            cb: None,
-        }
-    }
-}
-
 impl Alpm {
     pub fn set_log_cb<T: Send + 'static, F: FnMut(LogLevel, &str, &mut T) + Send + 'static>(
         &mut self,
