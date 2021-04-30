@@ -162,8 +162,8 @@ impl<'a> Dep<'a> {
         Ver::from_ptr((*self.inner).version)
     }
 
-    pub fn desc(&self) -> &'a str {
-        unsafe { from_cstr((*self.inner).desc) }
+    pub fn desc(&self) -> Option<&'a str> {
+        unsafe { from_cstr_optional((*self.inner).desc) }
     }
 
     pub fn name_hash(&self) -> u64 {
