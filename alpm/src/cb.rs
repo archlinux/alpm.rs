@@ -1,6 +1,6 @@
 use crate::{free, Alpm, AnyDownloadEvent, AnyEvent, AnyQuestion, FetchResult, LogLevel, Progress};
 use alpm_sys::*;
-use std::cell::UnsafeCell;
+use std::cell::{RefCell, UnsafeCell};
 use std::ffi::{c_void, CStr};
 use std::mem::transmute;
 use std::os::raw::{c_char, c_int};
@@ -10,126 +10,151 @@ extern "C" {
     fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: *mut __va_list_tag) -> c_int;
 }
 
+type Cb<T> = UnsafeCell<Option<Box<T>>>;
+
+#[derive(Default)]
+pub(crate) struct Callbacks {
+    pub(crate) log: Cb<dyn LogCbTrait>,
+    pub(crate) dl: Cb<dyn DlCbTrait>,
+    pub(crate) event: Cb<dyn EventCbTrait>,
+    pub(crate) progress: Cb<dyn ProgressCbTrait>,
+    pub(crate) question: Cb<dyn QuestionCbTrait>,
+    pub(crate) fetch: Cb<dyn FetchCbTrait>,
+}
+
 pub(crate) trait LogCbTrait {
-    fn call(&mut self, level: LogLevel, s: &str);
+    fn call(&self, level: LogLevel, s: &str);
+    fn assert_unlocked(&self);
 }
 
 pub(crate) trait DlCbTrait {
-    fn call(&mut self, filename: &str, event: AnyDownloadEvent);
+    fn call(&self, filename: &str, event: AnyDownloadEvent);
+    fn assert_unlocked(&self);
 }
 
 pub(crate) trait EventCbTrait {
-    fn call(&mut self, event: AnyEvent);
+    fn call(&self, event: AnyEvent);
     fn handle(&self) -> *mut alpm_handle_t;
+    fn assert_unlocked(&self);
 }
 
 pub(crate) trait ProgressCbTrait {
-    fn call(
-        &mut self,
-        progress: Progress,
-        pkgname: &str,
-        percent: i32,
-        howmany: usize,
-        current: usize,
-    );
+    fn call(&self, progress: Progress, pkgname: &str, percent: i32, howmany: usize, current: usize);
+    fn assert_unlocked(&self);
 }
 
 pub(crate) trait QuestionCbTrait {
-    fn call(&mut self, question: AnyQuestion);
+    fn call(&self, question: AnyQuestion);
     fn handle(&self) -> *mut alpm_handle_t;
+    fn assert_unlocked(&self);
 }
 
 pub(crate) trait FetchCbTrait {
-    fn call(&mut self, url: &str, filename: &str, force: bool) -> FetchResult;
+    fn call(&self, url: &str, filename: &str, force: bool) -> FetchResult;
+    fn assert_unlocked(&self);
 }
 
-struct LogCbImpl<T, F> {
-    cb: F,
-    data: T,
-}
+struct LogCbImpl<T, F>(RefCell<(F, T)>);
 
 impl<T, F: FnMut(LogLevel, &str, &mut T)> LogCbTrait for LogCbImpl<T, F> {
-    fn call(&mut self, level: LogLevel, s: &str) {
-        (self.cb)(level, s, &mut self.data)
+    fn call(&self, level: LogLevel, s: &str) {
+        let mut cb = self.0.borrow_mut();
+        let cb = &mut *cb;
+        (cb.0)(level, s, &mut cb.1)
+    }
+    fn assert_unlocked(&self) {
+        self.0.try_borrow_mut().expect("callback is in use");
     }
 }
 
-struct DlCbImpl<T, F> {
-    cb: F,
-    data: T,
-}
+struct DlCbImpl<T, F>(RefCell<(F, T)>);
 
 impl<T, F: FnMut(&str, AnyDownloadEvent, &mut T)> DlCbTrait for DlCbImpl<T, F> {
-    fn call(&mut self, s: &str, event: AnyDownloadEvent) {
-        (self.cb)(s, event, &mut self.data)
+    fn call(&self, s: &str, event: AnyDownloadEvent) {
+        let mut cb = self.0.borrow_mut();
+        let cb = &mut *cb;
+        (cb.0)(s, event, &mut cb.1)
+    }
+    fn assert_unlocked(&self) {
+        self.0.try_borrow_mut().expect("callback is in use");
     }
 }
 
-struct EventCbImpl<T, F> {
-    cb: F,
-    data: T,
-    handle: *mut alpm_handle_t,
-}
+struct EventCbImpl<T, F>(RefCell<(F, T)>, *mut alpm_handle_t);
 
 impl<T, F: FnMut(AnyEvent, &mut T)> EventCbTrait for EventCbImpl<T, F> {
-    fn call(&mut self, event: AnyEvent) {
-        (self.cb)(event, &mut self.data)
+    fn call(&self, event: AnyEvent) {
+        let mut cb = self.0.borrow_mut();
+        let cb = &mut *cb;
+        (cb.0)(event, &mut cb.1)
     }
+
+    fn assert_unlocked(&self) {
+        self.0.try_borrow_mut().expect("callback is in use");
+    }
+
     fn handle(&self) -> *mut alpm_handle_t {
-        self.handle
+        self.1
     }
 }
 
-struct ProgressCbImpl<T, F> {
-    cb: F,
-    data: T,
-}
+struct ProgressCbImpl<T, F>(RefCell<(F, T)>);
 
 impl<T, F: FnMut(Progress, &str, i32, usize, usize, &mut T)> ProgressCbTrait
     for ProgressCbImpl<T, F>
 {
     fn call(
-        &mut self,
+        &self,
         progress: Progress,
         pkgname: &str,
         percent: i32,
         howmany: usize,
         current: usize,
     ) {
-        (self.cb)(progress, pkgname, percent, howmany, current, &mut self.data)
+        let mut cb = self.0.borrow_mut();
+        let cb = &mut *cb;
+        (cb.0)(progress, pkgname, percent, howmany, current, &mut cb.1)
+    }
+    fn assert_unlocked(&self) {
+        self.0.try_borrow_mut().expect("callback is in use");
     }
 }
 
-struct QuestionCbImpl<T, F> {
-    cb: F,
-    data: T,
-    handle: *mut alpm_handle_t,
-}
+struct QuestionCbImpl<T, F>(RefCell<(F, T)>, *mut alpm_handle_t);
 
 impl<T, F: FnMut(AnyQuestion, &mut T)> QuestionCbTrait for QuestionCbImpl<T, F> {
-    fn call(&mut self, question: AnyQuestion) {
-        (self.cb)(question, &mut self.data)
+    fn call(&self, question: AnyQuestion) {
+        let mut cb = self.0.borrow_mut();
+        let cb = &mut *cb;
+        (cb.0)(question, &mut cb.1)
     }
+    fn assert_unlocked(&self) {
+        self.0.try_borrow_mut().expect("callback is in use");
+    }
+
     fn handle(&self) -> *mut alpm_handle_t {
-        self.handle
+        self.1
     }
 }
 
-struct FetchCbImpl<T, F> {
-    cb: F,
-    data: T,
-}
+struct FetchCbImpl<T, F>(RefCell<(F, T)>);
 
 impl<T, F: FnMut(&str, &str, bool, &mut T) -> FetchResult> FetchCbTrait for FetchCbImpl<T, F> {
-    fn call(&mut self, url: &str, filename: &str, force: bool) -> FetchResult {
-        (self.cb)(url, filename, force, &mut self.data)
+    fn call(&self, url: &str, filename: &str, force: bool) -> FetchResult {
+        let mut cb = self.0.borrow_mut();
+        let cb = &mut *cb;
+        (cb.0)(url, filename, force, &mut cb.1)
+    }
+
+    fn assert_unlocked(&self) {
+        self.0.try_borrow_mut().expect("callback is in use");
     }
 }
 
 pub struct RawLogCb {
     pub(crate) raw: alpm_cb_log,
     pub(crate) ctx: *mut c_void,
-    pub(crate) cb: Option<Box<UnsafeCell<dyn LogCbTrait>>>,
+    pub(crate) cb: Option<Box<dyn LogCbTrait>>,
 }
 
 impl fmt::Debug for RawLogCb {
@@ -141,7 +166,7 @@ impl fmt::Debug for RawLogCb {
 pub struct RawDlCb {
     pub(crate) raw: alpm_cb_download,
     pub(crate) ctx: *mut c_void,
-    pub(crate) cb: Option<Box<UnsafeCell<dyn DlCbTrait>>>,
+    pub(crate) cb: Option<Box<dyn DlCbTrait>>,
 }
 
 impl fmt::Debug for RawDlCb {
@@ -153,7 +178,7 @@ impl fmt::Debug for RawDlCb {
 pub struct RawEventCb {
     pub(crate) raw: alpm_cb_event,
     pub(crate) ctx: *mut c_void,
-    pub(crate) cb: Option<Box<UnsafeCell<dyn EventCbTrait>>>,
+    pub(crate) cb: Option<Box<dyn EventCbTrait>>,
 }
 
 impl fmt::Debug for RawEventCb {
@@ -165,8 +190,9 @@ impl fmt::Debug for RawEventCb {
 pub struct RawProgressCb {
     pub(crate) raw: alpm_cb_progress,
     pub(crate) ctx: *mut c_void,
-    pub(crate) cb: Option<Box<UnsafeCell<dyn ProgressCbTrait>>>,
+    pub(crate) cb: Option<Box<dyn ProgressCbTrait>>,
 }
+
 impl fmt::Debug for RawProgressCb {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("RawProgressCb")
@@ -176,7 +202,7 @@ impl fmt::Debug for RawProgressCb {
 pub struct RawQuestionCb {
     pub(crate) raw: alpm_cb_question,
     pub(crate) ctx: *mut c_void,
-    pub(crate) cb: Option<Box<UnsafeCell<dyn QuestionCbTrait>>>,
+    pub(crate) cb: Option<Box<dyn QuestionCbTrait>>,
 }
 
 impl fmt::Debug for RawQuestionCb {
@@ -188,8 +214,9 @@ impl fmt::Debug for RawQuestionCb {
 pub struct RawFetchCb {
     pub(crate) raw: alpm_cb_fetch,
     pub(crate) ctx: *mut c_void,
-    pub(crate) cb: Option<Box<UnsafeCell<dyn FetchCbTrait>>>,
+    pub(crate) cb: Option<Box<dyn FetchCbTrait>>,
 }
+
 impl fmt::Debug for RawFetchCb {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("RawFetchCb")
@@ -202,11 +229,15 @@ impl Alpm {
         data: T,
         f: F,
     ) {
-        let ctx = LogCbImpl { cb: f, data };
-        let ctx = Box::new(UnsafeCell::new(ctx));
+        let c = unsafe { &mut *self.cbs.log.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+        let ctx = LogCbImpl(RefCell::new((f, data)));
+        let ctx = Box::new(ctx);
         let cb = logcb::<LogCbImpl<T, F>>;
         unsafe { alpm_option_set_logcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.log.replace(Some(ctx));
+        c.replace(ctx);
     }
 
     pub fn set_dl_cb<T: 'static, F: FnMut(&str, AnyDownloadEvent, &mut T) + 'static>(
@@ -214,23 +245,31 @@ impl Alpm {
         data: T,
         f: F,
     ) {
-        let ctx = DlCbImpl { cb: f, data };
-        let ctx = Box::new(UnsafeCell::new(ctx));
+        let c = unsafe { &mut *self.cbs.dl.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+        let ctx = DlCbImpl(RefCell::new((f, data)));
+        let ctx = Box::new(ctx);
         let cb = dlcb::<DlCbImpl<T, F>>;
         unsafe { alpm_option_set_dlcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.dl.replace(Some(ctx));
+        c.replace(ctx);
     }
 
     pub fn set_event_cb<T: 'static, F: FnMut(AnyEvent, &mut T) + 'static>(&self, data: T, f: F) {
-        let ctx = EventCbImpl {
-            cb: f,
-            data,
-            handle: self.handle,
-        };
-        let ctx = Box::new(UnsafeCell::new(ctx));
+        let c = unsafe { &mut *self.cbs.event.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+        let ctx = EventCbImpl(RefCell::new((f, data)), self.handle);
+        let ctx = Box::new(ctx);
         let cb = eventcb::<EventCbImpl<T, F>>;
         unsafe { alpm_option_set_eventcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.event.replace(Some(ctx));
+        c.replace(ctx);
     }
 
     pub fn set_progress_cb<
@@ -241,11 +280,15 @@ impl Alpm {
         data: T,
         f: F,
     ) {
-        let ctx = ProgressCbImpl { cb: f, data };
-        let ctx = Box::new(UnsafeCell::new(ctx));
+        let c = unsafe { &mut *self.cbs.progress.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+        let ctx = ProgressCbImpl(RefCell::new((f, data)));
+        let ctx = Box::new(ctx);
         let cb = progresscb::<ProgressCbImpl<T, F>>;
         unsafe { alpm_option_set_progresscb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.progress.replace(Some(ctx));
+        c.replace(ctx);
     }
 
     pub fn set_question_cb<T: 'static, F: FnMut(AnyQuestion, &mut T) + 'static>(
@@ -253,15 +296,15 @@ impl Alpm {
         data: T,
         f: F,
     ) {
-        let ctx = QuestionCbImpl {
-            cb: f,
-            data,
-            handle: self.handle,
-        };
-        let ctx = Box::new(UnsafeCell::new(ctx));
+        let c = unsafe { &mut *self.cbs.question.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+        let ctx = QuestionCbImpl(RefCell::new((f, data)), self.handle);
+        let ctx = Box::new(ctx);
         let cb = questioncb::<QuestionCbImpl<T, F>>;
         unsafe { alpm_option_set_questioncb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.question.replace(Some(ctx));
+        c.replace(ctx);
     }
 
     pub fn set_fetch_cb<T: 'static, F: FnMut(&str, &str, bool, &mut T) -> FetchResult + 'static>(
@@ -269,93 +312,148 @@ impl Alpm {
         data: T,
         f: F,
     ) {
-        let ctx = FetchCbImpl { cb: f, data };
-        let ctx = Box::new(UnsafeCell::new(ctx));
+        let c = unsafe { &mut *self.cbs.fetch.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+        let ctx = FetchCbImpl(RefCell::new((f, data)));
+        let ctx = Box::new(ctx);
         let cb = fetchcb::<FetchCbImpl<T, F>>;
         unsafe { alpm_option_set_fetchcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.fetch.replace(Some(ctx));
+        c.replace(ctx);
     }
 
     pub fn take_raw_log_cb(&self) -> RawLogCb {
+        let c = unsafe { &mut *self.cbs.log.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
         let cb = RawLogCb {
             ctx: unsafe { alpm_option_get_logcb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_logcb(self.handle) },
-            cb: self.cbs.log.take(),
+            cb: c.take(),
         };
         unsafe { alpm_option_set_logcb(self.handle, None, ptr::null_mut()) };
         cb
     }
 
     pub fn set_raw_log_cb(&self, cb: RawLogCb) {
+        let c = unsafe { &mut *self.cbs.log.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
         unsafe { alpm_option_set_logcb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.log.replace(cb.cb);
+        *c = cb.cb
     }
 
     pub fn take_raw_dl_cb(&self) -> RawDlCb {
+        let c = unsafe { &mut *self.cbs.dl.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
         let cb = RawDlCb {
             ctx: unsafe { alpm_option_get_dlcb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_dlcb(self.handle) },
-            cb: self.cbs.dl.take(),
+            cb: c.take(),
         };
         unsafe { alpm_option_set_dlcb(self.handle, None, ptr::null_mut()) };
         cb
     }
 
     pub fn set_raw_dl_cb(&self, cb: RawDlCb) {
+        let c = unsafe { &mut *self.cbs.dl.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
         unsafe { alpm_option_set_dlcb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.dl.replace(cb.cb);
+        *c = cb.cb
     }
 
     pub fn take_raw_event_cb(&self) -> RawEventCb {
+        let c = unsafe { &mut *self.cbs.event.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
         let cb = RawEventCb {
             ctx: unsafe { alpm_option_get_eventcb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_eventcb(self.handle) },
-            cb: self.cbs.event.take(),
+            cb: c.take(),
         };
         unsafe { alpm_option_set_eventcb(self.handle, None, ptr::null_mut()) };
         cb
     }
 
     pub fn set_raw_event_cb(&self, cb: RawEventCb) {
+        let c = unsafe { &mut *self.cbs.event.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
         unsafe { alpm_option_set_eventcb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.event.replace(cb.cb);
+        *c = cb.cb
     }
 
     pub fn take_raw_progress_cb(&self) -> RawProgressCb {
+        let c = unsafe { &mut *self.cbs.progress.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
         let cb = RawProgressCb {
             ctx: unsafe { alpm_option_get_progresscb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_progresscb(self.handle) },
-            cb: self.cbs.progress.take(),
+            cb: c.take(),
         };
         unsafe { alpm_option_set_progresscb(self.handle, None, ptr::null_mut()) };
         cb
     }
 
     pub fn set_raw_progress_cb(&self, cb: RawProgressCb) {
+        let c = unsafe { &mut *self.cbs.progress.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
         unsafe { alpm_option_set_progresscb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.progress.replace(cb.cb);
+        *c = cb.cb;
     }
 
     pub fn take_raw_question_cb(&self) -> RawQuestionCb {
+        let c = unsafe { &mut *self.cbs.question.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
         let cb = RawQuestionCb {
             ctx: unsafe { alpm_option_get_questioncb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_questioncb(self.handle) },
-            cb: self.cbs.question.take(),
+            cb: c.take(),
         };
         unsafe { alpm_option_set_questioncb(self.handle, None, ptr::null_mut()) };
         cb
     }
 
     pub fn set_raw_question_cb(&self, cb: RawQuestionCb) {
+        let c = unsafe { &mut *self.cbs.question.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
         unsafe { alpm_option_set_questioncb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.question.replace(cb.cb);
+        *c = cb.cb;
     }
 
     pub fn take_raw_fetch_cb(&self) -> RawFetchCb {
+        let c = unsafe { &mut *self.cbs.fetch.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
         let cb = RawFetchCb {
             ctx: unsafe { alpm_option_get_fetchcb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_fetchcb(self.handle) },
-            cb: self.cbs.fetch.take(),
+            cb: c.take(),
         };
 
         unsafe { alpm_option_set_fetchcb(self.handle, None, ptr::null_mut()) };
@@ -363,8 +461,13 @@ impl Alpm {
     }
 
     pub fn set_raw_fetch_cb(&self, cb: RawFetchCb) {
+        let c = unsafe { &mut *self.cbs.fetch.get() };
+        if let Some(cb) = c.as_ref() {
+            cb.assert_unlocked()
+        }
+
         unsafe { alpm_option_set_fetchcb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.fetch.replace(cb.cb);
+        *c = cb.cb;
     }
 }
 
@@ -374,19 +477,18 @@ extern "C" fn logcb<C: LogCbTrait>(
     fmt: *const c_char,
     args: *mut __va_list_tag,
 ) {
-    let _ = panic::catch_unwind(|| {
-        let buff = ptr::null_mut();
-        let n = unsafe { vasprintf(&buff, fmt, args) };
-        if n != -1 {
+    let buff = ptr::null_mut();
+    let n = unsafe { vasprintf(&buff, fmt, args) };
+    if n != -1 {
+        let _ = panic::catch_unwind(|| {
             let s = unsafe { CStr::from_ptr(buff) };
             let level = LogLevel::from_bits(level).unwrap();
-            let cb = unsafe { &*(ctx as *const UnsafeCell<C>) };
-
-            let cb = unsafe { &mut *cb.get() };
+            let cb = unsafe { &*(ctx as *const C) };
             cb.call(level, &s.to_string_lossy());
-            unsafe { free(buff as *mut c_void) };
-        }
-    });
+        });
+
+        unsafe { free(buff as *mut c_void) };
+    }
 }
 
 extern "C" fn dlcb<C: DlCbTrait>(
@@ -399,8 +501,7 @@ extern "C" fn dlcb<C: DlCbTrait>(
         let filename = unsafe { CStr::from_ptr(filename) };
         let filename = filename.to_str().unwrap();
         let event = unsafe { AnyDownloadEvent::new(event, data) };
-        let cb = unsafe { &*(ctx as *const UnsafeCell<C>) };
-        let cb = unsafe { &mut *cb.get() };
+        let cb = unsafe { &*(ctx as *const C) };
         cb.call(&filename, event);
     });
 }
@@ -414,8 +515,7 @@ extern "C" fn fetchcb<C: FetchCbTrait>(
     let ret = panic::catch_unwind(|| {
         let url = unsafe { CStr::from_ptr(url).to_str().unwrap() };
         let localpath = unsafe { CStr::from_ptr(localpath).to_str().unwrap() };
-        let cb = unsafe { &*(ctx as *const UnsafeCell<C>) };
-        let cb = unsafe { &mut *cb.get() };
+        let cb = unsafe { &*(ctx as *const C) };
         let ret = cb.call(url, localpath, force != 0);
 
         match ret {
@@ -430,8 +530,7 @@ extern "C" fn fetchcb<C: FetchCbTrait>(
 
 extern "C" fn eventcb<C: EventCbTrait>(ctx: *mut c_void, event: *mut alpm_event_t) {
     let _ = panic::catch_unwind(|| {
-        let cb = unsafe { &*(ctx as *const UnsafeCell<C>) };
-        let cb = unsafe { &mut *cb.get() };
+        let cb = unsafe { &*(ctx as *const C) };
 
         let event = unsafe { AnyEvent::new(cb.handle(), event) };
         cb.call(event);
@@ -440,8 +539,7 @@ extern "C" fn eventcb<C: EventCbTrait>(ctx: *mut c_void, event: *mut alpm_event_
 
 extern "C" fn questioncb<C: QuestionCbTrait>(ctx: *mut c_void, question: *mut alpm_question_t) {
     let _ = panic::catch_unwind(|| {
-        let cb = unsafe { &*(ctx as *const UnsafeCell<C>) };
-        let cb = unsafe { &mut *cb.get() };
+        let cb = unsafe { &*(ctx as *const C) };
         let question = unsafe { AnyQuestion::new(cb.handle(), question) };
         cb.call(question);
     });
@@ -459,8 +557,7 @@ extern "C" fn progresscb<C: ProgressCbTrait>(
         let pkgname = unsafe { CStr::from_ptr(pkgname) };
         let pkgname = pkgname.to_str().unwrap();
         let progress = unsafe { transmute::<alpm_progress_t, Progress>(progress) };
-        let cb = unsafe { &*(ctx as *const UnsafeCell<C>) };
-        let cb = unsafe { &mut *cb.get() };
+        let cb = unsafe { &*(ctx as *const C) };
         cb.call(progress, &pkgname, percent as i32, howmany, current);
     });
 }
@@ -577,14 +674,25 @@ mod tests {
     }
 
     #[test]
-    fn test_cb_move() {
+    fn test_cb_refcell1() {
         let handle = Alpm::new("/", "tests/db").unwrap();
-
         let handle = Rc::new(handle);
 
         handle.set_log_cb(handle.clone(), |_, msg, data| {
             println!("{} {:?}", msg, data);
             data.take_raw_log_cb();
+        });
+        handle.register_syncdb("core", SigLevel::NONE).unwrap();
+    }
+
+    #[test]
+    fn test_cb_refcell2() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let handle = Rc::new(handle);
+
+        handle.set_log_cb(handle.clone(), |_, msg, data| {
+            println!("{} {:?}", msg, data);
+            data.set_log_cb((), |_, _, _| {});
         });
         handle.register_syncdb("core", SigLevel::NONE).unwrap();
     }

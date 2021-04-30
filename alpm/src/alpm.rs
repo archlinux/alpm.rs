@@ -1,10 +1,6 @@
 use crate::utils::*;
-use crate::{
-    DlCbTrait, Error, EventCbTrait, FetchCbTrait, LogCbTrait, ProgressCbTrait, QuestionCbTrait,
-    Result,
-};
+use crate::{Callbacks, Error, Result};
 
-use std::cell::{Cell, UnsafeCell};
 use std::ffi::{c_void, CString};
 use std::os::raw::c_int;
 
@@ -13,18 +9,6 @@ use bitflags::bitflags;
 
 extern "C" {
     pub(crate) fn free(ptr: *mut c_void);
-}
-
-type Cb<T> = Cell<Option<Box<UnsafeCell<T>>>>;
-
-#[derive(Default)]
-pub(crate) struct Callbacks {
-    pub(crate) log: Cb<dyn LogCbTrait>,
-    pub(crate) dl: Cb<dyn DlCbTrait>,
-    pub(crate) event: Cb<dyn EventCbTrait>,
-    pub(crate) progress: Cb<dyn ProgressCbTrait>,
-    pub(crate) question: Cb<dyn QuestionCbTrait>,
-    pub(crate) fetch: Cb<dyn FetchCbTrait>,
 }
 
 #[allow(dead_code)]
