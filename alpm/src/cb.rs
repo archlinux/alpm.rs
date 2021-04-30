@@ -197,7 +197,7 @@ impl fmt::Debug for RawFetchCb {
 }
 
 impl Alpm {
-    pub fn set_log_cb<T: Send + 'static, F: FnMut(LogLevel, &str, &mut T) + Send + 'static>(
+    pub fn set_log_cb<T: 'static, F: FnMut(LogLevel, &str, &mut T) + 'static>(
         &mut self,
         data: T,
         f: F,
@@ -209,10 +209,7 @@ impl Alpm {
         self.cbs.get_mut().log = Some(ctx);
     }
 
-    pub fn set_dl_cb<
-        T: Send + 'static,
-        F: FnMut(&str, AnyDownloadEvent, &mut T) + Send + 'static,
-    >(
+    pub fn set_dl_cb<T: 'static, F: FnMut(&str, AnyDownloadEvent, &mut T) + 'static>(
         &mut self,
         data: T,
         f: F,
@@ -224,7 +221,7 @@ impl Alpm {
         self.cbs.get_mut().dl = Some(ctx);
     }
 
-    pub fn set_event_cb<T: Send + 'static, F: FnMut(AnyEvent, &mut T) + Send + 'static>(
+    pub fn set_event_cb<T: 'static, F: FnMut(AnyEvent, &mut T) + 'static>(
         &mut self,
         data: T,
         f: F,
@@ -241,8 +238,8 @@ impl Alpm {
     }
 
     pub fn set_progress_cb<
-        T: Send + 'static,
-        F: FnMut(Progress, &str, i32, usize, usize, &mut T) + Send + 'static,
+        T: 'static,
+        F: FnMut(Progress, &str, i32, usize, usize, &mut T) + 'static,
     >(
         &mut self,
         data: T,
@@ -255,7 +252,7 @@ impl Alpm {
         self.cbs.get_mut().progress = Some(ctx);
     }
 
-    pub fn set_question_cb<T: Send + 'static, F: FnMut(AnyQuestion, &mut T) + Send + 'static>(
+    pub fn set_question_cb<T: 'static, F: FnMut(AnyQuestion, &mut T) + 'static>(
         &mut self,
         data: T,
         f: F,
@@ -271,10 +268,7 @@ impl Alpm {
         self.cbs.get_mut().question = Some(ctx);
     }
 
-    pub fn set_fetch_cb<
-        T: Send + 'static,
-        F: FnMut(&str, &str, bool, &mut T) -> FetchResult + Send + 'static,
-    >(
+    pub fn set_fetch_cb<T: 'static, F: FnMut(&str, &str, bool, &mut T) -> FetchResult + 'static>(
         &mut self,
         data: T,
         f: F,
