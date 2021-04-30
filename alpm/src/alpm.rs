@@ -4,7 +4,7 @@ use crate::{
     Result,
 };
 
-use std::cell::{RefCell, UnsafeCell};
+use std::cell::{Cell, UnsafeCell};
 use std::ffi::{c_void, CString};
 use std::os::raw::c_int;
 
@@ -15,20 +15,22 @@ extern "C" {
     pub(crate) fn free(ptr: *mut c_void);
 }
 
+type Cb<T> = Cell<Option<Box<UnsafeCell<T>>>>;
+
 #[derive(Default)]
 pub(crate) struct Callbacks {
-    pub(crate) log: Option<Box<UnsafeCell<dyn LogCbTrait>>>,
-    pub(crate) dl: Option<Box<UnsafeCell<dyn DlCbTrait>>>,
-    pub(crate) event: Option<Box<UnsafeCell<dyn EventCbTrait>>>,
-    pub(crate) progress: Option<Box<UnsafeCell<dyn ProgressCbTrait>>>,
-    pub(crate) question: Option<Box<UnsafeCell<dyn QuestionCbTrait>>>,
-    pub(crate) fetch: Option<Box<UnsafeCell<dyn FetchCbTrait>>>,
+    pub(crate) log: Cb<dyn LogCbTrait>,
+    pub(crate) dl: Cb<dyn DlCbTrait>,
+    pub(crate) event: Cb<dyn EventCbTrait>,
+    pub(crate) progress: Cb<dyn ProgressCbTrait>,
+    pub(crate) question: Cb<dyn QuestionCbTrait>,
+    pub(crate) fetch: Cb<dyn FetchCbTrait>,
 }
 
 #[allow(dead_code)]
 pub struct Alpm {
     pub(crate) handle: *mut alpm_handle_t,
-    pub(crate) cbs: RefCell<Callbacks>,
+    pub(crate) cbs: Callbacks,
 }
 
 impl std::fmt::Debug for Alpm {
@@ -60,14 +62,14 @@ impl Alpm {
 
         Ok(Alpm {
             handle,
-            cbs: RefCell::new(Callbacks::default()),
+            cbs: Callbacks::default(),
         })
     }
 
     pub(crate) unsafe fn from_ptr(handle: *mut alpm_handle_t) -> Alpm {
         Alpm {
             handle,
-            cbs: RefCell::new(Callbacks::default()),
+            cbs: Callbacks::default(),
         }
     }
 

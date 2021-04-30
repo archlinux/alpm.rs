@@ -198,7 +198,7 @@ impl fmt::Debug for RawFetchCb {
 
 impl Alpm {
     pub fn set_log_cb<T: 'static, F: FnMut(LogLevel, &str, &mut T) + 'static>(
-        &mut self,
+        &self,
         data: T,
         f: F,
     ) {
@@ -206,11 +206,11 @@ impl Alpm {
         let ctx = Box::new(UnsafeCell::new(ctx));
         let cb = logcb::<LogCbImpl<T, F>>;
         unsafe { alpm_option_set_logcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.get_mut().log = Some(ctx);
+        self.cbs.log.replace(Some(ctx));
     }
 
     pub fn set_dl_cb<T: 'static, F: FnMut(&str, AnyDownloadEvent, &mut T) + 'static>(
-        &mut self,
+        &self,
         data: T,
         f: F,
     ) {
@@ -218,14 +218,10 @@ impl Alpm {
         let ctx = Box::new(UnsafeCell::new(ctx));
         let cb = dlcb::<DlCbImpl<T, F>>;
         unsafe { alpm_option_set_dlcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.get_mut().dl = Some(ctx);
+        self.cbs.dl.replace(Some(ctx));
     }
 
-    pub fn set_event_cb<T: 'static, F: FnMut(AnyEvent, &mut T) + 'static>(
-        &mut self,
-        data: T,
-        f: F,
-    ) {
+    pub fn set_event_cb<T: 'static, F: FnMut(AnyEvent, &mut T) + 'static>(&self, data: T, f: F) {
         let ctx = EventCbImpl {
             cb: f,
             data,
@@ -234,14 +230,14 @@ impl Alpm {
         let ctx = Box::new(UnsafeCell::new(ctx));
         let cb = eventcb::<EventCbImpl<T, F>>;
         unsafe { alpm_option_set_eventcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.get_mut().event = Some(ctx);
+        self.cbs.event.replace(Some(ctx));
     }
 
     pub fn set_progress_cb<
         T: 'static,
         F: FnMut(Progress, &str, i32, usize, usize, &mut T) + 'static,
     >(
-        &mut self,
+        &self,
         data: T,
         f: F,
     ) {
@@ -249,11 +245,11 @@ impl Alpm {
         let ctx = Box::new(UnsafeCell::new(ctx));
         let cb = progresscb::<ProgressCbImpl<T, F>>;
         unsafe { alpm_option_set_progresscb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.get_mut().progress = Some(ctx);
+        self.cbs.progress.replace(Some(ctx));
     }
 
     pub fn set_question_cb<T: 'static, F: FnMut(AnyQuestion, &mut T) + 'static>(
-        &mut self,
+        &self,
         data: T,
         f: F,
     ) {
@@ -265,11 +261,11 @@ impl Alpm {
         let ctx = Box::new(UnsafeCell::new(ctx));
         let cb = questioncb::<QuestionCbImpl<T, F>>;
         unsafe { alpm_option_set_questioncb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.get_mut().question = Some(ctx);
+        self.cbs.question.replace(Some(ctx));
     }
 
     pub fn set_fetch_cb<T: 'static, F: FnMut(&str, &str, bool, &mut T) -> FetchResult + 'static>(
-        &mut self,
+        &self,
         data: T,
         f: F,
     ) {
@@ -277,14 +273,14 @@ impl Alpm {
         let ctx = Box::new(UnsafeCell::new(ctx));
         let cb = fetchcb::<FetchCbImpl<T, F>>;
         unsafe { alpm_option_set_fetchcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
-        self.cbs.get_mut().fetch = Some(ctx);
+        self.cbs.fetch.replace(Some(ctx));
     }
 
     pub fn take_raw_log_cb(&self) -> RawLogCb {
         let cb = RawLogCb {
             ctx: unsafe { alpm_option_get_logcb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_logcb(self.handle) },
-            cb: self.cbs.borrow_mut().log.take(),
+            cb: self.cbs.log.take(),
         };
         unsafe { alpm_option_set_logcb(self.handle, None, ptr::null_mut()) };
         cb
@@ -292,14 +288,14 @@ impl Alpm {
 
     pub fn set_raw_log_cb(&self, cb: RawLogCb) {
         unsafe { alpm_option_set_logcb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.borrow_mut().log = cb.cb;
+        self.cbs.log.replace(cb.cb);
     }
 
     pub fn take_raw_dl_cb(&self) -> RawDlCb {
         let cb = RawDlCb {
             ctx: unsafe { alpm_option_get_dlcb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_dlcb(self.handle) },
-            cb: self.cbs.borrow_mut().dl.take(),
+            cb: self.cbs.dl.take(),
         };
         unsafe { alpm_option_set_dlcb(self.handle, None, ptr::null_mut()) };
         cb
@@ -307,14 +303,14 @@ impl Alpm {
 
     pub fn set_raw_dl_cb(&self, cb: RawDlCb) {
         unsafe { alpm_option_set_dlcb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.borrow_mut().dl = cb.cb;
+        self.cbs.dl.replace(cb.cb);
     }
 
     pub fn take_raw_event_cb(&self) -> RawEventCb {
         let cb = RawEventCb {
             ctx: unsafe { alpm_option_get_eventcb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_eventcb(self.handle) },
-            cb: self.cbs.borrow_mut().event.take(),
+            cb: self.cbs.event.take(),
         };
         unsafe { alpm_option_set_eventcb(self.handle, None, ptr::null_mut()) };
         cb
@@ -322,14 +318,14 @@ impl Alpm {
 
     pub fn set_raw_event_cb(&self, cb: RawEventCb) {
         unsafe { alpm_option_set_eventcb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.borrow_mut().event = cb.cb;
+        self.cbs.event.replace(cb.cb);
     }
 
     pub fn take_raw_progress_cb(&self) -> RawProgressCb {
         let cb = RawProgressCb {
             ctx: unsafe { alpm_option_get_progresscb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_progresscb(self.handle) },
-            cb: self.cbs.borrow_mut().progress.take(),
+            cb: self.cbs.progress.take(),
         };
         unsafe { alpm_option_set_progresscb(self.handle, None, ptr::null_mut()) };
         cb
@@ -337,14 +333,14 @@ impl Alpm {
 
     pub fn set_raw_progress_cb(&self, cb: RawProgressCb) {
         unsafe { alpm_option_set_progresscb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.borrow_mut().progress = cb.cb;
+        self.cbs.progress.replace(cb.cb);
     }
 
     pub fn take_raw_question_cb(&self) -> RawQuestionCb {
         let cb = RawQuestionCb {
             ctx: unsafe { alpm_option_get_questioncb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_questioncb(self.handle) },
-            cb: self.cbs.borrow_mut().question.take(),
+            cb: self.cbs.question.take(),
         };
         unsafe { alpm_option_set_questioncb(self.handle, None, ptr::null_mut()) };
         cb
@@ -352,14 +348,14 @@ impl Alpm {
 
     pub fn set_raw_question_cb(&self, cb: RawQuestionCb) {
         unsafe { alpm_option_set_questioncb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.borrow_mut().question = cb.cb;
+        self.cbs.question.replace(cb.cb);
     }
 
     pub fn take_raw_fetch_cb(&self) -> RawFetchCb {
         let cb = RawFetchCb {
             ctx: unsafe { alpm_option_get_fetchcb_ctx(self.handle) },
             raw: unsafe { alpm_option_get_fetchcb(self.handle) },
-            cb: self.cbs.borrow_mut().fetch.take(),
+            cb: self.cbs.fetch.take(),
         };
 
         unsafe { alpm_option_set_fetchcb(self.handle, None, ptr::null_mut()) };
@@ -368,7 +364,7 @@ impl Alpm {
 
     pub fn set_raw_fetch_cb(&self, cb: RawFetchCb) {
         unsafe { alpm_option_set_fetchcb(self.handle, cb.raw, cb.ctx) };
-        self.cbs.borrow_mut().fetch = cb.cb;
+        self.cbs.fetch.replace(cb.cb);
     }
 }
 
