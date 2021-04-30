@@ -678,9 +678,10 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let handle = Rc::new(handle);
 
-        handle.set_log_cb(handle.clone(), |_, msg, data| {
-            println!("{} {:?}", msg, data);
-            data.take_raw_log_cb();
+        handle.set_log_cb(Rc::downgrade(&handle), |_, msg, data| {
+            let handle = data.upgrade().unwrap();
+            println!("{} {:?}", msg, handle);
+            handle.take_raw_log_cb();
         });
         handle.register_syncdb("core", SigLevel::NONE).unwrap();
     }
@@ -690,9 +691,10 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let handle = Rc::new(handle);
 
-        handle.set_log_cb(handle.clone(), |_, msg, data| {
-            println!("{} {:?}", msg, data);
-            data.set_log_cb((), |_, _, _| {});
+        handle.set_log_cb(Rc::downgrade(&handle), |_, msg, data| {
+            let handle = data.upgrade().unwrap();
+            println!("{} {:?}", msg, handle);
+            handle.set_log_cb((), |_, _, _| {});
         });
         handle.register_syncdb("core", SigLevel::NONE).unwrap();
     }
