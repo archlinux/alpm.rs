@@ -3,4 +3,4 @@ target
 **/*.rs.bk
 */Cargo.lock
 Cargo.lock
-alpm/test/log
+alpm/tests/log
