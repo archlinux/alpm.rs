@@ -274,7 +274,7 @@ impl<'a, T> AlpmList<'a, T>
 where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
-    pub fn to_list(&self) -> AlpmListMut<'a, T> {
+    pub fn to_list_mut(&self) -> AlpmListMut<'a, T> {
         let list = unsafe { alpm_list_copy(self.list) };
         AlpmListMut {
             list: AlpmList::from_parts(self.handle, list),
@@ -974,7 +974,7 @@ mod tests {
     fn test_retain() {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
-        let mut pkgs = db.pkgs().to_list();
+        let mut pkgs = db.pkgs().to_list_mut();
         pkgs.retain(|p| p.name().starts_with('a'));
 
         assert!(!pkgs.is_empty());
@@ -988,7 +988,7 @@ mod tests {
         let pkg = db.pkg("linux").unwrap();
         assert_eq!(handle.syncdbs().to_list().remove_list(0).len(), 1);
         pkg.sync_new_version(handle.syncdbs());
-        pkg.sync_new_version(&handle.syncdbs().to_list().remove_list(0));
+        pkg.sync_new_version(&handle.syncdbs().to_list_mut().remove_list(0));
         pkg.sync_new_version(vec![db].into_iter());
         pkg.sync_new_version(vec![db].iter());
     }

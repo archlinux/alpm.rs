@@ -87,7 +87,7 @@ mod tests {
         assert_eq!(pkg.sha256sum(), None);
         assert_eq!(pkg.base64_sig(), None);
 
-        let mut pkgs = handle.localdb().pkgs().to_list();
+        let mut pkgs = handle.localdb().pkgs().to_list_mut();
         pkgs.push(pkg.pkg());
         pkgs.find_satisfier("foo");
 
