@@ -698,4 +698,24 @@ mod tests {
         });
         handle.register_syncdb("core", SigLevel::NONE).unwrap();
     }
+
+    #[test]
+    fn test_cb_refcell_mut() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let handle = Rc::new(RefCell::new(handle));
+        let borrow = handle.borrow();
+        let db = borrow.register_syncdb("core", SigLevel::NONE).unwrap();
+
+        handle
+            .borrow()
+            .set_log_cb(Rc::clone(&handle), |_, msg, data| {
+                let handle = data;
+                println!("{} {:?}", msg, handle);
+                handle.borrow_mut().unregister_all_syncdbs();
+                println!("Done");
+            });
+
+        println!("{:?}", db.pkg("linux"));
+        assert_eq!(handle.borrow().syncdbs().len(), 1);
+    }
 }
