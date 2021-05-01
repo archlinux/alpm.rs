@@ -17,7 +17,7 @@ macro_rules! set_logcb {
         }
 
         unsafe extern "C" fn c_logcb(
-            _ctx: *mut c_void,
+            #[cfg(feature = "git")] _ctx: *mut c_void,
             level: alpm_loglevel_t,
             fmt: *const c_char,
             args: *mut __va_list_tag,
@@ -33,8 +33,11 @@ macro_rules! set_logcb {
         }
 
         unsafe {
-            alpm_option_set_logcb($handle.as_alpm_handle_t(), Some(c_logcb), ptr::null_mut())
-        };
+            #[cfg(not(feature = "git"))]
+            alpm_option_set_logcb($handle.as_alpm_handle_t(), Some(c_logcb));
+            #[cfg(feature = "git")]
+            alpm_option_set_logcb($handle.as_alpm_handle_t(), Some(c_logcb), ptr::null_mut());
+        }
     }};
 }
 
@@ -121,13 +124,14 @@ macro_rules! set_dlcb {
 macro_rules! set_fetchcb {
     ( $handle:tt, $f:tt ) => {{
         use std::ffi::CStr;
-        use std::os::raw::{c_char, c_int, c_void};
-        use std::ptr;
+        #[cfg(feature = "git")]
+        use std::os::raw::c_void;
+        use std::os::raw::{c_char, c_int};
         use $crate::alpm_sys::*;
         use $crate::FetchCbReturn;
 
         unsafe extern "C" fn c_fetchcb(
-            _ctx: *mut c_void,
+            #[cfg(feature = "git")] _ctx: *mut c_void,
             url: *const c_char,
             localpath: *const c_char,
             force: c_int,
@@ -144,8 +148,15 @@ macro_rules! set_fetchcb {
         }
 
         unsafe {
-            alpm_option_set_fetchcb($handle.as_alpm_handle_t(), Some(c_fetchcb), ptr::null_mut())
-        };
+            #[cfg(not(feature = "git"))]
+            alpm_option_set_fetchcb($handle.as_alpm_handle_t(), Some(c_fetchcb));
+            #[cfg(feature = "git")]
+            alpm_option_set_fetchcb(
+                $handle.as_alpm_handle_t(),
+                Some(c_fetchcb),
+                std::ptr::null_mut(),
+            );
+        }
     }};
 }
 
@@ -166,6 +177,7 @@ macro_rules! set_totaldlcb {
 #[macro_export]
 macro_rules! set_eventcb {
     ( $handle:tt, $f:tt ) => {{
+        #[cfg(feature = "git")]
         use std::os::raw::c_void;
         use std::ptr;
         use $crate::alpm_sys::*;
@@ -176,20 +188,31 @@ macro_rules! set_eventcb {
             C_ALPM_HANDLE = $handle.as_alpm_handle_t();
         }
 
-        unsafe extern "C" fn c_eventcb(_ctx: *mut c_void, event: *mut alpm_event_t) {
+        unsafe extern "C" fn c_eventcb(
+            #[cfg(feature = "git")] _ctx: *mut c_void,
+            event: *mut alpm_event_t,
+        ) {
             let event = Event::new(C_ALPM_HANDLE, event);
             $f(&event);
         }
 
         unsafe {
-            alpm_option_set_eventcb($handle.as_alpm_handle_t(), Some(c_eventcb), ptr::null_mut())
-        };
+            #[cfg(not(feature = "git"))]
+            alpm_option_set_eventcb($handle.as_alpm_handle_t(), Some(c_eventcb));
+            #[cfg(feature = "git")]
+            alpm_option_set_eventcb(
+                $handle.as_alpm_handle_t(),
+                Some(c_eventcb),
+                std::ptr::null_mut(),
+            );
+        }
     }};
 }
 
 #[macro_export]
 macro_rules! set_questioncb {
     ( $handle:tt, $f:tt ) => {{
+        #[cfg(feature = "git")]
         use std::os::raw::c_void;
         use std::ptr;
         use $crate::alpm_sys::*;
@@ -200,18 +223,25 @@ macro_rules! set_questioncb {
             C_ALPM_HANDLE = $handle.as_alpm_handle_t();
         }
 
-        unsafe extern "C" fn c_questioncb(_ctx: *mut c_void, question: *mut alpm_question_t) {
+        unsafe extern "C" fn c_questioncb(
+            #[cfg(feature = "git")] _ctx: *mut c_void,
+            question: *mut alpm_question_t,
+        ) {
             let mut question = Question::new(C_ALPM_HANDLE, question);
             $f(&mut question);
         }
 
         unsafe {
+            #[cfg(not(feature = "git"))]
+            alpm_option_set_questioncb($handle.as_alpm_handle_t(), Some(c_questioncb));
+
+            #[cfg(feature = "git")]
             alpm_option_set_questioncb(
                 $handle.as_alpm_handle_t(),
                 Some(c_questioncb),
                 ptr::null_mut(),
-            )
-        };
+            );
+        }
     }};
 }
 
@@ -220,13 +250,14 @@ macro_rules! set_progresscb {
     ( $handle:tt, $f:tt ) => {{
         use std::ffi::CStr;
         use std::mem::transmute;
+        #[cfg(feature = "git")]
+        use std::os::raw::c_void;
         use std::os::raw::{c_char, c_int};
-        use std::ptr;
         use $crate::alpm_sys::*;
         use $crate::Progress;
 
         unsafe extern "C" fn c_progresscb(
-            _ctx: *mut c_void,
+            #[cfg(feature = "git")] _ctx: *mut c_void,
             progress: alpm_progress_t,
             pkgname: *const c_char,
             percent: c_int,
@@ -240,12 +271,15 @@ macro_rules! set_progresscb {
         }
 
         unsafe {
+            #[cfg(not(feature = "git"))]
+            alpm_option_set_progresscb($handle.as_alpm_handle_t(), Some(c_progresscb));
+            #[cfg(feature = "git")]
             alpm_option_set_progresscb(
                 $handle.as_alpm_handle_t(),
                 Some(c_progresscb),
-                ptr::null_mut(),
-            )
-        };
+                std::ptr::null_mut(),
+            );
+        }
     }};
 }
 

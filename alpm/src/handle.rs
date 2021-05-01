@@ -10,6 +10,7 @@ use crate::TotalDownloadCb;
 use std::cmp::Ordering;
 use std::ffi::CString;
 use std::marker::PhantomData;
+#[cfg(feature = "git")]
 use std::ptr;
 
 use alpm_sys::*;
@@ -474,15 +475,36 @@ impl Alpm {
     }
 
     pub fn set_log_cb(&self, cb: LogCb) {
-        unsafe { alpm_option_set_logcb(self.handle, cb.cb, ptr::null_mut()) };
+        #[cfg(not(feature = "git"))]
+        unsafe {
+            alpm_option_set_logcb(self.handle, cb.cb)
+        };
+        #[cfg(feature = "git")]
+        unsafe {
+            alpm_option_set_logcb(self.handle, cb.cb, ptr::null_mut())
+        };
     }
 
     pub fn set_dl_cb(&self, cb: DownloadCb) {
-        unsafe { alpm_option_set_dlcb(self.handle, cb.cb, ptr::null_mut()) };
+        #[cfg(not(feature = "git"))]
+        unsafe {
+            alpm_option_set_dlcb(self.handle, cb.cb)
+        };
+        #[cfg(feature = "git")]
+        unsafe {
+            alpm_option_set_dlcb(self.handle, cb.cb, ptr::null_mut())
+        };
     }
 
     pub fn set_fetch_cb(&self, cb: FetchCb) {
-        unsafe { alpm_option_set_fetchcb(self.handle, cb.cb, ptr::null_mut()) };
+        #[cfg(not(feature = "git"))]
+        unsafe {
+            alpm_option_set_fetchcb(self.handle, cb.cb)
+        };
+        #[cfg(feature = "git")]
+        unsafe {
+            alpm_option_set_fetchcb(self.handle, cb.cb, ptr::null_mut())
+        };
     }
 
     #[cfg(not(feature = "git"))]
@@ -491,15 +513,36 @@ impl Alpm {
     }
 
     pub fn set_event_cb(&self, cb: EventCb) {
-        unsafe { alpm_option_set_eventcb(self.handle, cb.cb, ptr::null_mut()) };
+        #[cfg(not(feature = "git"))]
+        unsafe {
+            alpm_option_set_eventcb(self.handle, cb.cb)
+        };
+        #[cfg(feature = "git")]
+        unsafe {
+            alpm_option_set_eventcb(self.handle, cb.cb, ptr::null_mut())
+        };
     }
 
     pub fn set_question_cb(&self, cb: QuestionCb) {
-        unsafe { alpm_option_set_questioncb(self.handle, cb.cb, ptr::null_mut()) };
+        #[cfg(not(feature = "git"))]
+        unsafe {
+            alpm_option_set_questioncb(self.handle, cb.cb)
+        };
+        #[cfg(feature = "git")]
+        unsafe {
+            alpm_option_set_questioncb(self.handle, cb.cb, ptr::null_mut())
+        };
     }
 
     pub fn set_progress_cb(&self, cb: ProgressCb) {
-        unsafe { alpm_option_set_progresscb(self.handle, cb.cb, ptr::null_mut()) };
+        #[cfg(not(feature = "git"))]
+        unsafe {
+            alpm_option_set_progresscb(self.handle, cb.cb)
+        };
+        #[cfg(feature = "git")]
+        unsafe {
+            alpm_option_set_progresscb(self.handle, cb.cb, ptr::null_mut())
+        };
     }
 }
 
