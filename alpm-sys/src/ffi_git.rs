@@ -2354,8 +2354,11 @@ pub type alpm_event_t = _alpm_event_t;
 #[doc = " Event callback."]
 #[doc = ""]
 #[doc = " Called when an event occurs"]
+#[doc = " @param ctx user-provided context"]
 #[doc = " @param event the event that occurred"]
-pub type alpm_cb_event = ::std::option::Option<unsafe extern "C" fn(arg1: *mut alpm_event_t)>;
+pub type alpm_cb_event = ::std::option::Option<
+    unsafe extern "C" fn(ctx: *mut ::std::os::raw::c_void, arg1: *mut alpm_event_t),
+>;
 pub mod _alpm_question_type_t {
     #[doc = " Type of question."]
     #[doc = " Unlike the events or progress enumerations, this enum has bitmask values"]
@@ -3058,8 +3061,11 @@ pub type alpm_question_t = _alpm_question_t;
 #[doc = " Question callback."]
 #[doc = ""]
 #[doc = " This callback allows user to give input and decide what to do during certain events"]
+#[doc = " @param ctx user-provided context"]
 #[doc = " @param question the question being asked."]
-pub type alpm_cb_question = ::std::option::Option<unsafe extern "C" fn(arg1: *mut alpm_question_t)>;
+pub type alpm_cb_question = ::std::option::Option<
+    unsafe extern "C" fn(ctx: *mut ::std::os::raw::c_void, arg1: *mut alpm_question_t),
+>;
 #[repr(u32)]
 #[doc = " An enum over different kinds of progress alerts."]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -3092,6 +3098,7 @@ pub use self::_alpm_progress_t as alpm_progress_t;
 #[doc = " Alert the front end about the progress of certain events."]
 #[doc = " Allows the implementation of loading bars for events that"]
 #[doc = " make take a while to complete."]
+#[doc = " @param ctx user-provided context"]
 #[doc = " @param progress the kind of event that is progressing"]
 #[doc = " @param pkg for package operations, the name of the package being operated on"]
 #[doc = " @param percent the percent completion of the action"]
@@ -3099,6 +3106,7 @@ pub use self::_alpm_progress_t as alpm_progress_t;
 #[doc = " @param current the current amount of items completed"]
 pub type alpm_cb_progress = ::std::option::Option<
     unsafe extern "C" fn(
+        ctx: *mut ::std::os::raw::c_void,
         progress: alpm_progress_t,
         pkg: *const ::std::os::raw::c_char,
         percent: ::std::os::raw::c_int,
@@ -3259,17 +3267,20 @@ fn bindgen_test_layout__alpm_download_event_completed_t() {
 #[doc = " Context struct for when a download completes."]
 pub type alpm_download_event_completed_t = _alpm_download_event_completed_t;
 #[doc = " Type of download progress callbacks."]
+#[doc = " @param ctx user-provided context"]
 #[doc = " @param filename the name of the file being downloaded"]
 #[doc = " @param event the event type"]
 #[doc = " @param data the event data of type alpm_download_event_*_t"]
 pub type alpm_cb_download = ::std::option::Option<
     unsafe extern "C" fn(
+        ctx: *mut ::std::os::raw::c_void,
         filename: *const ::std::os::raw::c_char,
         event: alpm_download_event_type_t,
         data: *mut ::std::os::raw::c_void,
     ),
 >;
 #[doc = " A callback for downloading files"]
+#[doc = " @param ctx user-provided context"]
 #[doc = " @param url the URL of the file to be downloaded"]
 #[doc = " @param localpath the directory to which the file should be downloaded"]
 #[doc = " @param force whether to force an update, even if the file is the same"]
@@ -3277,6 +3288,7 @@ pub type alpm_cb_download = ::std::option::Option<
 #[doc = " error."]
 pub type alpm_cb_fetch = ::std::option::Option<
     unsafe extern "C" fn(
+        ctx: *mut ::std::os::raw::c_void,
         url: *const ::std::os::raw::c_char,
         localpath: *const ::std::os::raw::c_char,
         force: ::std::os::raw::c_int,
@@ -3416,7 +3428,8 @@ extern "C" {
     #[doc = " @param dbs list of package databases to update"]
     #[doc = " @param force if true, then forces the update, otherwise update only in case"]
     #[doc = " the databases aren't up to date"]
-    #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
+    #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly),"]
+    #[doc = " 1 if all databases are up to to date"]
     pub fn alpm_db_update(
         handle: *mut alpm_handle_t,
         dbs: *mut alpm_list_t,
@@ -3528,11 +3541,13 @@ pub use self::_alpm_loglevel_t::Type as alpm_loglevel_t;
 #[doc = " libalpm will call this function whenever something is to be logged."]
 #[doc = " many libalpm will produce log output. Additionally any calls to \\link alpm_logaction"]
 #[doc = " \\endlink will also call this callback."]
+#[doc = " @param ctx user-provided context"]
 #[doc = " @param level the currently set loglevel"]
 #[doc = " @param fmt the printf like format string"]
 #[doc = " @param args printf like arguments"]
 pub type alpm_cb_log = ::std::option::Option<
     unsafe extern "C" fn(
+        ctx: *mut ::std::os::raw::c_void,
         level: alpm_loglevel_t,
         fmt: *const ::std::os::raw::c_char,
         args: *mut __va_list_tag,
@@ -3558,13 +3573,21 @@ extern "C" {
     pub fn alpm_option_get_logcb(handle: *mut alpm_handle_t) -> alpm_cb_log;
 }
 extern "C" {
+    #[doc = " Returns the callback used for logging."]
+    #[doc = " @param handle the context handle"]
+    #[doc = " @return the currently set log callback context"]
+    pub fn alpm_option_get_logcb_ctx(handle: *mut alpm_handle_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
     #[doc = " Sets the callback used for logging."]
     #[doc = " @param handle the context handle"]
     #[doc = " @param cb the cb to use"]
+    #[doc = " @param ctx user-provided context to pass to cb"]
     #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_option_set_logcb(
         handle: *mut alpm_handle_t,
         cb: alpm_cb_log,
+        ctx: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -3574,13 +3597,21 @@ extern "C" {
     pub fn alpm_option_get_dlcb(handle: *mut alpm_handle_t) -> alpm_cb_download;
 }
 extern "C" {
+    #[doc = " Returns the callback used to report download progress."]
+    #[doc = " @param handle the context handle"]
+    #[doc = " @return the currently set download callback context"]
+    pub fn alpm_option_get_dlcb_ctx(handle: *mut alpm_handle_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
     #[doc = " Sets the callback used to report download progress."]
     #[doc = " @param handle the context handle"]
     #[doc = " @param cb the cb to use"]
+    #[doc = " @param ctx user-provided context to pass to cb"]
     #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_option_set_dlcb(
         handle: *mut alpm_handle_t,
         cb: alpm_cb_download,
+        ctx: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -3590,13 +3621,21 @@ extern "C" {
     pub fn alpm_option_get_fetchcb(handle: *mut alpm_handle_t) -> alpm_cb_fetch;
 }
 extern "C" {
+    #[doc = " Returns the downloading callback."]
+    #[doc = " @param handle the context handle"]
+    #[doc = " @return the currently set fetch callback context"]
+    pub fn alpm_option_get_fetchcb_ctx(handle: *mut alpm_handle_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
     #[doc = " Sets the downloading callback."]
     #[doc = " @param handle the context handle"]
     #[doc = " @param cb the cb to use"]
+    #[doc = " @param ctx user-provided context to pass to cb"]
     #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_option_set_fetchcb(
         handle: *mut alpm_handle_t,
         cb: alpm_cb_fetch,
+        ctx: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -3606,13 +3645,21 @@ extern "C" {
     pub fn alpm_option_get_eventcb(handle: *mut alpm_handle_t) -> alpm_cb_event;
 }
 extern "C" {
+    #[doc = " Returns the callback used for events."]
+    #[doc = " @param handle the context handle"]
+    #[doc = " @return the currently set event callback context"]
+    pub fn alpm_option_get_eventcb_ctx(handle: *mut alpm_handle_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
     #[doc = " Sets the callback used for events."]
     #[doc = " @param handle the context handle"]
     #[doc = " @param cb the cb to use"]
+    #[doc = " @param ctx user-provided context to pass to cb"]
     #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_option_set_eventcb(
         handle: *mut alpm_handle_t,
         cb: alpm_cb_event,
+        ctx: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -3622,13 +3669,23 @@ extern "C" {
     pub fn alpm_option_get_questioncb(handle: *mut alpm_handle_t) -> alpm_cb_question;
 }
 extern "C" {
+    #[doc = " Returns the callback used for questions."]
+    #[doc = " @param handle the context handle"]
+    #[doc = " @return the currently set question callback context"]
+    pub fn alpm_option_get_questioncb_ctx(
+        handle: *mut alpm_handle_t,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
     #[doc = " Sets the callback used for questions."]
     #[doc = " @param handle the context handle"]
     #[doc = " @param cb the cb to use"]
+    #[doc = " @param ctx user-provided context to pass to cb"]
     #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_option_set_questioncb(
         handle: *mut alpm_handle_t,
         cb: alpm_cb_question,
+        ctx: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -3638,13 +3695,23 @@ extern "C" {
     pub fn alpm_option_get_progresscb(handle: *mut alpm_handle_t) -> alpm_cb_progress;
 }
 extern "C" {
+    #[doc = "Returns the callback used for operation progress."]
+    #[doc = " @param handle the context handle"]
+    #[doc = " @return the currently set progress callback context"]
+    pub fn alpm_option_get_progresscb_ctx(
+        handle: *mut alpm_handle_t,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
     #[doc = " Sets the callback used for operation progress."]
     #[doc = " @param handle the context handle"]
     #[doc = " @param cb the cb to use"]
+    #[doc = " @param ctx user-provided context to pass to cb"]
     #[doc = " @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_option_set_progresscb(
         handle: *mut alpm_handle_t,
         cb: alpm_cb_progress,
+        ctx: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {

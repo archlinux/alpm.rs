@@ -17,6 +17,7 @@ macro_rules! set_logcb {
         }
 
         unsafe extern "C" fn c_logcb(
+            _ctx: *mut c_void,
             level: alpm_loglevel_t,
             fmt: *const c_char,
             args: *mut __va_list_tag,
@@ -31,7 +32,9 @@ macro_rules! set_logcb {
             }
         }
 
-        unsafe { alpm_option_set_logcb($handle.as_alpm_handle_t(), Some(c_logcb)) };
+        unsafe {
+            alpm_option_set_logcb($handle.as_alpm_handle_t(), Some(c_logcb), ptr::null_mut())
+        };
     }};
 }
 
@@ -42,6 +45,7 @@ macro_rules! set_dlcb {
         use std::cmp::Ordering;
         use std::ffi::{c_void, CStr};
         use std::os::raw::c_char;
+        use std::ptr;
         use $crate::alpm_sys::alpm_download_event_type_t::*;
         use $crate::alpm_sys::*;
         use $crate::{
@@ -50,6 +54,7 @@ macro_rules! set_dlcb {
         };
 
         unsafe extern "C" fn c_dlcb(
+            _ctx: *mut c_void,
             filename: *const c_char,
             event: alpm_download_event_type_t,
             data: *mut c_void,
@@ -90,7 +95,7 @@ macro_rules! set_dlcb {
             $f(&filename, event);
         }
 
-        unsafe { alpm_option_set_dlcb($handle.as_alpm_handle_t(), Some(c_dlcb)) };
+        unsafe { alpm_option_set_dlcb($handle.as_alpm_handle_t(), Some(c_dlcb), ptr::null_mut()) };
     }};
 }
 
@@ -116,11 +121,13 @@ macro_rules! set_dlcb {
 macro_rules! set_fetchcb {
     ( $handle:tt, $f:tt ) => {{
         use std::ffi::CStr;
-        use std::os::raw::{c_char, c_int};
+        use std::os::raw::{c_char, c_int, c_void};
+        use std::ptr;
         use $crate::alpm_sys::*;
         use $crate::FetchCbReturn;
 
         unsafe extern "C" fn c_fetchcb(
+            _ctx: *mut c_void,
             url: *const c_char,
             localpath: *const c_char,
             force: c_int,
@@ -136,7 +143,9 @@ macro_rules! set_fetchcb {
             }
         }
 
-        unsafe { alpm_option_set_fetchcb($handle.as_alpm_handle_t(), Some(c_fetchcb)) };
+        unsafe {
+            alpm_option_set_fetchcb($handle.as_alpm_handle_t(), Some(c_fetchcb), ptr::null_mut())
+        };
     }};
 }
 
@@ -157,6 +166,7 @@ macro_rules! set_totaldlcb {
 #[macro_export]
 macro_rules! set_eventcb {
     ( $handle:tt, $f:tt ) => {{
+        use std::os::raw::c_void;
         use std::ptr;
         use $crate::alpm_sys::*;
         use $crate::Event;
@@ -166,18 +176,21 @@ macro_rules! set_eventcb {
             C_ALPM_HANDLE = $handle.as_alpm_handle_t();
         }
 
-        unsafe extern "C" fn c_eventcb(event: *mut alpm_event_t) {
+        unsafe extern "C" fn c_eventcb(_ctx: *mut c_void, event: *mut alpm_event_t) {
             let event = Event::new(C_ALPM_HANDLE, event);
             $f(&event);
         }
 
-        unsafe { alpm_option_set_eventcb($handle.as_alpm_handle_t(), Some(c_eventcb)) };
+        unsafe {
+            alpm_option_set_eventcb($handle.as_alpm_handle_t(), Some(c_eventcb), ptr::null_mut())
+        };
     }};
 }
 
 #[macro_export]
 macro_rules! set_questioncb {
     ( $handle:tt, $f:tt ) => {{
+        use std::os::raw::c_void;
         use std::ptr;
         use $crate::alpm_sys::*;
         use $crate::Question;
@@ -187,12 +200,18 @@ macro_rules! set_questioncb {
             C_ALPM_HANDLE = $handle.as_alpm_handle_t();
         }
 
-        unsafe extern "C" fn c_questioncb(question: *mut alpm_question_t) {
+        unsafe extern "C" fn c_questioncb(_ctx: *mut c_void, question: *mut alpm_question_t) {
             let mut question = Question::new(C_ALPM_HANDLE, question);
             $f(&mut question);
         }
 
-        unsafe { alpm_option_set_questioncb($handle.as_alpm_handle_t(), Some(c_questioncb)) };
+        unsafe {
+            alpm_option_set_questioncb(
+                $handle.as_alpm_handle_t(),
+                Some(c_questioncb),
+                ptr::null_mut(),
+            )
+        };
     }};
 }
 
@@ -202,10 +221,12 @@ macro_rules! set_progresscb {
         use std::ffi::CStr;
         use std::mem::transmute;
         use std::os::raw::{c_char, c_int};
+        use std::ptr;
         use $crate::alpm_sys::*;
         use $crate::Progress;
 
         unsafe extern "C" fn c_progresscb(
+            _ctx: *mut c_void,
             progress: alpm_progress_t,
             pkgname: *const c_char,
             percent: c_int,
@@ -218,7 +239,13 @@ macro_rules! set_progresscb {
             $f(progress, &pkgname, percent as i32, howmany, current);
         }
 
-        unsafe { alpm_option_set_progresscb($handle.as_alpm_handle_t(), Some(c_progresscb)) };
+        unsafe {
+            alpm_option_set_progresscb(
+                $handle.as_alpm_handle_t(),
+                Some(c_progresscb),
+                ptr::null_mut(),
+            )
+        };
     }};
 }
 
