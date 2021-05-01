@@ -44,3 +44,23 @@ impl<'a> Iterator for MTree<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Alpm;
+    use libarchive::archive::Entry;
+
+    #[test]
+    fn test_mtree() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.localdb();
+        let pkg = db.pkg("vifm").unwrap();
+        let mut mtree = pkg.mtree().unwrap();
+
+        println!("entries:");
+        let file = mtree.next().unwrap();
+        assert!(file.pathname() == "./.BUILDINFO");
+        assert!(file.size() == 4900);
+        assert!(mtree.count() > 10);
+    }
+}

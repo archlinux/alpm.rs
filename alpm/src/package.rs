@@ -332,16 +332,4 @@ mod tests {
         changelog.read_to_string(&mut s).unwrap();
         assert!(s.contains("2010-02-15 Jaroslav Lichtblau <svetlemodry@archlinux.org>"));
     }
-
-    #[test]
-    #[cfg(feature = "mtree")]
-    fn test_mtree() {
-        let handle = Alpm::new("/", "tests/db").unwrap();
-        let db = handle.localdb();
-        let pkg = db.pkg("vifm").unwrap();
-        let mtree = pkg.mtree().unwrap();
-
-        println!("entries:");
-        assert!(mtree.count() > 10);
-    }
 }
