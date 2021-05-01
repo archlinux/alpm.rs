@@ -14,7 +14,7 @@ jobs:
       image: archlinux
     steps:
       - name: Install Packages
-        run: pacman -Syu rust clang gcc libarchive --noconfirm --needed
+        run: pacman -Syu rust clang gcc libarchive pkgconf --noconfirm --needed
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
       image: archlinux
     steps:
       - name: Install Packages
-        run: pacman -Syu rust curl clang git base-devel libarchive meson asciidoc doxygen --noconfirm fakechroot --needed
+        run: pacman -Syu rust curl clang git base-devel libarchive meson asciidoc doxygen pkgconf fakechroot --noconfirm --needed
 
       - name: Install Pacman-git
         run: |
