@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Test
-        run: cargo test --features generate
+        run: cargo test --features generate,mtree
         working-directory: alpm
 
   test-git:
@@ -44,5 +44,5 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Test
-        run: cargo test --features generate,git
+        run: cargo test --features generate,git,mtree
         working-directory: alpm
