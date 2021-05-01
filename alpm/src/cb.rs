@@ -711,7 +711,7 @@ mod tests {
             .set_log_cb(Rc::clone(&handle), |_, msg, data| {
                 let handle = data;
                 println!("{} {:?}", msg, handle);
-                handle.borrow_mut().unregister_all_syncdbs();
+                handle.borrow_mut().unregister_all_syncdbs().unwrap();
                 println!("Done");
             });
 
