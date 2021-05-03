@@ -130,7 +130,7 @@ impl PartialEq<Version> for &Ver {
     }
 }
 
-#[derive(Debug, Eq, Hash)]
+#[derive(Debug, Eq, Hash, Clone)]
 pub struct Version(CString);
 
 impl Version {
