@@ -24,6 +24,12 @@ pub struct Depend {
     dep: Dep<'static>,
 }
 
+impl Clone for Depend {
+    fn clone(&self) -> Self {
+        Depend::new(self.to_string())
+    }
+}
+
 impl fmt::Display for Depend {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.dep.fmt(f)
