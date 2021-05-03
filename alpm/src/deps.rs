@@ -9,7 +9,6 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::mem::transmute;
 
-#[derive(Eq)]
 pub struct Dep<'a> {
     pub(crate) inner: *mut alpm_depend_t,
     pub(crate) phantom: PhantomData<&'a ()>,
@@ -37,13 +36,15 @@ pub struct Depend {
 
 impl Clone for Depend {
     fn clone(&self) -> Self {
-        Depend::new(self.to_string())
+        let ptr = unsafe { alpm_dep_compute_string(self.inner) };
+        let dep = unsafe { alpm_dep_from_string(ptr) };
+        unsafe { Depend::from_ptr(dep) }
     }
 }
 
 impl fmt::Debug for Depend {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(self.as_dep(), f)
+        fmt::Debug::fmt(&self.as_dep(), f)
     }
 }
 
@@ -62,24 +63,24 @@ impl std::ops::Deref for Depend {
 }
 
 pub trait AsDep {
-    fn as_dep(&self) -> &Dep;
+    fn as_dep<'a>(&'a self) -> Dep<'a>;
 }
 
-impl AsDep for Depend {
-    fn as_dep(&self) -> &Dep {
-        &self.dep
+impl<'a> AsDep for Depend {
+    fn as_dep<'b>(&'b self) -> Dep<'b> {
+        self.dep()
     }
 }
 
 impl<'a> AsDep for Dep<'a> {
-    fn as_dep(&self) -> &Dep {
-        self
+    fn as_dep<'b>(&'b self) -> Dep<'b> {
+        self.dep()
     }
 }
 
 impl<'a> AsDep for &Dep<'a> {
-    fn as_dep(&self) -> &Dep {
-        self
+    fn as_dep<'b>(&'b self) -> Dep<'b> {
+        self.dep()
     }
 }
 
@@ -146,6 +147,13 @@ impl Depend {
 }
 
 impl<'a> Dep<'a> {
+    pub fn dep<'b>(&'b self) -> Dep<'b> {
+        Dep {
+            inner: self.inner,
+            phantom: PhantomData,
+        }
+    }
+
     pub fn to_depend(&self) -> Depend {
         Depend::new(self.to_string())
     }

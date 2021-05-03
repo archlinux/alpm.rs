@@ -1,5 +1,7 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, Db, DbMut, Dep, Depend, IntoRawAlpmList, Match, Result, SigLevel};
+use crate::{
+    Alpm, AlpmList, AsDep, Db, DbMut, Dep, Depend, IntoRawAlpmList, Match, Result, SigLevel,
+};
 
 use alpm_sys::*;
 use std::cmp::Ordering;
@@ -301,8 +303,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_assume_installed(&mut self, s: &Dep) -> Result<bool> {
-        let ret = unsafe { alpm_option_remove_assumeinstalled(self.handle, s.inner) };
+    pub fn remove_assume_installed<D: AsDep>(&mut self, s: D) -> Result<bool> {
+        let ret = unsafe { alpm_option_remove_assumeinstalled(self.handle, s.as_dep().inner) };
         if ret == 1 {
             Ok(true)
         } else {
