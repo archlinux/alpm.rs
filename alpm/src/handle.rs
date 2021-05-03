@@ -300,8 +300,8 @@ impl Alpm {
         }
     }
 
-    pub fn add_assume_installed<'a, D: AsRef<Dep<'a>>>(&mut self, s: D) -> Result<()> {
-        let ret = unsafe { alpm_option_add_assumeinstalled(self.handle, s.as_ref().inner) };
+    pub fn add_assume_installed(&mut self, s: &Dep) -> Result<()> {
+        let ret = unsafe { alpm_option_add_assumeinstalled(self.handle, s.inner) };
         self.check_ret(ret)
     }
 
@@ -316,8 +316,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn remove_assume_installed<'a, D: AsRef<Dep<'a>>>(&mut self, s: D) -> Result<bool> {
-        let ret = unsafe { alpm_option_remove_assumeinstalled(self.handle, s.as_ref().inner) };
+    pub fn remove_assume_installed(&mut self, s: &Dep) -> Result<bool> {
+        let ret = unsafe { alpm_option_remove_assumeinstalled(self.handle, s.inner) };
         if ret == 1 {
             Ok(true)
         } else {
