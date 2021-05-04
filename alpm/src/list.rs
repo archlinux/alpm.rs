@@ -639,23 +639,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Package<'a> {
     }
 }
 
-unsafe impl<'a> AsAlpmListItemPtr<'a> for &Package<'a> {
-    type Output = Package<'a>;
-
-    fn as_ptr(&self) -> *mut c_void {
-        self.pkg as *mut c_void
-    }
-}
-
 unsafe impl<'a> AsAlpmListItemPtr<'a> for Db<'a> {
-    type Output = Db<'a>;
-
-    fn as_ptr(&self) -> *mut c_void {
-        self.db as *mut c_void
-    }
-}
-
-unsafe impl<'a> AsAlpmListItemPtr<'a> for &Db<'a> {
     type Output = Db<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
@@ -668,6 +652,14 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Depend {
 
     fn as_ptr(&self) -> *mut c_void {
         self.inner as *mut c_void
+    }
+}
+
+unsafe impl<'a, T: AsAlpmListItemPtr<'a>> AsAlpmListItemPtr<'a> for &T {
+    type Output = T::Output;
+
+    fn as_ptr(&self) -> *mut c_void {
+        (*self).as_ptr()
     }
 }
 
@@ -687,25 +679,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for String {
     }
 }
 
-unsafe impl<'a> AsAlpmListItemPtr<'a> for &String {
-    type Output = String;
-    const FREE: Option<unsafe extern "C" fn(_ptr: *mut c_void)> = Some(free);
-
-    fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
-    }
-}
-
 unsafe impl<'a> AsAlpmListItemPtr<'a> for &str {
-    type Output = String;
-    const FREE: Option<unsafe extern "C" fn(_ptr: *mut c_void)> = Some(free);
-
-    fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
-    }
-}
-
-unsafe impl<'a> AsAlpmListItemPtr<'a> for &&str {
     type Output = String;
     const FREE: Option<unsafe extern "C" fn(_ptr: *mut c_void)> = Some(free);
 
@@ -991,5 +965,13 @@ mod tests {
         pkg.sync_new_version(&handle.syncdbs().to_list_mut().remove_list(0));
         pkg.sync_new_version(vec![db].into_iter());
         pkg.sync_new_version(vec![db].iter());
+    }
+
+    #[test]
+    fn test_into_raw_alpm_list2() {
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
+
+        let list = vec![Depend::new("foo")];
+        handle.set_assume_installed(list.iter()).unwrap();
     }
 }
