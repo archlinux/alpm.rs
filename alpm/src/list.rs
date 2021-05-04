@@ -197,7 +197,7 @@ where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&self.as_alpm_list(), f)
+        fmt::Debug::fmt(&self.as_list(), f)
     }
 }
 
@@ -368,7 +368,7 @@ where
         AlpmListMut::from_parts(self.handle, item)
     }
 
-    pub fn as_alpm_list(&self) -> AlpmList<'a, T> {
+    pub fn as_list(&self) -> AlpmList<'a, T> {
         self.list
     }
 }
