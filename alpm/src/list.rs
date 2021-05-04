@@ -132,6 +132,16 @@ where
     }
 }
 
+impl<'a, T, D: Bool> IntoRawAlpmList<'a, T> for RawAlpmList<'a, T, D>
+where
+    T: AsAlpmListItemPtr<'a>,
+{
+    type Drop = D;
+    unsafe fn into_raw_alpm_list(self) -> RawAlpmList<'a, T, Self::Drop> {
+        self
+    }
+}
+
 impl<'a, T, I> IntoRawAlpmList<'a, T::Output> for I
 where
     I: Iterator<Item = T>,
