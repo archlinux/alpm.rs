@@ -940,8 +940,12 @@ mod tests {
 
         let mut list = AlpmListMut::new(&handle);
         list.push(pkg);
-
         assert_eq!(list.first().unwrap().name(), "pacman");
+
+        let mut list = AlpmListMut::new(&handle);
+        list.push(Depend::new("a"));
+        list.push(Depend::new("b"));
+        list.push(Depend::new("c"));
     }
 
     #[test]

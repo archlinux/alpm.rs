@@ -699,6 +699,7 @@ mod tests {
         handle.register_syncdb("core", SigLevel::NONE).unwrap();
     }
 
+    #[ignore]
     #[test]
     fn test_cb_refcell_mut() {
         let handle = Alpm::new("/", "tests/db").unwrap();
