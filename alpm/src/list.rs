@@ -956,6 +956,16 @@ mod tests {
         list.push(Depend::new("a"));
         list.push(Depend::new("b"));
         list.push(Depend::new("c"));
+
+        let mut list = AlpmListMut::new(&handle);
+        list.push("a".to_string());
+        list.push("b".to_string());
+        list.push("c".to_string());
+
+        let mut list = AlpmListMut::new(&handle);
+        list.push("a".to_string());
+        list.push_str("b");
+        list.push_str("c");
     }
 
     #[test]
