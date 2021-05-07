@@ -1,6 +1,6 @@
 use crate::{
     free, Alpm, Backup, Conflict, Db, DbMut, Dep, DepMissing, Depend, DependMissing, FileConflict,
-    Group, LoadedPackage, OwnedConflict, OwnedFileConflict, Package,
+    Group, LoadedPackage, OwnedConflict, OwnedFileConflict, Package, Pkg,
 };
 
 use std::ffi::{c_void, CStr};
@@ -93,9 +93,20 @@ where
     unsafe fn into_raw_alpm_list(self) -> RawAlpmList<'a, T, Self::Drop>;
 }
 
-impl<'a> IntoRawAlpmList<'a, Package<'a>> for AlpmList<'a, LoadedPackage<'a>> {
+impl<'a> IntoRawAlpmList<'a, Pkg<'a>> for AlpmList<'a, LoadedPackage<'a>> {
     type Drop = False;
-    unsafe fn into_raw_alpm_list(self) -> RawAlpmList<'a, Package<'a>, Self::Drop> {
+    unsafe fn into_raw_alpm_list(self) -> RawAlpmList<'a, Pkg<'a>, Self::Drop> {
+        RawAlpmList {
+            list: self.list,
+            _marker1: PhantomData,
+            _marker2: PhantomData,
+        }
+    }
+}
+
+impl<'a> IntoRawAlpmList<'a, Pkg<'a>> for AlpmList<'a, Package<'a>> {
+    type Drop = False;
+    unsafe fn into_raw_alpm_list(self) -> RawAlpmList<'a, Pkg<'a>, Self::Drop> {
         RawAlpmList {
             list: self.list,
             _marker1: PhantomData,
@@ -641,11 +652,19 @@ where
     }
 }
 
+unsafe impl<'a> AsAlpmListItemPtr<'a> for Pkg<'a> {
+    type Output = Pkg<'a>;
+
+    fn as_ptr(&self) -> *mut c_void {
+        self.pkg as *mut c_void
+    }
+}
+
 unsafe impl<'a> AsAlpmListItemPtr<'a> for Package<'a> {
     type Output = Package<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
-        self.pkg as *mut c_void
+        self.pkg.pkg as *mut c_void
     }
 }
 
@@ -699,6 +718,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for &str {
 }
 
 unsafe impl<'a> Push<'a> for String {}
+unsafe impl<'a> Push<'a> for Pkg<'a> {}
 unsafe impl<'a> Push<'a> for Package<'a> {}
 unsafe impl<'a> Push<'a> for Db<'a> {}
 unsafe impl<'a> Push<'a> for Depend {}

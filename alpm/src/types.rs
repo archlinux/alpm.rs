@@ -1,7 +1,7 @@
 use crate::utils::*;
 use crate::{
     Alpm, AlpmList, AlpmListMut, Conflict, Db, Dep, DependMissing, Error, OwnedConflict,
-    OwnedFileConflict, Package, PgpKey,
+    OwnedFileConflict, Package, PgpKey, Pkg,
 };
 
 use std::cmp::Ordering;
@@ -981,7 +981,7 @@ impl<'a> Group<'a> {
 }
 
 pub struct ChangeLog<'a> {
-    pub(crate) pkg: &'a Package<'a>,
+    pub(crate) pkg: &'a Pkg<'a>,
     pub(crate) stream: *mut c_void,
 }
 

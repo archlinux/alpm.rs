@@ -188,7 +188,7 @@ impl SigList {
 impl<'a> Package<'a> {
     pub fn check_signature(&self) -> Result<(bool, SigList)> {
         let mut siglist = SigList::new();
-        let ret = unsafe { alpm_pkg_check_pgp_signature(self.pkg, &mut siglist.inner) };
+        let ret = unsafe { alpm_pkg_check_pgp_signature(self.pkg.pkg, &mut siglist.inner) };
         let valid = match ret {
             0 => true,
             1 => false,

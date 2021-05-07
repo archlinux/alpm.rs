@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmListMut, Dep, IntoRawAlpmList, Package};
+use crate::{Alpm, AlpmListMut, AsAlpmListItemPtr, AsPkg, Dep, IntoRawAlpmList};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
@@ -168,7 +168,7 @@ impl Drop for OwnedFileConflict {
 }
 
 impl Alpm {
-    pub fn check_conflicts<'a, L: IntoRawAlpmList<'a, Package<'a>>>(
+    pub fn check_conflicts<'a, P: 'a + AsPkg + AsAlpmListItemPtr<'a>, L: IntoRawAlpmList<'a, P>>(
         &self,
         list: L,
     ) -> AlpmListMut<OwnedConflict> {

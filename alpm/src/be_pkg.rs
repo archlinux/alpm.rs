@@ -1,4 +1,4 @@
-use crate::{Alpm, Package, Result, SigLevel};
+use crate::{Alpm, AsPkg, Pkg, Result, SigLevel};
 
 use alpm_sys::*;
 
@@ -8,7 +8,7 @@ use std::ptr;
 
 #[derive(Debug)]
 pub struct LoadedPackage<'a> {
-    pub(crate) pkg: Package<'a>,
+    pub(crate) pkg: Pkg<'a>,
 }
 
 impl<'a> Drop for LoadedPackage<'a> {
@@ -19,8 +19,14 @@ impl<'a> Drop for LoadedPackage<'a> {
     }
 }
 
+impl<'a> AsPkg for LoadedPackage<'a> {
+    fn as_pkg<'b>(&'b self) -> Pkg<'b> {
+        self.pkg
+    }
+}
+
 impl<'a> std::ops::Deref for LoadedPackage<'a> {
-    type Target = Package<'a>;
+    type Target = Pkg<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.pkg
@@ -28,7 +34,7 @@ impl<'a> std::ops::Deref for LoadedPackage<'a> {
 }
 
 impl<'a> LoadedPackage<'a> {
-    pub fn pkg(&'a self) -> Package<'a> {
+    pub fn pkg(&'a self) -> Pkg<'a> {
         self.pkg
     }
 }
@@ -41,7 +47,7 @@ impl Alpm {
         level: SigLevel,
     ) -> Result<LoadedPackage> {
         let filename = CString::new(filename).unwrap();
-        let mut pkg = Package {
+        let mut pkg = Pkg {
             pkg: ptr::null_mut(),
             handle: self,
         };
@@ -86,10 +92,6 @@ mod tests {
         assert_eq!(pkg.md5sum(), None);
         assert_eq!(pkg.sha256sum(), None);
         assert_eq!(pkg.base64_sig(), None);
-
-        let mut pkgs = handle.localdb().pkgs().to_list_mut();
-        pkgs.push(pkg.pkg());
-        pkgs.find_satisfier("foo");
 
         Ok(())
     }

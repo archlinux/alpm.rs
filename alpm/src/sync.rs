@@ -7,7 +7,7 @@ use alpm_sys::*;
 impl<'a> Package<'a> {
     pub fn sync_new_version<T: IntoRawAlpmList<'a, Db<'a>>>(&self, dbs: T) -> Option<Package> {
         let dbs = unsafe { dbs.into_raw_alpm_list() };
-        let ret = unsafe { alpm_sync_get_new_version(self.pkg, dbs.list()) };
+        let ret = unsafe { alpm_sync_get_new_version(self.pkg.pkg, dbs.list()) };
 
         if ret.is_null() {
             None
@@ -17,7 +17,7 @@ impl<'a> Package<'a> {
     }
 
     pub fn download_size(&self) -> i64 {
-        let size = unsafe { alpm_pkg_download_size(self.pkg) };
+        let size = unsafe { alpm_pkg_download_size(self.pkg.pkg) };
         size as i64
     }
 }

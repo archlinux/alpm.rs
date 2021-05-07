@@ -14,13 +14,44 @@ use crate::MTree;
 
 use std::fmt;
 use std::mem::transmute;
+use std::ops::Deref;
 
 use alpm_sys::*;
 
+pub trait AsPkg {
+    fn as_pkg<'a>(&'a self) -> Pkg<'a>;
+}
+
+impl<'a> AsPkg for Package<'a> {
+    fn as_pkg<'b>(&'b self) -> Pkg<'b> {
+        self.pkg
+    }
+}
+
+impl<'a> AsPkg for Pkg<'a> {
+    fn as_pkg<'b>(&'b self) -> Pkg<'b> {
+        *self
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Package<'a> {
+    pub(crate) pkg: Pkg<'a>,
+}
+
+#[derive(Copy, Clone)]
+pub struct Pkg<'a> {
     pub(crate) handle: &'a Alpm,
     pub(crate) pkg: *mut alpm_pkg_t,
+}
+
+impl<'a> fmt::Debug for Pkg<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Pkg")
+            .field("name", &self.name())
+            .field("version", &self.version())
+            .finish()
+    }
 }
 
 impl<'a> fmt::Debug for Package<'a> {
@@ -32,13 +63,22 @@ impl<'a> fmt::Debug for Package<'a> {
     }
 }
 
-impl<'a> Package<'a> {
-    pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Package {
-        Package { handle, pkg }
+impl<'a> Deref for Package<'a> {
+    type Target = Pkg<'a>;
+    fn deref(&self) -> &Self::Target {
+        &self.pkg
     }
 }
 
 impl<'a> Package<'a> {
+    pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Package {
+        Package {
+            pkg: Pkg { handle, pkg },
+        }
+    }
+}
+
+impl<'a> Pkg<'a> {
     pub fn name(&self) -> &'a str {
         let name = unsafe { alpm_pkg_get_name(self.pkg) };
         unsafe { from_cstr(name) }

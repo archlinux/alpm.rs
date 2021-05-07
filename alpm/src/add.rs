@@ -13,7 +13,7 @@ pub unsafe trait IntoPkgAdd: fmt::Debug {
 
 unsafe impl<'a> IntoPkgAdd for Package<'a> {
     unsafe fn as_alpm_pkg_t(&self) -> *mut alpm_pkg_t {
-        self.pkg
+        self.pkg.pkg
     }
     unsafe fn added(self) {}
 }
