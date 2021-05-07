@@ -325,7 +325,7 @@ where
         let item = unsafe { alpm_list_nth(self.list.list, n) };
         unsafe { self.list.list = alpm_list_remove_item(self.list.list, item) };
         let ret = unsafe { Some(T::into_alpm_list_item(self.handle, (*self.list.list).data)) };
-        unsafe { alpm_list_free(item) };
+        unsafe { free(item as _) };
         ret
     }
 
@@ -336,6 +336,8 @@ where
 
         let item = unsafe { alpm_list_nth(self.list.list, n) };
         self.list.list = unsafe { alpm_list_remove_item(self.list.list, item) };
+        unsafe { (*item).next = ptr::null_mut() };
+        unsafe { (*item).prev = ptr::null_mut() };
         AlpmListMut::from_parts(self.handle, item)
     }
 
