@@ -923,7 +923,7 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
-
+        assert_eq!(handle.syncdbs().to_list().remove_list(0).len(), 1);
         pkg.sync_new_version(handle.syncdbs());
         pkg.sync_new_version(&handle.syncdbs().to_list().remove_list(0));
         pkg.sync_new_version(vec![db].into_iter());
