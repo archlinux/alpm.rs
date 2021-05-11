@@ -1,4 +1,4 @@
-use crate::Package;
+use crate::Pkg;
 use alpm_sys::*;
 
 use libarchive::archive::Handle;
@@ -8,7 +8,7 @@ use libarchive3_sys::ffi::*;
 use std::{fmt, ptr};
 
 pub struct MTree<'a> {
-    pub(crate) pkg: &'a Package<'a>,
+    pub(crate) pkg: &'a Pkg<'a>,
     pub(crate) archive: *mut archive,
 }
 
