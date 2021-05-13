@@ -3,7 +3,7 @@
 [![Latest version](https://img.shields.io/crates/v/alpm.svg)](https://crates.io/crates/alpm)
 [![Documentation](https://docs.rs/alpm/badge.svg)](https://docs.rs/alpm)
 
-alpm.rs provides complete, safe, erganomic bindings to the libalpm API,
+alpm.rs provides complete, safe, ergonomic bindings to the libalpm API,
 the package management library used by pacman and other tools.
 
 # Features
