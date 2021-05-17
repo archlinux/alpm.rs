@@ -53,7 +53,7 @@ macro_rules! set_dlcb {
         use $crate::alpm_sys::*;
         use $crate::{
             DownloadEvent, DownloadEventCompleted, DownloadEventInit, DownloadEventProgress,
-            DownloadResult,
+            DownloadEventRetry, DownloadResult,
         };
 
         unsafe extern "C" fn c_dlcb(
@@ -72,6 +72,13 @@ macro_rules! set_dlcb {
                         optional: (*data).optional != 0,
                     };
                     DownloadEvent::Init(event)
+                }
+                ALPM_DOWNLOAD_RETRY => {
+                    let data = data as *const alpm_download_event_retry_t;
+                    let event = DownloadEventRetry {
+                        resume: (*data).resume != 0,
+                    };
+                    DownloadEvent::Retry(event)
                 }
                 ALPM_DOWNLOAD_PROGRESS => {
                     let data = data as *const alpm_download_event_progress_t;

@@ -524,64 +524,66 @@ pub enum _alpm_errno_t {
     ALPM_ERR_TRANS_NULL = 24,
     #[doc = " Duplicate target in transaction"]
     ALPM_ERR_TRANS_DUP_TARGET = 25,
+    #[doc = " Duplicate filename in transaction"]
+    ALPM_ERR_TRANS_DUP_FILENAME = 26,
     #[doc = " A transaction has not been initialized"]
-    ALPM_ERR_TRANS_NOT_INITIALIZED = 26,
+    ALPM_ERR_TRANS_NOT_INITIALIZED = 27,
     #[doc = " Transaction has not been prepared"]
-    ALPM_ERR_TRANS_NOT_PREPARED = 27,
+    ALPM_ERR_TRANS_NOT_PREPARED = 28,
     #[doc = " Transaction was aborted"]
-    ALPM_ERR_TRANS_ABORT = 28,
+    ALPM_ERR_TRANS_ABORT = 29,
     #[doc = " Failed to interrupt transaction"]
-    ALPM_ERR_TRANS_TYPE = 29,
+    ALPM_ERR_TRANS_TYPE = 30,
     #[doc = " Tried to commit transaction without locking the database"]
-    ALPM_ERR_TRANS_NOT_LOCKED = 30,
+    ALPM_ERR_TRANS_NOT_LOCKED = 31,
     #[doc = " A hook failed to run"]
-    ALPM_ERR_TRANS_HOOK_FAILED = 31,
+    ALPM_ERR_TRANS_HOOK_FAILED = 32,
     #[doc = " Package not found"]
-    ALPM_ERR_PKG_NOT_FOUND = 32,
+    ALPM_ERR_PKG_NOT_FOUND = 33,
     #[doc = " Package is in ignorepkg"]
-    ALPM_ERR_PKG_IGNORED = 33,
+    ALPM_ERR_PKG_IGNORED = 34,
     #[doc = " Package is invalid"]
-    ALPM_ERR_PKG_INVALID = 34,
+    ALPM_ERR_PKG_INVALID = 35,
     #[doc = " Package has an invalid checksum"]
-    ALPM_ERR_PKG_INVALID_CHECKSUM = 35,
+    ALPM_ERR_PKG_INVALID_CHECKSUM = 36,
     #[doc = " Package has an invalid signature"]
-    ALPM_ERR_PKG_INVALID_SIG = 36,
+    ALPM_ERR_PKG_INVALID_SIG = 37,
     #[doc = " Package does not have a signature"]
-    ALPM_ERR_PKG_MISSING_SIG = 37,
+    ALPM_ERR_PKG_MISSING_SIG = 38,
     #[doc = " Cannot open the package file"]
-    ALPM_ERR_PKG_OPEN = 38,
+    ALPM_ERR_PKG_OPEN = 39,
     #[doc = " Failed to remove package files"]
-    ALPM_ERR_PKG_CANT_REMOVE = 39,
+    ALPM_ERR_PKG_CANT_REMOVE = 40,
     #[doc = " Package has an invalid name"]
-    ALPM_ERR_PKG_INVALID_NAME = 40,
+    ALPM_ERR_PKG_INVALID_NAME = 41,
     #[doc = " Package has an invalid architecture"]
-    ALPM_ERR_PKG_INVALID_ARCH = 41,
+    ALPM_ERR_PKG_INVALID_ARCH = 42,
     #[doc = " Unused"]
-    ALPM_ERR_PKG_REPO_NOT_FOUND = 42,
+    ALPM_ERR_PKG_REPO_NOT_FOUND = 43,
     #[doc = " Signatures are missing"]
-    ALPM_ERR_SIG_MISSING = 43,
+    ALPM_ERR_SIG_MISSING = 44,
     #[doc = " Signatures are invalid"]
-    ALPM_ERR_SIG_INVALID = 44,
+    ALPM_ERR_SIG_INVALID = 45,
     #[doc = " Dependencies could not be satisfied"]
-    ALPM_ERR_UNSATISFIED_DEPS = 45,
+    ALPM_ERR_UNSATISFIED_DEPS = 46,
     #[doc = " Conflicting dependencies"]
-    ALPM_ERR_CONFLICTING_DEPS = 46,
+    ALPM_ERR_CONFLICTING_DEPS = 47,
     #[doc = " Files conflict"]
-    ALPM_ERR_FILE_CONFLICTS = 47,
+    ALPM_ERR_FILE_CONFLICTS = 48,
     #[doc = " Download failed"]
-    ALPM_ERR_RETRIEVE = 48,
+    ALPM_ERR_RETRIEVE = 49,
     #[doc = " Invalid Regex"]
-    ALPM_ERR_INVALID_REGEX = 49,
+    ALPM_ERR_INVALID_REGEX = 50,
     #[doc = " Error in libarchive"]
-    ALPM_ERR_LIBARCHIVE = 50,
+    ALPM_ERR_LIBARCHIVE = 51,
     #[doc = " Error in libcurl"]
-    ALPM_ERR_LIBCURL = 51,
+    ALPM_ERR_LIBCURL = 52,
     #[doc = " Error in external download program"]
-    ALPM_ERR_EXTERNAL_DOWNLOAD = 52,
+    ALPM_ERR_EXTERNAL_DOWNLOAD = 53,
     #[doc = " Error in gpgme"]
-    ALPM_ERR_GPGME = 53,
+    ALPM_ERR_GPGME = 54,
     #[doc = " Missing compile-time features"]
-    ALPM_ERR_MISSING_CAPABILITY_SIGNATURES = 54,
+    ALPM_ERR_MISSING_CAPABILITY_SIGNATURES = 55,
 }
 #[doc = " libalpm's error type"]
 pub use self::_alpm_errno_t as alpm_errno_t;
@@ -3123,8 +3125,10 @@ pub enum _alpm_download_event_type_t {
     ALPM_DOWNLOAD_INIT = 0,
     #[doc = " A download made progress"]
     ALPM_DOWNLOAD_PROGRESS = 1,
+    #[doc = " Download will be retried"]
+    ALPM_DOWNLOAD_RETRY = 2,
     #[doc = " A download completed"]
-    ALPM_DOWNLOAD_COMPLETED = 2,
+    ALPM_DOWNLOAD_COMPLETED = 3,
 }
 #[doc = " File download events."]
 #[doc = " These events are reported by ALPM via download callback."]
@@ -3212,6 +3216,40 @@ fn bindgen_test_layout__alpm_download_event_progress_t() {
 }
 #[doc = " Context struct for when a download progresses."]
 pub type alpm_download_event_progress_t = _alpm_download_event_progress_t;
+#[doc = " Context struct for when a download retries."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _alpm_download_event_retry_t {
+    #[doc = " If the download will resume or start over"]
+    pub resume: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout__alpm_download_event_retry_t() {
+    assert_eq!(
+        ::std::mem::size_of::<_alpm_download_event_retry_t>(),
+        4usize,
+        concat!("Size of: ", stringify!(_alpm_download_event_retry_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<_alpm_download_event_retry_t>(),
+        4usize,
+        concat!("Alignment of ", stringify!(_alpm_download_event_retry_t))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<_alpm_download_event_retry_t>())).resume as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_alpm_download_event_retry_t),
+            "::",
+            stringify!(resume)
+        )
+    );
+}
+#[doc = " Context struct for when a download retries."]
+pub type alpm_download_event_retry_t = _alpm_download_event_retry_t;
 #[doc = " Context struct for when a download completes."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -3372,10 +3410,9 @@ extern "C" {
 }
 extern "C" {
     #[doc = " Sets the list of servers for the database to use."]
-    #[doc = " @param db the database to set the servers"]
-    #[doc = " @param servers a char* list of servers. Note: the database will"]
-    #[doc = " take ownership of the list and it should no longer be"]
-    #[doc = " freed by the caller"]
+    #[doc = " @param db the database to set the servers. The list will be duped and"]
+    #[doc = " the original will still need to be freed by the caller."]
+    #[doc = " @param servers a char* list of servers."]
     pub fn alpm_db_set_servers(
         db: *mut alpm_db_t,
         servers: *mut alpm_list_t,

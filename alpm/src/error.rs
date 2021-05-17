@@ -39,6 +39,8 @@ pub enum Error {
     TransNotNull = ALPM_ERR_TRANS_NOT_NULL as u32,
     TransNull = ALPM_ERR_TRANS_NULL as u32,
     TransDupTarget = ALPM_ERR_TRANS_DUP_TARGET as u32,
+    #[cfg(feature = "git")]
+    TransDupFileName = ALPM_ERR_TRANS_DUP_FILENAME as u32,
     TransNotInitialized = ALPM_ERR_TRANS_NOT_INITIALIZED as u32,
     TransNotPrepared = ALPM_ERR_TRANS_NOT_PREPARED as u32,
     TransAbort = ALPM_ERR_TRANS_ABORT as u32,

@@ -1151,6 +1151,7 @@ impl Backup {
 pub enum DownloadEvent {
     Init(DownloadEventInit),
     Progress(DownloadEventProgress),
+    Retry(DownloadEventRetry),
     Completed(DownloadEventCompleted),
 }
 
@@ -1165,6 +1166,12 @@ pub struct DownloadEventInit {
 pub struct DownloadEventProgress {
     pub downloaded: i64,
     pub total: i64,
+}
+
+#[cfg(feature = "git")]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub struct DownloadEventRetry {
+    pub resume: bool,
 }
 
 #[cfg(feature = "git")]
