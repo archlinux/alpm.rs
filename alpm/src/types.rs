@@ -1076,6 +1076,7 @@ impl<'a> fmt::Debug for AnyDownloadEvent<'a> {
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub enum DownloadEventType {
     Init = ALPM_DOWNLOAD_INIT as u32,
+    Retry = ALPM_DOWNLOAD_RETRY as u32,
     Progress = ALPM_DOWNLOAD_PROGRESS as u32,
     Completed = ALPM_DOWNLOAD_COMPLETED as u32,
 }
@@ -1109,6 +1110,13 @@ impl<'a> AnyDownloadEvent<'a> {
                     total: unsafe { (*data).total },
                 };
                 DownloadEvent::Progress(event)
+            }
+            DownloadEventType::Retry => {
+                let data = self.data as *const alpm_download_event_retry_t;
+                let event = DownloadEventRetry {
+                    resume: unsafe { (*data).resume != 0 },
+                };
+                DownloadEvent::Retry(event)
             }
             DownloadEventType::Completed => {
                 let data = self.data as *mut alpm_download_event_completed_t;
