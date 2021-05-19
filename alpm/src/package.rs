@@ -1,20 +1,15 @@
 use crate::utils::*;
 use crate::{
     Alpm, AlpmList, AlpmListMut, Backup, ChangeLog, Db, Dep, FileList, PackageFrom, PackageReason,
-    PackageValidation, Result, Ver,
+    PackageValidation, Result, Signature, Ver,
 };
-
-#[cfg(feature = "git")]
-use crate::Signature;
-#[cfg(feature = "git")]
-use std::ptr;
 
 #[cfg(feature = "mtree")]
 use crate::MTree;
 
-use std::fmt;
 use std::mem::transmute;
 use std::ops::Deref;
+use std::{fmt, ptr};
 
 use alpm_sys::*;
 
@@ -283,7 +278,6 @@ impl<'a> Pkg<'a> {
         unsafe { alpm_pkg_has_scriptlet(self.pkg) != 0 }
     }
 
-    #[cfg(feature = "git")]
     pub fn sig(&self) -> Result<Signature> {
         let mut sig = ptr::null_mut();
         let mut len = 0;

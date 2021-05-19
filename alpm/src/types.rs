@@ -4,16 +4,14 @@ use crate::{
     OwnedFileConflict, Package, PgpKey, Pkg,
 };
 
-use std::cmp::Ordering;
 use std::ffi::c_void;
 use std::fmt;
 use std::io::{self, Read};
 use std::marker::PhantomData;
 use std::mem::{transmute, ManuallyDrop};
-#[cfg(feature = "git")]
 use std::os::raw::c_uchar;
-#[cfg(feature = "git")]
 use std::slice;
+use std::{cmp::Ordering, ops::Deref};
 
 use _alpm_db_usage_t::*;
 use _alpm_download_event_type_t::*;
@@ -1159,7 +1157,6 @@ pub struct DownloadEventRetry {
     pub resume: bool,
 }
 
-#[cfg(feature = "git")]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub struct DownloadEventCompleted {
     pub total: i64,
@@ -1174,21 +1171,31 @@ pub enum DownloadResult {
     Failed,
 }
 
-#[cfg(feature = "git")]
-#[derive(Debug)]
 pub struct Signature {
     pub(crate) sig: *mut c_uchar,
     pub(crate) len: usize,
 }
 
-#[cfg(feature = "git")]
 impl Signature {
     pub fn sig(&self) -> &[u8] {
         unsafe { slice::from_raw_parts(self.sig, self.len) }
     }
 }
 
-#[cfg(feature = "git")]
+impl fmt::Debug for Signature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list().entries(self.sig()).finish()
+    }
+}
+
+impl Deref for Signature {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.sig()
+    }
+}
+
 impl Drop for Signature {
     fn drop(&mut self) {
         unsafe { crate::free(self.sig as _) }
