@@ -4,6 +4,11 @@ use crate::{
     PackageValidation, Result, Ver,
 };
 
+#[cfg(feature = "git")]
+use crate::Signature;
+#[cfg(feature = "git")]
+use std::ptr;
+
 #[cfg(feature = "mtree")]
 use crate::MTree;
 
@@ -226,6 +231,16 @@ impl<'a> Package<'a> {
 
     pub fn has_scriptlet(&self) -> bool {
         unsafe { alpm_pkg_has_scriptlet(self.pkg) != 0 }
+    }
+
+    #[cfg(feature = "git")]
+    pub fn sig(&self) -> Result<Signature> {
+        let mut sig = ptr::null_mut();
+        let mut len = 0;
+        let ret = unsafe { alpm_pkg_get_sig(self.pkg, &mut sig, &mut len) };
+        self.handle.check_ret(ret)?;
+        let sig = Signature { sig, len };
+        Ok(sig)
     }
 }
 

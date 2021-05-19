@@ -8,8 +8,12 @@ use std::ffi::c_void;
 use std::io::{self, Read};
 use std::marker::PhantomData;
 use std::mem::{transmute, ManuallyDrop};
+#[cfg(feature = "git")]
+use std::os::raw::c_uchar;
 #[cfg(feature = "mtree")]
 use std::ptr;
+#[cfg(feature = "git")]
+use std::slice;
 
 use _alpm_db_usage_t::*;
 use _alpm_event_type_t::*;
@@ -1187,4 +1191,25 @@ pub enum DownloadResult {
     Success,
     UpToDate,
     Failed,
+}
+
+#[cfg(feature = "git")]
+#[derive(Debug)]
+pub struct Signature {
+    pub(crate) sig: *mut c_uchar,
+    pub(crate) len: usize,
+}
+
+#[cfg(feature = "git")]
+impl Signature {
+    pub fn sig(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.sig, self.len) }
+    }
+}
+
+#[cfg(feature = "git")]
+impl Drop for Signature {
+    fn drop(&mut self) {
+        unsafe { crate::free(self.sig as _) }
+    }
 }
