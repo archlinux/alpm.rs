@@ -1,6 +1,6 @@
 [package]
 name = "alpm-utils"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["morganamilo <morganamilo@gmail.com>"]
 edition = "2018"
 
@@ -17,4 +17,4 @@ generate = ["alpm/generate"]
 default = ["alpm"]
 
 [dependencies]
-alpm = { version = "1.0.0", path = "../alpm", optional = true }
+alpm = { version = "2.0.0", path = "../alpm", optional = true }
