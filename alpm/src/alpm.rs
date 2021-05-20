@@ -27,7 +27,6 @@ unsafe impl Send for Alpm {}
 
 impl Drop for Alpm {
     fn drop(&mut self) {
-        unsafe { alpm_trans_release(self.handle) };
         unsafe { alpm_release(self.handle) };
     }
 }
