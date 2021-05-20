@@ -56,7 +56,6 @@ pub enum Error {
     PkgCantRemove = ALPM_ERR_PKG_CANT_REMOVE as u32,
     PkgInvalidName = ALPM_ERR_PKG_INVALID_NAME as u32,
     PkgInvalidArch = ALPM_ERR_PKG_INVALID_ARCH as u32,
-    PkgRepoNotFound = ALPM_ERR_PKG_REPO_NOT_FOUND as u32,
     SigMissing = ALPM_ERR_SIG_MISSING as u32,
     SigInvalid = ALPM_ERR_SIG_INVALID as u32,
     UnsatisfiedDeps = ALPM_ERR_UNSATISFIED_DEPS as u32,
