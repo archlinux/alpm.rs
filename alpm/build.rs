@@ -16,8 +16,8 @@ fn main() {
             .collect::<Vec<_>>();
 
         assert!(
-            parts[0] == 12 && parts[2] <= 2,
-            "this version of alpm.rs does not support libalpm v{} only v12.x.0 - v12.x.2 is supported",
+            parts[0] == 13 && parts[2] == 0,
+            "this version of alpm.rs does not support libalpm v{} only v13.x.0 is supported",
             ver,
         );
     }
