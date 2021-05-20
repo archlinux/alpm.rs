@@ -30,6 +30,11 @@ Currently alpm.rs supports libalpm v13.x.0.
 as commits happen. As the git version is not considered stable software, this is done
 without bumping the major version.
 
+# Documentation
+
+This crate just provides bindings for libalpm and hence does not document libalpm.
+You can find documentation for libalpm in the [libalpm (3)](https://man.archlinux.org/man/core/pacman/libalpm.3.en) man page or in [alpm.h](https://git.archlinux.org/pacman.git/tree/lib/libalpm/alpm.h).
+
 # alpm-sys
 
 This repo also contains the alpm-sys crate, providing raw bindings for libalpm.
