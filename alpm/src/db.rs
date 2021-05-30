@@ -112,6 +112,7 @@ impl<'a> Db<'a> {
         unsafe { Ok(Package::new(self.handle, pkg)) }
     }
 
+    #[doc(alias = "pkgcache")]
     pub fn pkgs(&self) -> AlpmList<'a, Package<'a>> {
         let pkgs = unsafe { alpm_db_get_pkgcache(self.db) };
         AlpmList::from_parts(self.handle, pkgs)
@@ -143,6 +144,7 @@ impl<'a> Db<'a> {
         Ok(AlpmListMut::from_parts(self.handle, ret))
     }
 
+    #[doc(alias = "groupcache")]
     pub fn groups(&self) -> Result<AlpmListMut<'a, Group<'a>>> {
         let groups = unsafe { alpm_db_get_groupcache(self.db) };
         self.handle.check_null(groups)?;
