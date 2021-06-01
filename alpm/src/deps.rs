@@ -37,7 +37,9 @@ pub struct Depend {
 impl Clone for Depend {
     fn clone(&self) -> Self {
         let ptr = unsafe { alpm_dep_compute_string(self.inner) };
+        assert!(!ptr.is_null(), "failed to compute string for dep");
         let dep = unsafe { alpm_dep_from_string(ptr) };
+        assert!(!dep.is_null(), "failed to create dep from string");
         unsafe { Depend::from_ptr(dep) }
     }
 }
@@ -103,8 +105,9 @@ impl<'a> fmt::Display for Dep<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         unsafe {
             let cs = alpm_dep_compute_string(self.inner);
+            assert!(!cs.is_null(), "failed to compute string for dep");
             let s = from_cstr(cs);
-            let err = write!(f, "{}", s);
+            let err = f.write_str(&s);
             free(cs as *mut c_void);
             err
         }
@@ -115,6 +118,7 @@ impl<'a> From<Dep<'a>> for Vec<u8> {
     fn from(dep: Dep<'a>) -> Vec<u8> {
         unsafe {
             let cs = alpm_dep_compute_string(dep.inner);
+            assert!(!cs.is_null(), "failed to compute string for dep");
             let s = std::ffi::CStr::from_ptr(cs);
             let s = s.to_bytes().to_vec();
             free(cs as *mut c_void);
@@ -127,6 +131,7 @@ impl Depend {
     pub fn new<S: Into<Vec<u8>>>(s: S) -> Depend {
         let s = CString::new(s).unwrap();
         let dep = unsafe { alpm_dep_from_string(s.as_ptr()) };
+        assert!(!dep.is_null(), "failed to create dep from string");
 
         Depend {
             dep: Dep {

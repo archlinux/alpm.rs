@@ -459,4 +459,11 @@ mod tests {
         assert_eq!(deps.into_iter().map(|d| d.to_string()).collect::<Vec<_>>(), ai.into_iter().map(|d| d.to_string()).collect::<Vec<_>>());
         */
     }
+
+    #[test]
+    fn test_strs() {
+        let mut handle = Alpm::new("/", "tests/db/").unwrap();
+
+        handle.gpgdir();
+    }
 }
