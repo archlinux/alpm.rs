@@ -107,7 +107,7 @@ impl<'a> fmt::Display for Dep<'a> {
             let cs = alpm_dep_compute_string(self.inner);
             assert!(!cs.is_null(), "failed to compute string for dep");
             let s = from_cstr(cs);
-            let err = f.write_str(&s);
+            let err = f.write_str(s);
             free(cs as *mut c_void);
             err
         }

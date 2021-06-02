@@ -749,36 +749,36 @@ impl<'a> AnyQuestion<'a> {
             QuestionType::InstallIgnorepkg => {
                 Question::InstallIgnorepkg(InstallIgnorepkgQuestion {
                     handle,
-                    inner: &mut unsafe { (*self.inner).install_ignorepkg },
+                    inner: unsafe { &mut (*self.inner).install_ignorepkg },
                     marker: PhantomData,
                 })
             }
             QuestionType::ReplacePkg => Question::Replace(ReplaceQuestion {
                 handle,
-                inner: &mut unsafe { (*self.inner).replace },
+                inner: unsafe { &mut (*self.inner).replace },
                 marker: PhantomData,
             }),
             QuestionType::ConflictPkg => Question::Conflict(ConflictQuestion {
-                inner: &mut unsafe { (*self.inner).conflict },
+                inner: unsafe { &mut (*self.inner).conflict },
                 marker: PhantomData,
             }),
             QuestionType::CorruptedPkg => Question::Corrupted(CorruptedQuestion {
-                inner: &mut unsafe { (*self.inner).corrupted },
+                inner: unsafe { &mut (*self.inner).corrupted },
                 marker: PhantomData,
             }),
             QuestionType::RemovePkgs => Question::RemovePkgs(RemovePkgsQuestion {
                 handle,
-                inner: &mut unsafe { (*self.inner).remove_pkgs },
+                inner: unsafe { &mut (*self.inner).remove_pkgs },
                 marker: PhantomData,
             }),
 
             QuestionType::SelectProvider => Question::SelectProvider(SelectProviderQuestion {
                 handle,
-                inner: &mut unsafe { (*self.inner).select_provider },
+                inner: unsafe { &mut (*self.inner).select_provider },
                 marker: PhantomData,
             }),
             QuestionType::ImportKey => Question::ImportKey(ImportKeyQuestion {
-                inner: &mut unsafe { (*self.inner).import_key },
+                inner: unsafe { &mut (*self.inner).import_key },
                 marker: PhantomData,
             }),
         }
