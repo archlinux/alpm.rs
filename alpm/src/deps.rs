@@ -367,6 +367,10 @@ mod tests {
     fn test_depend() {
         let dep = Depend::new("abc");
         assert_eq!(dep.name(), "abc");
+
+        let dep = Depend::new("<3");
+        assert_eq!(dep.name(), "");
+        assert_eq!(dep.version().unwrap().as_str(), "3");
     }
 
     #[test]
@@ -384,7 +388,8 @@ mod tests {
     #[test]
     fn test_eq() {
         assert_eq!(Depend::new("foo=1"), Depend::new("foo=1"));
-        assert!(Depend::new("foo=2") != Depend::new("foo=1"));
+        assert_ne!(Depend::new("foo=1-1"), Depend::new("foo=1-2"));
+        assert_ne!(Depend::new("foo=2"), Depend::new("foo=1"));
     }
 
     #[test]

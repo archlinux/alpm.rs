@@ -563,7 +563,7 @@ impl<'a> HookRunEvent<'a> {
     }
 
     pub fn desc(&self) -> &str {
-        unsafe { from_cstr((*self.inner).desc) }
+        unsafe { from_cstr_optional2((*self.inner).desc) }
     }
 
     pub fn position(&self) -> usize {

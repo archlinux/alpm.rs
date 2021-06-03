@@ -40,7 +40,7 @@ impl Alpm {
     }
 
     pub fn gpgdir(&self) -> &str {
-        unsafe { from_cstr(alpm_option_get_gpgdir(self.handle)) }
+        unsafe { from_cstr_optional2(alpm_option_get_gpgdir(self.handle)) }
     }
 
     pub fn use_syslog(&self) -> bool {
@@ -409,20 +409,21 @@ impl Alpm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_getters() {
         let handle = Alpm::new("/", "tests/db/").unwrap();
+
         assert_eq!(handle.root(), "/");
-        assert_eq!(
-            handle.dbpath().trim_end_matches('/'),
-            PathBuf::from("tests/db/")
-                .canonicalize()
-                .unwrap()
-                .to_str()
-                .unwrap()
-        );
+        assert!(handle.dbpath().ends_with("tests/db/"));
+
+        assert!(handle.cachedirs().is_empty());
+        assert!(!handle.lockfile().is_empty());
+        assert!(!handle.use_syslog());
+        assert!(handle.assume_installed().is_empty());
+        assert!(!handle.dbext().is_empty());
+        assert!(handle.gpgdir().is_empty());
+        assert!(handle.logfile().is_none());
     }
 
     #[test]

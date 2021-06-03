@@ -91,7 +91,7 @@ impl<'a> Pkg<'a> {
 
     pub fn filename(&self) -> &'a str {
         let name = unsafe { alpm_pkg_get_filename(self.pkg) };
-        unsafe { from_cstr(name) }
+        unsafe { from_cstr_optional2(name) }
     }
 
     pub fn base(&self) -> Option<&'a str> {
@@ -322,6 +322,7 @@ mod tests {
         }
 
         assert!(files.contains("etc/").unwrap().is_some());
+        assert_eq!(pkg.filename(), "");
     }
 
     #[test]
