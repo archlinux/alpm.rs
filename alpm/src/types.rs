@@ -580,8 +580,9 @@ impl<'a> PkgRetrieveStartEvent<'a> {
         unsafe { (*self.inner).num }
     }
 
+    #[allow(clippy::useless_conversion)]
     pub fn total_size(&self) -> i64 {
-        unsafe { (*self.inner).total_size }
+        unsafe { (*self.inner).total_size.into() }
     }
 }
 
@@ -1091,6 +1092,7 @@ impl<'a> AnyDownloadEvent<'a> {
         }
     }
 
+    #[allow(clippy::useless_conversion)]
     pub fn event(&self) -> DownloadEvent {
         let event = unsafe { transmute(self.event) };
         match event {
@@ -1104,8 +1106,8 @@ impl<'a> AnyDownloadEvent<'a> {
             DownloadEventType::Progress => {
                 let data = self.data as *const alpm_download_event_progress_t;
                 let event = DownloadEventProgress {
-                    downloaded: unsafe { (*data).downloaded },
-                    total: unsafe { (*data).total },
+                    downloaded: unsafe { (*data).downloaded.into() },
+                    total: unsafe { (*data).total.into() },
                 };
                 DownloadEvent::Progress(event)
             }
@@ -1124,7 +1126,7 @@ impl<'a> AnyDownloadEvent<'a> {
                     Ordering::Less => DownloadResult::Failed,
                 };
                 let event = DownloadEventCompleted {
-                    total: unsafe { (*data).total },
+                    total: unsafe { (*data).total.into() },
                     result,
                 };
                 DownloadEvent::Completed(event)
