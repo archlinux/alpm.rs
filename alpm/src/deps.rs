@@ -65,23 +65,23 @@ impl std::ops::Deref for Depend {
 }
 
 pub trait AsDep {
-    fn as_dep<'a>(&'a self) -> Dep<'a>;
+    fn as_dep(&self) -> Dep;
 }
 
 impl<'a> AsDep for Depend {
-    fn as_dep<'b>(&'b self) -> Dep<'b> {
+    fn as_dep(&self) -> Dep {
         self.dep()
     }
 }
 
 impl<'a> AsDep for Dep<'a> {
-    fn as_dep<'b>(&'b self) -> Dep<'b> {
+    fn as_dep(&self) -> Dep {
         self.dep()
     }
 }
 
 impl<'a> AsDep for &Dep<'a> {
-    fn as_dep<'b>(&'b self) -> Dep<'b> {
+    fn as_dep(&self) -> Dep {
         self.dep()
     }
 }
@@ -152,7 +152,7 @@ impl Depend {
 }
 
 impl<'a> Dep<'a> {
-    pub fn dep<'b>(&'b self) -> Dep<'b> {
+    pub fn dep(&self) -> Dep {
         Dep {
             inner: self.inner,
             phantom: PhantomData,

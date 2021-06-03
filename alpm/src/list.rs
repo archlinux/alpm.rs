@@ -295,6 +295,7 @@ impl<'a, T> AlpmList<'a, T>
 where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_list_mut(&self) -> AlpmListMut<'a, T> {
         let list = unsafe { alpm_list_copy(self.list) };
         AlpmListMut {

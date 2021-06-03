@@ -14,17 +14,17 @@ use std::{fmt, ptr};
 use alpm_sys::*;
 
 pub trait AsPkg {
-    fn as_pkg<'a>(&'a self) -> Pkg<'a>;
+    fn as_pkg(&self) -> Pkg;
 }
 
 impl<'a> AsPkg for Package<'a> {
-    fn as_pkg<'b>(&'b self) -> Pkg<'b> {
+    fn as_pkg(&self) -> Pkg {
         self.pkg
     }
 }
 
 impl<'a> AsPkg for Pkg<'a> {
-    fn as_pkg<'b>(&'b self) -> Pkg<'b> {
+    fn as_pkg(&self) -> Pkg {
         *self
     }
 }

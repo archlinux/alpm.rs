@@ -20,7 +20,7 @@ impl<'a> Drop for LoadedPackage<'a> {
 }
 
 impl<'a> AsPkg for LoadedPackage<'a> {
-    fn as_pkg<'b>(&'b self) -> Pkg<'b> {
+    fn as_pkg(&self) -> Pkg {
         self.pkg
     }
 }
