@@ -88,11 +88,11 @@ impl PgpKey {
     }
 
     pub fn name(&self) -> &str {
-        unsafe { from_cstr(self.inner.name) }
+        unsafe { from_cstr_optional2(self.inner.name) }
     }
 
     pub fn email(&self) -> &str {
-        unsafe { from_cstr(self.inner.email) }
+        unsafe { from_cstr_optional2(self.inner.email) }
     }
 
     pub fn created(&self) -> i64 {
