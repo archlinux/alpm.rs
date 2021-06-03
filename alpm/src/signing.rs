@@ -79,8 +79,6 @@ impl fmt::Debug for PgpKey {
 }
 
 impl PgpKey {
-    //TODO: what is data?
-
     pub fn fingerprint(&self) -> &str {
         unsafe { from_cstr(self.inner.fingerprint) }
     }
