@@ -134,6 +134,10 @@ impl Alpm {
         }
     }
 
+    pub fn logfile(&self) -> Option<&str> {
+        unsafe { from_cstr_optional(alpm_option_get_logfile(self.handle)) }
+    }
+
     pub fn set_logfile<S: Into<Vec<u8>>>(&self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
         let ret = unsafe { alpm_option_set_logfile(self.handle, s.as_ptr()) };
