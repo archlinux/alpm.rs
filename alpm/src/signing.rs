@@ -116,6 +116,7 @@ impl PgpKey {
     }
 }
 
+#[repr(transparent)]
 pub struct SigResult {
     inner: alpm_sigresult_t,
 }
@@ -179,7 +180,13 @@ impl SigList {
     }
 
     pub fn results(&self) -> &[SigResult] {
-        unsafe { slice::from_raw_parts(self.inner.results as *const SigResult, self.inner.count) }
+        if self.inner.results.is_null() {
+            unsafe { slice::from_raw_parts(1 as *const SigResult, 0) }
+        } else {
+            unsafe {
+                slice::from_raw_parts(self.inner.results as *const SigResult, self.inner.count)
+            }
+        }
     }
 }
 

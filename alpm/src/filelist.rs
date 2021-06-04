@@ -7,6 +7,7 @@ use std::ffi::CString;
 use std::fmt;
 use std::slice;
 
+#[repr(transparent)]
 pub struct File {
     inner: alpm_file_t,
 }
@@ -48,7 +49,11 @@ impl fmt::Debug for FileList {
 
 impl FileList {
     pub fn files(&self) -> &[File] {
-        unsafe { slice::from_raw_parts(self.inner.files as *const File, self.inner.count) }
+        if self.inner.files.is_null() {
+            unsafe { slice::from_raw_parts(1 as *const File, 0) }
+        } else {
+            unsafe { slice::from_raw_parts(self.inner.files as *const File, self.inner.count) }
+        }
     }
 
     pub fn contains<S: Into<Vec<u8>>>(&self, path: S) -> Result<Option<File>> {
