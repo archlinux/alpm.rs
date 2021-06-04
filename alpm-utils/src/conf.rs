@@ -14,7 +14,27 @@ use pacmanconf::Config;
 /// ```
 pub fn alpm_with_conf(conf: &Config) -> alpm::Result<Alpm> {
     let mut alpm = Alpm::new(&*conf.root_dir, &*conf.db_path)?;
+    configure_alpm(&mut alpm, conf)?;
+    Ok(alpm)
+}
 
+/// Configures an exsting Alpm handle  using a pacman config.
+///
+/// You probably just want to use alpm_with_conf unless you need to do something before the
+/// repos are registered such as setting the db ext.
+///
+/// ```no_run
+/// use pacmanconf::Config;
+/// use alpm_utils::configure_alpm;
+/// use alpm::Alpm;
+///
+/// # fn main() {
+/// let conf = Config::new().unwrap();
+/// let mut alpm = Alpm::new(&*conf.root_dir, &*conf.db_path).unwrap();
+/// let alpm = configure_alpm(&mut alpm, &conf).unwrap();
+/// # }
+/// ```
+pub fn configure_alpm(alpm: &mut Alpm, conf: &Config) -> alpm::Result<()> {
     alpm.set_cachedirs(conf.cache_dir.iter())?;
     alpm.set_hookdirs(conf.hook_dir.iter())?;
     alpm.set_gpgdir(&*conf.gpg_dir)?;
@@ -33,10 +53,10 @@ pub fn alpm_with_conf(conf: &Config) -> alpm::Result<Alpm> {
     alpm.set_parallel_downloads(conf.parallel_downloads as u32);
 
     for repo in &conf.repos {
-        register_db(&mut alpm, repo)?;
+        register_db(alpm, repo)?;
     }
 
-    Ok(alpm)
+    Ok(())
 }
 
 fn parse_sig_level(levels: &[String]) -> SigLevel {
