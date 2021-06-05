@@ -73,3 +73,30 @@ impl FileList {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{Alpm, SigLevel};
+
+    #[test]
+    fn test_files() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        let pkg = db.pkg("linux").unwrap();
+        let files = pkg.files();
+
+        assert!(files.files().is_empty());
+        assert!(Some(files.files()).is_some());
+
+        let db = handle.localdb();
+        let pkg = db.pkg("linux").unwrap();
+        let files = pkg.files();
+
+        assert!(!files.files().is_empty());
+        assert!(Some(files.files()).is_some());
+
+        let file = files.contains("boot/").unwrap().unwrap();
+        assert_eq!(file.name(), "boot/");
+        assert!(files.contains("aaaaa/").unwrap().is_none());
+    }
+}
