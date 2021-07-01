@@ -21,6 +21,7 @@ no-default-features = true
 default = ["checkver"]
 mtree = ["libarchive", "libarchive3-sys"]
 git = ["alpm-sys/git"]
+static = ["alpm-sys/static"]
 generate = ["alpm-sys/generate"]
 checkver = []
 

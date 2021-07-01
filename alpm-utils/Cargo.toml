@@ -14,6 +14,7 @@ keywords = ["archlinux", "arch", "alpm", "pacman"]
 [features]
 git = ["alpm/git"]
 generate = ["alpm/generate"]
+static = ["alpm/static"]
 default = ["alpm", "conf"]
 conf = ["pacmanconf", "alpm"]
 

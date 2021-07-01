@@ -1,12 +1,26 @@
 fn main() {
     use std::env;
+    use std::path::Path;
 
-    println!("cargo:rustc-link-lib=alpm");
+    #[cfg(feature = "static")]
+    println!("cargo:rerun-if-changed=/usr/lib/pacman/lib/pkgconfig");
+    #[cfg(feature = "static")]
+    println!("cargo:rustc-link-search=/usr/lib/pacman/lib/");
     println!("cargo:rerun-if-env-changed=ALPM_LIB_DIR");
+
+    if cfg!(feature = "static") && Path::new("/usr/lib/pacman/lib/pkgconfig").exists() {
+        env::set_var("PKG_CONFIG_LIBDIR", "/usr/lib/pacman/lib/pkgconfig");
+    }
 
     if let Ok(dir) = env::var("ALPM_LIB_DIR") {
         println!("cargo:rustc-link-search={}", dir);
     }
+
+    pkg_config::Config::new()
+        .atleast_version("13.0.0")
+        .statik(cfg!(feature = "static"))
+        .probe("libalpm")
+        .unwrap();
 
     #[cfg(feature = "generate")]
     {
