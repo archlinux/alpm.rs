@@ -18,19 +18,16 @@ fn main() {
                 .collect::<Vec<_>>();
 
             let current = parts[0];
-            let revision = parts[1];
             let age = parts[2];
 
             let supported_current = 13;
-            let supported_revision = 0;
 
             assert!(
                 supported_current == current
-                    && (revision - age..=revision).contains(&supported_revision),
-                "this version of alpm.rs does not support libalpm v{} only v{}.{}.0 is supported",
+                    && (current - age..=current).contains(&supported_current),
+                "this version of alpm.rs does not support libalpm v{} only v{}.x.x is supported",
                 ver,
                 supported_current,
-                supported_revision,
             );
         }
     }
