@@ -12,6 +12,7 @@ the package management library used by pacman and other tools.
 - generate - generate the raw alpm-sys bindings at build time
 - checkver - check that the version of libalpm installed is compatible with alpm.rs
 - git - target the git master API
+- static - statically link to libalpm
 
 
 **Note:** checkver does not work with the git feature. You can instead use
