@@ -81,9 +81,9 @@ impl<'a> DbMut<'a> {
         self.handle.check_ret(ret)
     }
 
-    pub fn set_servers<L: IntoRawAlpmList<'a, String>>(&self, list: L) -> Result<()> {
+    pub fn set_servers<'b, L: IntoRawAlpmList<'b, String>>(&self, list: L) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_db_set_servers(self.db, alpm_list_strdup(list.list())) };
+        let ret = unsafe { alpm_db_set_servers(self.db, list.list()) };
         self.handle.check_ret(ret)
     }
 
