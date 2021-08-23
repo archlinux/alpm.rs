@@ -502,7 +502,7 @@ extern "C" fn dlcb<C: DlCbTrait>(
         let filename = filename.to_str().unwrap();
         let event = unsafe { AnyDownloadEvent::new(event, data) };
         let cb = unsafe { &*(ctx as *const C) };
-        cb.call(&filename, event);
+        cb.call(filename, event);
     });
 }
 
@@ -558,7 +558,7 @@ extern "C" fn progresscb<C: ProgressCbTrait>(
         let pkgname = pkgname.to_str().unwrap();
         let progress = unsafe { transmute::<alpm_progress_t, Progress>(progress) };
         let cb = unsafe { &*(ctx as *const C) };
-        cb.call(progress, &pkgname, percent as i32, howmany, current);
+        cb.call(progress, pkgname, percent as i32, howmany, current);
     });
 }
 

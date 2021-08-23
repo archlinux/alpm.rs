@@ -92,7 +92,7 @@ impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let err = unsafe { transmute::<Error, alpm_errno_t>(*self) };
         let s = unsafe { CStr::from_ptr(alpm_strerror(err)) };
-        fmt.write_str(&s.to_str().unwrap())
+        fmt.write_str(s.to_str().unwrap())
     }
 }
 
