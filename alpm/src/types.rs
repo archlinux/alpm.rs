@@ -1,7 +1,10 @@
 use crate::utils::*;
+
+#[cfg(not(feature = "git"))]
+use crate::PgpKey;
 use crate::{
     Alpm, AlpmList, AlpmListMut, Conflict, Db, Dep, DependMissing, Error, OwnedConflict,
-    OwnedFileConflict, Package, PgpKey, Pkg,
+    OwnedFileConflict, Package, Pkg,
 };
 
 use std::ffi::c_void;
@@ -684,10 +687,20 @@ pub struct ImportKeyQuestion<'a> {
 }
 
 impl<'a> fmt::Debug for ImportKeyQuestion<'a> {
+    #[cfg(not(feature = "git"))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ImportKeyQuestion")
             .field("import", &self.import())
             .field("key", &self.key())
+            .finish()
+    }
+
+    #[cfg(feature = "git")]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ImportKeyQuestion")
+            .field("import", &self.import())
+            .field("uid", &self.uid())
+            .field("fingerprint", &self.fingerprint())
             .finish()
     }
 }
@@ -948,6 +961,17 @@ impl<'a> ImportKeyQuestion<'a> {
         unsafe { (*self.inner).import != 0 }
     }
 
+    #[cfg(feature = "git")]
+    pub fn uid(&self) -> &str {
+        unsafe { from_cstr((*self.inner).uid) }
+    }
+
+    #[cfg(feature = "git")]
+    pub fn fingerprint(&self) -> &str {
+        unsafe { from_cstr((*self.inner).fingerprint) }
+    }
+
+    #[cfg(not(feature = "git"))]
     pub fn key(&self) -> PgpKey {
         let key = unsafe { *(*self.inner).key };
         PgpKey { inner: key }
