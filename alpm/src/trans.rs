@@ -16,6 +16,8 @@ bitflags! {
         const CASCADE = ALPM_TRANS_FLAG_CASCADE;
         const RECURSE = ALPM_TRANS_FLAG_RECURSE;
         const DB_ONLY = ALPM_TRANS_FLAG_DBONLY;
+        #[cfg(feature = "git")]
+        const NO_HOOKS = ALPM_TRANS_FLAG_NOHOOKS;
         const ALL_DEPS = ALPM_TRANS_FLAG_ALLDEPS;
         const DOWNLOAD_ONLY = ALPM_TRANS_FLAG_DOWNLOADONLY;
         const NO_SCRIPTLET = ALPM_TRANS_FLAG_NOSCRIPTLET;
