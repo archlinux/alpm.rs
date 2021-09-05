@@ -24,7 +24,6 @@ fn main() {
 
     #[cfg(feature = "generate")]
     {
-        use std::path::Path;
 
         println!("cargo:rerun-if-env-changed=ALPM_INCLUDE_DIR");
 
