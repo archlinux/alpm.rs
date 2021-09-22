@@ -1,7 +1,7 @@
 fn main() {
     #[cfg(feature = "checkver")]
     {
-        #[cfg(not(feature = "git"))]
+        #[cfg(all(not(feature = "git"), not(feature = "docs-rs")))]
         {
             use alpm_sys::alpm_version;
             use std::ffi::CStr;

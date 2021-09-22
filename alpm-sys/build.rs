@@ -2,6 +2,10 @@ fn main() {
     use std::env;
     use std::path::Path;
 
+    if cfg!(feature = "docs-rs") {
+        return;
+    }
+
     #[cfg(feature = "static")]
     println!("cargo:rerun-if-changed=/usr/lib/pacman/lib/pkgconfig");
     #[cfg(feature = "static")]

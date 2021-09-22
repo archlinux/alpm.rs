@@ -16,7 +16,11 @@ categories = ["external-ffi-bindings"]
 git = []
 static = []
 generate = ["bindgen"]
+docs-rs = []
 
 [build-dependencies]
 bindgen = { version = "0.55.1", optional = true, default-features = false, features = ["runtime"] }
 pkg-config = "0.3.19"
+
+[package.metadata.docs.rs]
+features = [ "docs-rs" ]

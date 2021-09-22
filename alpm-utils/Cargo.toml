@@ -11,12 +11,16 @@ documentation = "https://docs.rs/alpm-utils"
 license = "GPL-3.0"
 keywords = ["archlinux", "arch", "alpm", "pacman"]
 
+[package.metadata.docs.rs]
+features = ["docs-rs", "pacmanconf"]
+
 [features]
 git = ["alpm/git"]
 generate = ["alpm/generate"]
 static = ["alpm/static"]
 default = ["alpm", "conf"]
 conf = ["pacmanconf", "alpm"]
+docs-rs = ["alpm/docs-rs"]
 
 [dependencies]
 alpm = { version = "2.1.0", path = "../alpm", optional = true }

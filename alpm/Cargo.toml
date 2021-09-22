@@ -16,6 +16,7 @@ exclude = ["tests"]
 
 [package.metadata.docs.rs]
 no-default-features = true
+features = [ "docs-rs" ]
 
 [features]
 default = ["checkver"]
@@ -24,6 +25,7 @@ git = ["alpm-sys/git"]
 static = ["alpm-sys/static"]
 generate = ["alpm-sys/generate"]
 checkver = []
+docs-rs = ["alpm-sys/docs-rs"]
 
 [dependencies]
 bitflags = "1.0.4"
