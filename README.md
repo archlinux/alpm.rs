@@ -8,7 +8,7 @@ the package management library used by pacman and other tools.
 
 # Features
 
-- mtree - enables the alpm_pkg_mtree_* funtions
+- mtree - enables the alpm_pkg_mtree_* functions
 - generate - generate the raw alpm-sys bindings at build time
 - checkver - check that the version of libalpm installed is compatible with alpm.rs
 - git - target the git master API
