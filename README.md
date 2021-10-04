@@ -36,7 +36,7 @@ without bumping the major version.
 This crate just provides bindings for libalpm and hence does not document libalpm.
 You can find documentation for libalpm in the [libalpm (3)](https://man.archlinux.org/man/core/pacman/libalpm.3.en) man page or in [alpm.h](https://gitlab.archlinux.org/pacman/pacman/-/blob/master/lib/libalpm/alpm.h).
 
-There are also examples on how to use the alpm create in [alpm/examples](alpm/examples).
+There are also examples on how to use the alpm crate in [alpm/examples](alpm/examples).
 
 # alpm-sys
 
