@@ -10,6 +10,7 @@ use std::ops::Deref;
 use alpm_sys::*;
 
 #[derive(Copy, Clone)]
+#[doc(alias("repo", "repository"))]
 pub struct Db<'a> {
     pub(crate) db: *mut alpm_db_t,
     pub(crate) handle: &'a Alpm,
