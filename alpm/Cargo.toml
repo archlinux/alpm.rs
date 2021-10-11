@@ -34,7 +34,7 @@ libarchive3-sys = { version = "0.1.2", optional = true }
 alpm-sys = { path = "../alpm-sys", version = "2.1.0" }
 
 [build-dependencies]
-alpm-sys = { path = "../alpm-sys", version = "2.1.0" }
+alpm-sys = { path = "../alpm-sys", version = "2.1.2" }
 
 [dev-dependencies]
 criterion = "0.2.11"

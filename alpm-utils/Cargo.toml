@@ -23,5 +23,5 @@ conf = ["pacmanconf", "alpm"]
 docs-rs = ["alpm/docs-rs"]
 
 [dependencies]
-alpm = { version = "2.1.0", path = "../alpm", optional = true }
+alpm = { version = "2.1.2", path = "../alpm", optional = true }
 pacmanconf = { version = "1.0.0", optional = true }
