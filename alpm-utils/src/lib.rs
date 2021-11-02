@@ -1,6 +1,6 @@
 //! # alpm-utils
 //!
-//! A utility libary that provides some common functionality an alpm user may requre.
+//! A utility library that provides some common functionality an alpm user may requre.
 
 #![warn(missing_docs)]
 
