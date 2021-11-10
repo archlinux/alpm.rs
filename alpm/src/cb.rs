@@ -654,6 +654,11 @@ mod tests {
         handle.set_progress_cb((), progresscb);
 
         log_action!(handle, "me", "look i am logging an action {}", ":D").unwrap();
+        handle.log_action("me", "look i am logging an action 2").unwrap();
+        handle.log_action("me", "look i am logging an action 2").unwrap();
+        handle.log_action("me", "look i am logging an action 2").unwrap();
+        handle.log_action("me", "look i am logging an action 2").unwrap();
+        handle.log_action("me", "look i am logging an action 2").unwrap();
 
         let db = handle.register_syncdb_mut("core", SigLevel::NONE).unwrap();
         db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/core/os/x86_64")
