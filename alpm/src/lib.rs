@@ -1,3 +1,7 @@
+//! # Alpm
+//!
+//! See [`Alpm`] as the base type to interact with alpm.
+//!
 #![doc = include_str!("../../README.md")]
 
 mod add;

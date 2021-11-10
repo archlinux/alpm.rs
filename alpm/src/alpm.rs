@@ -32,7 +32,7 @@ impl Drop for Alpm {
 }
 
 impl Alpm {
-    #[doc(alias = "initialize")]
+    #[doc(alias("alpm_initialize", "initialize"))]
     pub fn new<S: Into<Vec<u8>>>(root: S, db_path: S) -> Result<Alpm> {
         let mut err = alpm_errno_t::ALPM_ERR_OK;
         let root = CString::new(root).unwrap();
