@@ -50,6 +50,16 @@ impl Alpm {
         })
     }
 
+    pub fn release(self) -> std::result::Result<(), ()> {
+        if unsafe { alpm_release(self.handle) } == 0 {
+            std::mem::forget(self);
+            Ok(())
+        } else {
+            std::mem::forget(self);
+            Err(())
+        }
+    }
+
     pub(crate) unsafe fn from_ptr(handle: *mut alpm_handle_t) -> Alpm {
         Alpm {
             handle,
