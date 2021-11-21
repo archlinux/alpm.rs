@@ -724,4 +724,18 @@ mod tests {
         println!("{:?}", db.pkg("linux"));
         assert_eq!(handle.borrow().syncdbs().len(), 1);
     }
+
+    #[test]
+    fn test_cb_drop() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let mut val = Rc::new(42);
+        handle.set_log_cb(Rc::clone(&val), |_, _, _| ());
+        assert!(Rc::get_mut(&mut val).is_none());
+        let cb = handle.take_raw_log_cb();
+        assert!(Rc::get_mut(&mut val).is_none());
+        drop(cb);
+        Rc::get_mut(&mut val).unwrap();
+        drop(handle);
+    }
+
 }
