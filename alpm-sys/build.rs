@@ -28,7 +28,6 @@ fn main() {
 
     #[cfg(feature = "generate")]
     {
-
         println!("cargo:rerun-if-env-changed=ALPM_INCLUDE_DIR");
 
         let out_dir = env::var_os("OUT_DIR").unwrap();
