@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, AlpmListMut, Db, IntoRawAlpmList, Package, Ver};
+use crate::{free, Alpm, AlpmList, AlpmListMut, Db, IntoRawAlpmList, Package, Pkg, Ver};
 
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
@@ -334,9 +334,9 @@ impl<'a> AlpmList<'a, Package<'a>> {
 impl Alpm {
     pub fn check_deps<'a>(
         &self,
-        pkgs: impl IntoRawAlpmList<'a, Package<'a>>,
-        rem: impl IntoRawAlpmList<'a, Package<'a>>,
-        upgrade: impl IntoRawAlpmList<'a, Package<'a>>,
+        pkgs: impl IntoRawAlpmList<'a, Pkg<'a>>,
+        rem: impl IntoRawAlpmList<'a, Pkg<'a>>,
+        upgrade: impl IntoRawAlpmList<'a, Pkg<'a>>,
         reverse_deps: bool,
     ) -> AlpmListMut<DependMissing> {
         let reverse_deps = if reverse_deps { 1 } else { 0 };

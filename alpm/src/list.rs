@@ -93,28 +93,6 @@ where
     unsafe fn into_raw_alpm_list(self) -> RawAlpmList<'a, T, Self::Drop>;
 }
 
-impl<'a> IntoRawAlpmList<'a, Pkg<'a>> for AlpmList<'a, LoadedPackage<'a>> {
-    type Drop = False;
-    unsafe fn into_raw_alpm_list(self) -> RawAlpmList<'a, Pkg<'a>, Self::Drop> {
-        RawAlpmList {
-            list: self.list,
-            _marker1: PhantomData,
-            _marker2: PhantomData,
-        }
-    }
-}
-
-impl<'a> IntoRawAlpmList<'a, Pkg<'a>> for AlpmList<'a, Package<'a>> {
-    type Drop = False;
-    unsafe fn into_raw_alpm_list(self) -> RawAlpmList<'a, Pkg<'a>, Self::Drop> {
-        RawAlpmList {
-            list: self.list,
-            _marker1: PhantomData,
-            _marker2: PhantomData,
-        }
-    }
-}
-
 impl<'a, T> IntoRawAlpmList<'a, T> for AlpmList<'a, T>
 where
     T: AsAlpmListItemPtr<'a>,
@@ -669,6 +647,14 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Package<'a> {
     }
 }
 
+unsafe impl<'a> AsAlpmListItemPtr<'a> for LoadedPackage<'a> {
+    type Output = Pkg<'a>;
+
+    fn as_ptr(&self) -> *mut c_void {
+        self.pkg.pkg as *mut c_void
+    }
+}
+
 unsafe impl<'a> AsAlpmListItemPtr<'a> for Db<'a> {
     type Output = Db<'a>;
 
@@ -726,12 +712,34 @@ unsafe impl<'a> Push<'a> for Depend {}
 unsafe impl<'a> Push<'a> for Dep<'a> {}
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Package<'a> {
-    type Borrow = Self;
+    type Borrow = Pkg<'a>;
     unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
         Package::new(handle, ptr as *mut alpm_pkg_t)
     }
     unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        Package::new(handle, ptr as *mut alpm_pkg_t)
+        Package::new(handle, ptr as *mut alpm_pkg_t).pkg
+    }
+}
+
+unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Pkg<'a> {
+    type Borrow = Self;
+    unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
+        Package::new(handle, ptr as *mut alpm_pkg_t).pkg
+    }
+    unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+        Package::new(handle, ptr as *mut alpm_pkg_t).pkg
+    }
+}
+
+unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for LoadedPackage<'a> {
+    type Borrow = Pkg<'a>;
+    unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
+        LoadedPackage {
+            pkg: Package::new(handle, ptr as *mut alpm_pkg_t).pkg,
+        }
+    }
+    unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+        Package::new(handle, ptr as *mut alpm_pkg_t).pkg
     }
 }
 
