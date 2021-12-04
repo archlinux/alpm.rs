@@ -662,7 +662,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Pkg<'a> {
 }
 
 unsafe impl<'a> AsAlpmListItemPtr<'a> for Package<'a> {
-    type Output = Package<'a>;
+    type Output = Pkg<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
         self.pkg.pkg as *mut c_void
