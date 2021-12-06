@@ -635,7 +635,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Pkg<'a> {
     type Output = Pkg<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
-        self.pkg as *mut c_void
+        (*self).as_ptr() as *mut c_void
     }
 }
 
@@ -643,7 +643,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Package<'a> {
     type Output = Pkg<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
-        self.pkg.pkg as *mut c_void
+        self.pkg.as_ptr() as *mut c_void
     }
 }
 
@@ -651,7 +651,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for LoadedPackage<'a> {
     type Output = Pkg<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
-        self.pkg.pkg as *mut c_void
+        self.pkg.as_ptr() as *mut c_void
     }
 }
 
@@ -659,7 +659,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Db<'a> {
     type Output = Db<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
-        self.db as *mut c_void
+        (*self).as_ptr() as *mut c_void
     }
 }
 
@@ -855,16 +855,10 @@ unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Conflict<'a> {
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Db<'a> {
     type Borrow = Self;
     unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
-        Db {
-            db: ptr as *mut alpm_db_t,
-            handle,
-        }
+        Db::new(handle, ptr as *mut alpm_db_t)
     }
     unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        Db {
-            db: ptr as *mut alpm_db_t,
-            handle,
-        }
+        Db::new(handle, ptr as *mut alpm_db_t)
     }
 }
 
@@ -872,18 +866,12 @@ unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for DbMut<'a> {
     type Borrow = Self;
     unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
         DbMut {
-            inner: Db {
-                db: ptr as *mut alpm_db_t,
-                handle,
-            },
+            inner: Db::new(handle, ptr as *mut alpm_db_t),
         }
     }
     unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
         DbMut {
-            inner: Db {
-                db: ptr as *mut alpm_db_t,
-                handle,
-            },
+            inner: Db::new(handle, ptr as *mut alpm_db_t),
         }
     }
 }

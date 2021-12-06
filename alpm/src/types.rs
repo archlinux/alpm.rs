@@ -851,12 +851,7 @@ impl<'a> ReplaceQuestion<'a> {
     }
 
     pub fn newdb(&self) -> Db {
-        unsafe {
-            Db {
-                db: (*self.inner).newdb,
-                handle: &self.handle,
-            }
-        }
+        unsafe { Db::new(&self.handle, (*self.inner).newdb) }
     }
 }
 
@@ -1016,7 +1011,7 @@ impl<'a> fmt::Debug for ChangeLog<'a> {
 
 impl<'a> Drop for ChangeLog<'a> {
     fn drop(&mut self) {
-        unsafe { alpm_pkg_changelog_close(self.pkg.pkg, self.stream) };
+        unsafe { alpm_pkg_changelog_close(self.pkg.as_ptr(), self.stream) };
     }
 }
 
@@ -1026,7 +1021,7 @@ impl<'a> Read for ChangeLog<'a> {
             alpm_pkg_changelog_read(
                 buf.as_mut_ptr() as *mut c_void,
                 buf.len(),
-                self.pkg.pkg,
+                self.pkg.as_ptr(),
                 self.stream,
             )
         };

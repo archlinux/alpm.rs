@@ -173,7 +173,7 @@ impl Alpm {
         list: L,
     ) -> AlpmListMut<OwnedConflict> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_checkconflicts(self.handle, list.list()) };
+        let ret = unsafe { alpm_checkconflicts(self.as_ptr(), list.list()) };
         AlpmListMut::from_parts(self, ret)
     }
 }

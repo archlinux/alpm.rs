@@ -9,102 +9,102 @@ use std::ffi::CString;
 
 impl Alpm {
     pub fn as_alpm_handle_t(&self) -> *mut alpm_handle_t {
-        self.handle
+        self.as_ptr()
     }
 
     pub fn unlock(&self) -> Result<()> {
-        let ret = unsafe { alpm_unlock(self.handle) };
+        let ret = unsafe { alpm_unlock(self.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn root(&self) -> &str {
-        unsafe { from_cstr(alpm_option_get_root(self.handle)) }
+        unsafe { from_cstr(alpm_option_get_root(self.as_ptr())) }
     }
 
     pub fn dbpath(&self) -> &str {
-        unsafe { from_cstr(alpm_option_get_dbpath(self.handle)) }
+        unsafe { from_cstr(alpm_option_get_dbpath(self.as_ptr())) }
     }
 
     pub fn hookdirs(&self) -> AlpmList<'_, &str> {
-        let list = unsafe { alpm_option_get_hookdirs(self.handle) };
+        let list = unsafe { alpm_option_get_hookdirs(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn cachedirs(&self) -> AlpmList<'_, &str> {
-        let list = unsafe { alpm_option_get_cachedirs(self.handle) };
+        let list = unsafe { alpm_option_get_cachedirs(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn lockfile(&self) -> &str {
-        unsafe { from_cstr(alpm_option_get_lockfile(self.handle)) }
+        unsafe { from_cstr(alpm_option_get_lockfile(self.as_ptr())) }
     }
 
     pub fn gpgdir(&self) -> &str {
-        unsafe { from_cstr_optional2(alpm_option_get_gpgdir(self.handle)) }
+        unsafe { from_cstr_optional2(alpm_option_get_gpgdir(self.as_ptr())) }
     }
 
     pub fn use_syslog(&self) -> bool {
-        unsafe { alpm_option_get_usesyslog(self.handle) != 0 }
+        unsafe { alpm_option_get_usesyslog(self.as_ptr()) != 0 }
     }
 
     pub fn noupgrades(&self) -> AlpmList<'_, &str> {
-        let list = unsafe { alpm_option_get_noupgrades(self.handle) };
+        let list = unsafe { alpm_option_get_noupgrades(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn noextracts(&self) -> AlpmList<'_, &str> {
-        let list = unsafe { alpm_option_get_noextracts(self.handle) };
+        let list = unsafe { alpm_option_get_noextracts(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn ignorepkgs(&self) -> AlpmList<'_, &str> {
-        let list = unsafe { alpm_option_get_ignorepkgs(self.handle) };
+        let list = unsafe { alpm_option_get_ignorepkgs(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn ignoregroups(&self) -> AlpmList<'_, &str> {
-        let list = unsafe { alpm_option_get_ignoregroups(self.handle) };
+        let list = unsafe { alpm_option_get_ignoregroups(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn overwrite_files(&self) -> AlpmList<'_, &str> {
-        let list = unsafe { alpm_option_get_overwrite_files(self.handle) };
+        let list = unsafe { alpm_option_get_overwrite_files(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn assume_installed(&self) -> AlpmList<'_, Depend> {
-        let list = unsafe { alpm_option_get_assumeinstalled(self.handle) };
+        let list = unsafe { alpm_option_get_assumeinstalled(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn architectures(&self) -> AlpmList<'_, &str> {
-        let list = unsafe { alpm_option_get_architectures(self.handle) };
+        let list = unsafe { alpm_option_get_architectures(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn check_space(&self) -> bool {
-        unsafe { alpm_option_get_checkspace(self.handle) != 0 }
+        unsafe { alpm_option_get_checkspace(self.as_ptr()) != 0 }
     }
 
     pub fn dbext(&self) -> &str {
-        unsafe { from_cstr(alpm_option_get_dbext(self.handle)) }
+        unsafe { from_cstr(alpm_option_get_dbext(self.as_ptr())) }
     }
 
     pub fn add_hookdir<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_add_hookdir(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_add_hookdir(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn set_hookdirs<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_hookdirs(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_hookdirs(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_hookdir<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_remove_hookdir(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_remove_hookdir(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -114,19 +114,19 @@ impl Alpm {
 
     pub fn add_cachedir<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_add_cachedir(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_add_cachedir(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn set_cachedirs<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_cachedirs(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_cachedirs(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_cachedir<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_remove_cachedir(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_remove_cachedir(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -135,41 +135,41 @@ impl Alpm {
     }
 
     pub fn logfile(&self) -> Option<&str> {
-        unsafe { from_cstr_optional(alpm_option_get_logfile(self.handle)) }
+        unsafe { from_cstr_optional(alpm_option_get_logfile(self.as_ptr())) }
     }
 
     pub fn set_logfile<S: Into<Vec<u8>>>(&self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_set_logfile(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_set_logfile(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn set_gpgdir<S: Into<Vec<u8>>>(&self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_set_gpgdir(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_set_gpgdir(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn set_use_syslog(&self, b: bool) {
         let b = if b { 1 } else { 0 };
-        unsafe { alpm_option_set_usesyslog(self.handle, b) };
+        unsafe { alpm_option_set_usesyslog(self.as_ptr(), b) };
     }
 
     pub fn add_noupgrade<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_add_noupgrade(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_add_noupgrade(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn set_noupgrades<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_noupgrades(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_noupgrades(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_noupgrade<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_remove_noupgrade(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_remove_noupgrade(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -179,7 +179,7 @@ impl Alpm {
 
     pub fn match_noupgrade<S: Into<Vec<u8>>>(&mut self, s: S) -> Match {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_match_noupgrade(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_match_noupgrade(self.as_ptr(), s.as_ptr()) };
 
         match ret.cmp(&0) {
             Ordering::Equal => Match::Yes,
@@ -190,19 +190,19 @@ impl Alpm {
 
     pub fn add_noextract<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_add_noextract(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_add_noextract(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn set_noextracts<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_noextracts(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_noextracts(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_noextract<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_remove_noextract(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_remove_noextract(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -212,7 +212,7 @@ impl Alpm {
 
     pub fn match_noextract<S: Into<Vec<u8>>>(&mut self, s: S) -> Match {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_match_noextract(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_match_noextract(self.as_ptr(), s.as_ptr()) };
 
         match ret.cmp(&0) {
             Ordering::Equal => Match::Yes,
@@ -223,19 +223,19 @@ impl Alpm {
 
     pub fn add_ignorepkg<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_add_ignorepkg(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_add_ignorepkg(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn set_ignorepkgs<'a, T: IntoRawAlpmList<'a, String>>(&mut self, list: T) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_ignorepkgs(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_ignorepkgs(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_ignorepkg<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_remove_ignorepkg(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_remove_ignorepkg(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -245,7 +245,7 @@ impl Alpm {
 
     pub fn add_ignoregroup<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_add_ignoregroup(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_add_ignoregroup(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
@@ -254,13 +254,13 @@ impl Alpm {
         list: T,
     ) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_ignoregroups(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_ignoregroups(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_ignoregroup<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_remove_ignoregroup(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_remove_ignoregroup(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -270,7 +270,7 @@ impl Alpm {
 
     pub fn add_overwrite_file<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_add_overwrite_file(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_add_overwrite_file(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
@@ -279,13 +279,13 @@ impl Alpm {
         list: T,
     ) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_overwrite_files(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_overwrite_files(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_overwrite_file<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_remove_overwrite_file(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_remove_overwrite_file(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -294,7 +294,7 @@ impl Alpm {
     }
 
     pub fn add_assume_installed(&mut self, s: &Dep) -> Result<()> {
-        let ret = unsafe { alpm_option_add_assumeinstalled(self.handle, s.inner) };
+        let ret = unsafe { alpm_option_add_assumeinstalled(self.as_ptr(), s.inner) };
         self.check_ret(ret)
     }
 
@@ -303,12 +303,12 @@ impl Alpm {
         list: T,
     ) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_assumeinstalled(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_assumeinstalled(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_assume_installed<D: AsDep>(&mut self, s: D) -> Result<bool> {
-        let ret = unsafe { alpm_option_remove_assumeinstalled(self.handle, s.as_dep().inner) };
+        let ret = unsafe { alpm_option_remove_assumeinstalled(self.as_ptr(), s.as_dep().inner) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -318,7 +318,7 @@ impl Alpm {
 
     pub fn add_architecture<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_add_architecture(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_add_architecture(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
@@ -327,13 +327,13 @@ impl Alpm {
         list: T,
     ) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_architectures(self.handle, list.list()) };
+        let ret = unsafe { alpm_option_set_architectures(self.as_ptr(), list.list()) };
         self.check_ret(ret)
     }
 
     pub fn remove_architecture<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
         let s = CString::new(s).unwrap();
-        let ret = unsafe { alpm_option_remove_architecture(self.handle, s.as_ptr()) };
+        let ret = unsafe { alpm_option_remove_architecture(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -342,67 +342,67 @@ impl Alpm {
     }
 
     pub fn localdb(&self) -> Db {
-        let db = unsafe { alpm_get_localdb(self.handle) };
-        Db { handle: self, db }
+        let db = unsafe { alpm_get_localdb(self.as_ptr()) };
+        unsafe { Db::new(self, db) }
     }
 
     pub fn syncdbs(&self) -> AlpmList<Db> {
-        let dbs = unsafe { alpm_get_syncdbs(self.handle) };
+        let dbs = unsafe { alpm_get_syncdbs(self.as_ptr()) };
         AlpmList::from_parts(self, dbs)
     }
 
     pub fn syncdbs_mut(&mut self) -> AlpmList<DbMut> {
-        let dbs = unsafe { alpm_get_syncdbs(self.handle) };
+        let dbs = unsafe { alpm_get_syncdbs(self.as_ptr()) };
         AlpmList::from_parts(self, dbs)
     }
 
     pub fn set_check_space(&self, b: bool) {
         let b = if b { 1 } else { 0 };
-        unsafe { alpm_option_set_checkspace(self.handle, b) };
+        unsafe { alpm_option_set_checkspace(self.as_ptr(), b) };
     }
 
     pub fn set_dbext<S: Into<Vec<u8>>>(&self, s: S) {
         let s = CString::new(s).unwrap();
-        unsafe { alpm_option_set_dbext(self.handle, s.as_ptr()) };
+        unsafe { alpm_option_set_dbext(self.as_ptr(), s.as_ptr()) };
     }
 
     pub fn set_default_siglevel(&self, s: SigLevel) -> Result<()> {
-        let ret = unsafe { alpm_option_set_default_siglevel(self.handle, s.bits() as i32) };
+        let ret = unsafe { alpm_option_set_default_siglevel(self.as_ptr(), s.bits() as i32) };
         self.check_ret(ret)
     }
 
     pub fn default_siglevel(&self) -> SigLevel {
-        let ret = unsafe { alpm_option_get_default_siglevel(self.handle) };
+        let ret = unsafe { alpm_option_get_default_siglevel(self.as_ptr()) };
         SigLevel::from_bits(ret as u32).unwrap()
     }
 
     pub fn set_local_file_siglevel(&self, s: SigLevel) -> Result<()> {
-        let ret = unsafe { alpm_option_set_local_file_siglevel(self.handle, s.bits() as i32) };
+        let ret = unsafe { alpm_option_set_local_file_siglevel(self.as_ptr(), s.bits() as i32) };
         self.check_ret(ret)
     }
 
     pub fn local_file_siglevel(&self) -> SigLevel {
-        let ret = unsafe { alpm_option_get_local_file_siglevel(self.handle) };
+        let ret = unsafe { alpm_option_get_local_file_siglevel(self.as_ptr()) };
         SigLevel::from_bits(ret as u32).unwrap()
     }
 
     pub fn set_remote_file_siglevel(&self, s: SigLevel) -> Result<()> {
-        let ret = unsafe { alpm_option_set_remote_file_siglevel(self.handle, s.bits() as i32) };
+        let ret = unsafe { alpm_option_set_remote_file_siglevel(self.as_ptr(), s.bits() as i32) };
         self.check_ret(ret)
     }
 
     pub fn remote_file_siglevel(&self) -> SigLevel {
-        let ret = unsafe { alpm_option_get_remote_file_siglevel(self.handle) };
+        let ret = unsafe { alpm_option_get_remote_file_siglevel(self.as_ptr()) };
         SigLevel::from_bits(ret as u32).unwrap()
     }
 
     pub fn set_disable_dl_timeout(&self, b: bool) {
         let b = if b { 1 } else { 0 };
-        unsafe { alpm_option_set_disable_dl_timeout(self.handle, b) };
+        unsafe { alpm_option_set_disable_dl_timeout(self.as_ptr(), b) };
     }
 
     pub fn set_parallel_downloads(&self, n: u32) {
-        unsafe { alpm_option_set_parallel_downloads(self.handle, n) };
+        unsafe { alpm_option_set_parallel_downloads(self.as_ptr(), n) };
     }
 }
 

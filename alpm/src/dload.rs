@@ -11,7 +11,7 @@ impl Alpm {
     ) -> Result<AlpmListMut<'a, String>> {
         let mut out = ptr::null_mut();
         let list = unsafe { urls.into_raw_alpm_list() };
-        let ret = unsafe { alpm_fetch_pkgurl(self.handle, list.list(), &mut out) };
+        let ret = unsafe { alpm_fetch_pkgurl(self.as_ptr(), list.list(), &mut out) };
         self.check_ret(ret)?;
         let fetched = AlpmListMut::from_parts(self, out);
         Ok(fetched)

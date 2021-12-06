@@ -32,13 +32,13 @@ bitflags! {
 
 impl Alpm {
     pub fn trans_flags(self) -> TransFlag {
-        let flags = unsafe { alpm_trans_get_flags(self.handle) };
+        let flags = unsafe { alpm_trans_get_flags(self.as_ptr()) };
         TransFlag::from_bits(flags as u32).unwrap()
     }
 
     pub fn trans_prepare(&mut self) -> std::result::Result<(), (PrepareResult, Error)> {
         let mut list = ptr::null_mut();
-        let ret = unsafe { alpm_trans_prepare(self.handle, &mut list) };
+        let ret = unsafe { alpm_trans_prepare(self.as_ptr(), &mut list) };
         let err = self.check_ret(ret);
 
         if let Err(err) = err {
@@ -63,7 +63,7 @@ impl Alpm {
 
     pub fn trans_commit(&mut self) -> std::result::Result<(), (CommitResult, Error)> {
         let mut list = ptr::null_mut();
-        let ret = unsafe { alpm_trans_commit(self.handle, &mut list) };
+        let ret = unsafe { alpm_trans_commit(self.as_ptr(), &mut list) };
         let err = self.check_ret(ret);
 
         if let Err(err) = err {
@@ -84,29 +84,29 @@ impl Alpm {
     }
 
     pub fn trans_interrupt(&mut self) -> Result<()> {
-        let ret = unsafe { alpm_trans_interrupt(self.handle) };
+        let ret = unsafe { alpm_trans_interrupt(self.as_ptr()) };
         self.check_ret(ret)
     }
 
     pub fn trans_add(&self) -> AlpmList<Package> {
-        let list = unsafe { alpm_trans_get_add(self.handle) };
+        let list = unsafe { alpm_trans_get_add(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn trans_remove(&self) -> AlpmList<Package> {
-        let list = unsafe { alpm_trans_get_remove(self.handle) };
+        let list = unsafe { alpm_trans_get_remove(self.as_ptr()) };
         AlpmList::from_parts(self, list)
     }
 
     pub fn trans_release(&mut self) -> Result<()> {
-        let ret = unsafe { alpm_trans_release(self.handle) };
+        let ret = unsafe { alpm_trans_release(self.as_ptr()) };
         self.check_ret(ret)
     }
 }
 
 impl Alpm {
     pub fn trans_init(&self, flags: TransFlag) -> Result<()> {
-        let ret = unsafe { alpm_trans_init(self.handle, flags.bits() as i32) };
+        let ret = unsafe { alpm_trans_init(self.as_ptr(), flags.bits() as i32) };
         self.check_ret(ret)
     }
 }

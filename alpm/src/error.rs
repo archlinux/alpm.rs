@@ -78,7 +78,7 @@ impl Error {
 
 impl Alpm {
     pub fn last_error(&self) -> Error {
-        unsafe { Error::new(alpm_errno(self.handle)) }
+        unsafe { Error::new(alpm_errno(self.as_ptr())) }
     }
 }
 

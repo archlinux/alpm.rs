@@ -315,7 +315,7 @@ impl<'a> AlpmList<'a, Db<'a>> {
     pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<Package<'a>> {
         let dep = CString::new(dep).unwrap();
 
-        let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.handle, self.list, dep.as_ptr()) };
+        let pkg = unsafe { alpm_find_dbs_satisfier(self.handle.as_ptr(), self.list, dep.as_ptr()) };
         self.handle.check_null(pkg).ok()?;
         unsafe { Some(Package::new(self.handle, pkg)) }
     }
@@ -347,7 +347,7 @@ impl Alpm {
 
         let ret = unsafe {
             alpm_checkdeps(
-                self.handle,
+                self.as_ptr(),
                 pkgs.list(),
                 rem.list(),
                 upgrade.list(),

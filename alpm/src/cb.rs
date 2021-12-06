@@ -236,7 +236,7 @@ impl Alpm {
         let ctx = LogCbImpl(RefCell::new((f, data)));
         let ctx = Box::new(ctx);
         let cb = logcb::<LogCbImpl<T, F>>;
-        unsafe { alpm_option_set_logcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
+        unsafe { alpm_option_set_logcb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
         c.replace(ctx);
     }
 
@@ -256,7 +256,7 @@ impl Alpm {
         let ctx = DlCbImpl(RefCell::new((f, data)));
         let ctx = Box::new(ctx);
         let cb = dlcb::<DlCbImpl<T, F>>;
-        unsafe { alpm_option_set_dlcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
+        unsafe { alpm_option_set_dlcb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
         c.replace(ctx);
     }
 
@@ -265,10 +265,10 @@ impl Alpm {
         if let Some(cb) = c.as_ref() {
             cb.assert_unlocked()
         }
-        let ctx = EventCbImpl(RefCell::new((f, data)), self.handle);
+        let ctx = EventCbImpl(RefCell::new((f, data)), self.as_ptr());
         let ctx = Box::new(ctx);
         let cb = eventcb::<EventCbImpl<T, F>>;
-        unsafe { alpm_option_set_eventcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
+        unsafe { alpm_option_set_eventcb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
         c.replace(ctx);
     }
 
@@ -287,7 +287,7 @@ impl Alpm {
         let ctx = ProgressCbImpl(RefCell::new((f, data)));
         let ctx = Box::new(ctx);
         let cb = progresscb::<ProgressCbImpl<T, F>>;
-        unsafe { alpm_option_set_progresscb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
+        unsafe { alpm_option_set_progresscb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
         c.replace(ctx);
     }
 
@@ -300,10 +300,10 @@ impl Alpm {
         if let Some(cb) = c.as_ref() {
             cb.assert_unlocked()
         }
-        let ctx = QuestionCbImpl(RefCell::new((f, data)), self.handle);
+        let ctx = QuestionCbImpl(RefCell::new((f, data)), self.as_ptr());
         let ctx = Box::new(ctx);
         let cb = questioncb::<QuestionCbImpl<T, F>>;
-        unsafe { alpm_option_set_questioncb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
+        unsafe { alpm_option_set_questioncb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
         c.replace(ctx);
     }
 
@@ -319,7 +319,7 @@ impl Alpm {
         let ctx = FetchCbImpl(RefCell::new((f, data)));
         let ctx = Box::new(ctx);
         let cb = fetchcb::<FetchCbImpl<T, F>>;
-        unsafe { alpm_option_set_fetchcb(self.handle, Some(cb), &*ctx as *const _ as *mut _) };
+        unsafe { alpm_option_set_fetchcb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
         c.replace(ctx);
     }
 
@@ -330,11 +330,11 @@ impl Alpm {
         }
 
         let cb = RawLogCb {
-            ctx: unsafe { alpm_option_get_logcb_ctx(self.handle) },
-            raw: unsafe { alpm_option_get_logcb(self.handle) },
+            ctx: unsafe { alpm_option_get_logcb_ctx(self.as_ptr()) },
+            raw: unsafe { alpm_option_get_logcb(self.as_ptr()) },
             cb: c.take(),
         };
-        unsafe { alpm_option_set_logcb(self.handle, None, ptr::null_mut()) };
+        unsafe { alpm_option_set_logcb(self.as_ptr(), None, ptr::null_mut()) };
         cb
     }
 
@@ -343,7 +343,7 @@ impl Alpm {
         if let Some(cb) = c.as_ref() {
             cb.assert_unlocked()
         }
-        unsafe { alpm_option_set_logcb(self.handle, cb.raw, cb.ctx) };
+        unsafe { alpm_option_set_logcb(self.as_ptr(), cb.raw, cb.ctx) };
         *c = cb.cb
     }
 
@@ -353,11 +353,11 @@ impl Alpm {
             cb.assert_unlocked()
         }
         let cb = RawDlCb {
-            ctx: unsafe { alpm_option_get_dlcb_ctx(self.handle) },
-            raw: unsafe { alpm_option_get_dlcb(self.handle) },
+            ctx: unsafe { alpm_option_get_dlcb_ctx(self.as_ptr()) },
+            raw: unsafe { alpm_option_get_dlcb(self.as_ptr()) },
             cb: c.take(),
         };
-        unsafe { alpm_option_set_dlcb(self.handle, None, ptr::null_mut()) };
+        unsafe { alpm_option_set_dlcb(self.as_ptr(), None, ptr::null_mut()) };
         cb
     }
 
@@ -366,7 +366,7 @@ impl Alpm {
         if let Some(cb) = c.as_ref() {
             cb.assert_unlocked()
         }
-        unsafe { alpm_option_set_dlcb(self.handle, cb.raw, cb.ctx) };
+        unsafe { alpm_option_set_dlcb(self.as_ptr(), cb.raw, cb.ctx) };
         *c = cb.cb
     }
 
@@ -376,11 +376,11 @@ impl Alpm {
             cb.assert_unlocked()
         }
         let cb = RawEventCb {
-            ctx: unsafe { alpm_option_get_eventcb_ctx(self.handle) },
-            raw: unsafe { alpm_option_get_eventcb(self.handle) },
+            ctx: unsafe { alpm_option_get_eventcb_ctx(self.as_ptr()) },
+            raw: unsafe { alpm_option_get_eventcb(self.as_ptr()) },
             cb: c.take(),
         };
-        unsafe { alpm_option_set_eventcb(self.handle, None, ptr::null_mut()) };
+        unsafe { alpm_option_set_eventcb(self.as_ptr(), None, ptr::null_mut()) };
         cb
     }
 
@@ -390,7 +390,7 @@ impl Alpm {
             cb.assert_unlocked()
         }
 
-        unsafe { alpm_option_set_eventcb(self.handle, cb.raw, cb.ctx) };
+        unsafe { alpm_option_set_eventcb(self.as_ptr(), cb.raw, cb.ctx) };
         *c = cb.cb
     }
 
@@ -401,11 +401,11 @@ impl Alpm {
         }
 
         let cb = RawProgressCb {
-            ctx: unsafe { alpm_option_get_progresscb_ctx(self.handle) },
-            raw: unsafe { alpm_option_get_progresscb(self.handle) },
+            ctx: unsafe { alpm_option_get_progresscb_ctx(self.as_ptr()) },
+            raw: unsafe { alpm_option_get_progresscb(self.as_ptr()) },
             cb: c.take(),
         };
-        unsafe { alpm_option_set_progresscb(self.handle, None, ptr::null_mut()) };
+        unsafe { alpm_option_set_progresscb(self.as_ptr(), None, ptr::null_mut()) };
         cb
     }
 
@@ -415,7 +415,7 @@ impl Alpm {
             cb.assert_unlocked()
         }
 
-        unsafe { alpm_option_set_progresscb(self.handle, cb.raw, cb.ctx) };
+        unsafe { alpm_option_set_progresscb(self.as_ptr(), cb.raw, cb.ctx) };
         *c = cb.cb;
     }
 
@@ -426,11 +426,11 @@ impl Alpm {
         }
 
         let cb = RawQuestionCb {
-            ctx: unsafe { alpm_option_get_questioncb_ctx(self.handle) },
-            raw: unsafe { alpm_option_get_questioncb(self.handle) },
+            ctx: unsafe { alpm_option_get_questioncb_ctx(self.as_ptr()) },
+            raw: unsafe { alpm_option_get_questioncb(self.as_ptr()) },
             cb: c.take(),
         };
-        unsafe { alpm_option_set_questioncb(self.handle, None, ptr::null_mut()) };
+        unsafe { alpm_option_set_questioncb(self.as_ptr(), None, ptr::null_mut()) };
         cb
     }
 
@@ -440,7 +440,7 @@ impl Alpm {
             cb.assert_unlocked()
         }
 
-        unsafe { alpm_option_set_questioncb(self.handle, cb.raw, cb.ctx) };
+        unsafe { alpm_option_set_questioncb(self.as_ptr(), cb.raw, cb.ctx) };
         *c = cb.cb;
     }
 
@@ -451,12 +451,12 @@ impl Alpm {
         }
 
         let cb = RawFetchCb {
-            ctx: unsafe { alpm_option_get_fetchcb_ctx(self.handle) },
-            raw: unsafe { alpm_option_get_fetchcb(self.handle) },
+            ctx: unsafe { alpm_option_get_fetchcb_ctx(self.as_ptr()) },
+            raw: unsafe { alpm_option_get_fetchcb(self.as_ptr()) },
             cb: c.take(),
         };
 
-        unsafe { alpm_option_set_fetchcb(self.handle, None, ptr::null_mut()) };
+        unsafe { alpm_option_set_fetchcb(self.as_ptr(), None, ptr::null_mut()) };
         cb
     }
 
@@ -466,7 +466,7 @@ impl Alpm {
             cb.assert_unlocked()
         }
 
-        unsafe { alpm_option_set_fetchcb(self.handle, cb.raw, cb.ctx) };
+        unsafe { alpm_option_set_fetchcb(self.as_ptr(), cb.raw, cb.ctx) };
         *c = cb.cb;
     }
 }

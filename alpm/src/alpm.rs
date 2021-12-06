@@ -13,7 +13,7 @@ extern "C" {
 
 #[allow(dead_code)]
 pub struct Alpm {
-    pub(crate) handle: *mut alpm_handle_t,
+    handle: *mut alpm_handle_t,
     pub(crate) cbs: Callbacks,
 }
 
@@ -65,6 +65,10 @@ impl Alpm {
             handle,
             cbs: Callbacks::default(),
         }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut alpm_handle_t {
+        self.handle
     }
 
     pub(crate) fn check_ret(&self, int: c_int) -> Result<()> {

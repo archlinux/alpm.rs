@@ -14,7 +14,7 @@ pub struct LoadedPackage<'a> {
 impl<'a> Drop for LoadedPackage<'a> {
     fn drop(&mut self) {
         unsafe {
-            alpm_pkg_free(self.pkg.pkg);
+            alpm_pkg_free(self.pkg.as_ptr());
         }
     }
 }
@@ -47,22 +47,21 @@ impl Alpm {
         level: SigLevel,
     ) -> Result<LoadedPackage> {
         let filename = CString::new(filename).unwrap();
-        let mut pkg = Pkg {
-            pkg: ptr::null_mut(),
-            handle: self,
-        };
+        let mut pkg = ptr::null_mut();
 
         let ret = unsafe {
             alpm_pkg_load(
-                self.handle,
+                self.as_ptr(),
                 filename.as_ptr(),
                 full as c_int,
                 level.bits() as i32,
-                &mut pkg.pkg,
+                &mut pkg,
             )
         };
         self.check_ret(ret)?;
-        Ok(LoadedPackage { pkg })
+        Ok(LoadedPackage {
+            pkg: unsafe { Pkg::new(self, pkg) },
+        })
     }
 }
 

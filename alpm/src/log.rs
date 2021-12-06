@@ -12,7 +12,7 @@ impl Alpm {
         let s = CString::new(msg).unwrap();
         let p = CString::new(prefix).unwrap();
 
-        let ret = unsafe { alpm_logaction(self.handle, p.as_ptr(), s.as_ptr()) };
+        let ret = unsafe { alpm_logaction(self.as_ptr(), p.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 }

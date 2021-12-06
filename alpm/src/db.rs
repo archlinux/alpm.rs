@@ -12,7 +12,7 @@ use alpm_sys::*;
 #[derive(Copy, Clone)]
 #[doc(alias("repo", "repository"))]
 pub struct Db<'a> {
-    pub(crate) db: *mut alpm_db_t,
+    db: *mut alpm_db_t,
     pub(crate) handle: &'a Alpm,
 }
 
@@ -51,7 +51,7 @@ impl Alpm {
         let name = CString::new(name).unwrap();
 
         let db =
-            unsafe { alpm_register_syncdb(self.handle, name.as_ptr(), sig_level.bits() as i32) };
+            unsafe { alpm_register_syncdb(self.as_ptr(), name.as_ptr(), sig_level.bits() as i32) };
 
         self.check_null(db)?;
         Ok(Db { db, handle: self })
@@ -67,7 +67,7 @@ impl Alpm {
     }
 
     pub fn unregister_all_syncdbs(&mut self) -> Result<()> {
-        self.check_ret(unsafe { alpm_unregister_all_syncdbs(self.handle) })
+        self.check_ret(unsafe { alpm_unregister_all_syncdbs(self.as_ptr()) })
     }
 }
 
@@ -96,6 +96,13 @@ impl<'a> DbMut<'a> {
 }
 
 impl<'a> Db<'a> {
+    pub(crate) unsafe fn new(handle: &Alpm, db: *mut alpm_db_t) -> Db {
+        Db { handle, db }
+    }
+
+    pub fn as_ptr(self) -> *mut alpm_db_t {
+        self.db
+    }
     pub fn name(&self) -> &'a str {
         let name = unsafe { alpm_db_get_name(self.db) };
         unsafe { from_cstr(name) }
