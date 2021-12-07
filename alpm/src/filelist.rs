@@ -5,6 +5,7 @@ use alpm_sys::*;
 
 use std::ffi::CString;
 use std::fmt;
+use std::mem;
 use std::slice;
 
 #[repr(transparent)]
@@ -50,7 +51,7 @@ impl fmt::Debug for FileList {
 impl FileList {
     pub fn files(&self) -> &[File] {
         if self.inner.files.is_null() {
-            unsafe { slice::from_raw_parts(1 as *const File, 0) }
+            unsafe { slice::from_raw_parts(mem::align_of::<File>() as *const File, 0) }
         } else {
             unsafe { slice::from_raw_parts(self.inner.files as *const File, self.inner.count) }
         }
