@@ -45,7 +45,7 @@ impl Alpm {
 macro_rules! log_action {
     ($handle:tt, $prefix:tt, $($arg:tt)*) => ({
         let mut s = format!($($arg)*);
-        s.reserve(1);
+        s.reserve_exact(1);
         s.push('\n');
         $handle.log_action($prefix, s)
     })
