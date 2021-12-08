@@ -8,7 +8,7 @@ pub struct ChecksumError;
 
 impl fmt::Display for ChecksumError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("Failed to compute checksum")
+        f.write_str("failed to compute checksum")
     }
 }
 

@@ -14,7 +14,7 @@ pub struct SignatureDecodeError;
 
 impl fmt::Display for SignatureDecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("Failed to decode signature")
+        f.write_str("failed to decode signature")
     }
 }
 

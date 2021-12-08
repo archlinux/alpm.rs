@@ -39,7 +39,7 @@ pub struct ReleaseError;
 
 impl fmt::Display for ReleaseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("Failed to release alpm")
+        f.write_str("failed to release alpm")
     }
 }
 
