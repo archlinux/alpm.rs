@@ -2,6 +2,7 @@ use crate::utils::*;
 use crate::{Callbacks, Error, Result};
 
 use std::ffi::{c_void, CString};
+use std::fmt;
 use std::os::raw::c_int;
 use std::ptr::NonNull;
 
@@ -33,6 +34,17 @@ impl Drop for Alpm {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+pub struct ReleaseError;
+
+impl fmt::Display for ReleaseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Failed to release alpm")
+    }
+}
+
+impl std::error::Error for ReleaseError {}
+
 impl Alpm {
     #[doc(alias("alpm_initialize", "initialize"))]
     pub fn new<S: Into<Vec<u8>>>(root: S, db_path: S) -> Result<Alpm> {
@@ -55,13 +67,13 @@ impl Alpm {
         Alpm::new(root, db_path)
     }
 
-    pub fn release(self) -> std::result::Result<(), ()> {
+    pub fn release(self) -> std::result::Result<(), ReleaseError> {
         if unsafe { alpm_release(self.as_ptr()) } == 0 {
             std::mem::forget(self);
             Ok(())
         } else {
             std::mem::forget(self);
-            Err(())
+            Err(ReleaseError)
         }
     }
 
