@@ -798,18 +798,12 @@ unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for OwnedFileConflict {
     type Borrow = FileConflict<'b>;
     unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
         OwnedFileConflict {
-            inner: FileConflict {
-                inner: ptr as *mut alpm_fileconflict_t,
-                phantom: PhantomData,
-            },
+            inner: FileConflict::from_ptr(ptr as *mut alpm_fileconflict_t),
         }
     }
 
     unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        FileConflict {
-            inner: ptr as *mut alpm_fileconflict_t,
-            phantom: PhantomData,
-        }
+        FileConflict::from_ptr(ptr as *mut alpm_fileconflict_t)
     }
 }
 

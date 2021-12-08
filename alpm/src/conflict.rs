@@ -7,6 +7,7 @@ use alpm_sys::*;
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem::transmute;
+use std::ptr::NonNull;
 
 pub struct OwnedConflict {
     conflict: Conflict<'static>,
@@ -15,10 +16,7 @@ pub struct OwnedConflict {
 impl OwnedConflict {
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_conflict_t) -> OwnedConflict {
         OwnedConflict {
-            conflict: Conflict {
-                inner: ptr,
-                phantom: PhantomData,
-            },
+            conflict: Conflict::from_ptr(ptr),
         }
     }
 }
@@ -30,8 +28,8 @@ impl fmt::Debug for OwnedConflict {
 }
 
 pub struct Conflict<'a> {
-    pub(crate) inner: *mut alpm_conflict_t,
-    pub(crate) phantom: PhantomData<&'a ()>,
+    inner: NonNull<alpm_conflict_t>,
+    _marker: PhantomData<&'a ()>,
 }
 
 impl<'a> fmt::Debug for Conflict<'a> {
@@ -56,42 +54,46 @@ impl std::ops::Deref for OwnedConflict {
 
 impl Drop for OwnedConflict {
     fn drop(&mut self) {
-        unsafe { alpm_conflict_free(self.conflict.inner) }
+        unsafe { alpm_conflict_free(self.conflict.as_ptr()) }
     }
 }
 
 impl<'a> Conflict<'a> {
+    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_conflict_t) -> Conflict<'b> {
+        Conflict {
+            inner: NonNull::new_unchecked(ptr),
+            _marker: PhantomData,
+        }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut alpm_conflict_t {
+        self.inner.as_ptr()
+    }
+
     pub fn package1_hash(&self) -> u64 {
         #[allow(clippy::useless_conversion)]
         unsafe {
-            (*self.inner).package1_hash.into()
+            (*self.as_ptr()).package1_hash.into()
         }
     }
 
     pub fn package2_hash(&self) -> u64 {
         #[allow(clippy::useless_conversion)]
         unsafe {
-            (*self.inner).package2_hash.into()
+            (*self.as_ptr()).package2_hash.into()
         }
     }
 
     pub fn package1(&self) -> &'a str {
-        unsafe { from_cstr((*self.inner).package1) }
+        unsafe { from_cstr((*self.as_ptr()).package1) }
     }
 
     pub fn package2(&self) -> &'a str {
-        unsafe { from_cstr((*self.inner).package2) }
+        unsafe { from_cstr((*self.as_ptr()).package2) }
     }
 
     pub fn reason(&self) -> Dep<'a> {
-        unsafe { Dep::from_ptr((*self.inner).reason) }
-    }
-
-    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_conflict_t) -> Conflict<'b> {
-        Conflict {
-            inner: ptr,
-            phantom: PhantomData,
-        }
+        unsafe { Dep::from_ptr((*self.as_ptr()).reason) }
     }
 }
 
@@ -103,8 +105,8 @@ pub enum FileConflictType {
 }
 
 pub struct FileConflict<'a> {
-    pub(crate) inner: *mut alpm_fileconflict_t,
-    pub(crate) phantom: PhantomData<&'a ()>,
+    inner: NonNull<alpm_fileconflict_t>,
+    _marker: PhantomData<&'a ()>,
 }
 
 impl<'a> fmt::Debug for FileConflict<'a> {
@@ -137,21 +139,33 @@ impl fmt::Debug for OwnedFileConflict {
 }
 
 impl<'a> FileConflict<'a> {
+    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_fileconflict_t) -> FileConflict<'b> {
+        FileConflict {
+            inner: NonNull::new_unchecked(ptr),
+            _marker: PhantomData,
+        }
+    }
+
+    pub(crate) unsafe fn as_ptr(&self) -> *mut alpm_fileconflict_t {
+        self.inner.as_ptr()
+    }
+
     pub fn target(&self) -> &'a str {
-        unsafe { from_cstr((*self.inner).target) }
+        unsafe { from_cstr((*self.as_ptr()).target) }
     }
 
     pub fn conflict_type(&self) -> FileConflictType {
-        let t = unsafe { (*self.inner).type_ };
+        let t = unsafe { (*self.as_ptr()).type_ };
         unsafe { transmute::<alpm_fileconflicttype_t, FileConflictType>(t) }
     }
 
     pub fn file(&self) -> &'a str {
-        unsafe { from_cstr((*self.inner).file) }
+        unsafe { from_cstr((*self.as_ptr()).file) }
     }
 
+    // TODO: check s can be null
     pub fn conflicting_target(&self) -> Option<&'a str> {
-        let s = unsafe { from_cstr((*self.inner).ctarget) };
+        let s = unsafe { from_cstr((*self.as_ptr()).target) };
 
         if s.is_empty() {
             None
@@ -163,7 +177,7 @@ impl<'a> FileConflict<'a> {
 
 impl Drop for OwnedFileConflict {
     fn drop(&mut self) {
-        unsafe { alpm_fileconflict_free(self.inner.inner) }
+        unsafe { alpm_fileconflict_free(self.as_ptr()) }
     }
 }
 
