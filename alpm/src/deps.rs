@@ -10,8 +10,8 @@ use std::marker::PhantomData;
 use std::mem::transmute;
 
 pub struct Dep<'a> {
-    pub(crate) inner: *mut alpm_depend_t,
-    pub(crate) phantom: PhantomData<&'a ()>,
+    inner: *mut alpm_depend_t,
+    _marker: PhantomData<&'a ()>,
 }
 
 impl<'a> fmt::Debug for Dep<'a> {
@@ -132,31 +132,25 @@ impl Depend {
         let s = CString::new(s).unwrap();
         let dep = unsafe { alpm_dep_from_string(s.as_ptr()) };
         assert!(!dep.is_null(), "failed to create dep from string");
-
-        Depend {
-            dep: Dep {
-                inner: dep,
-                phantom: PhantomData,
-            },
-        }
+        unsafe { Depend { dep: Dep::from_ptr(dep) } }
     }
 
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depend_t) -> Depend {
-        Depend {
-            dep: Dep {
-                inner: ptr,
-                phantom: PhantomData,
-            },
-        }
+        Depend { dep: Dep::from_ptr(ptr) }
     }
 }
 
 impl<'a> Dep<'a> {
+    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_depend_t) -> Dep<'b> {
+        Dep { inner: ptr, _marker: PhantomData }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut alpm_depend_t {
+        self.inner
+    }
+
     pub fn dep(&self) -> Dep {
-        Dep {
-            inner: self.inner,
-            phantom: PhantomData,
-        }
+        unsafe { Dep::from_ptr(self.as_ptr()) }
     }
 
     pub fn to_depend(&self) -> Depend {
@@ -197,12 +191,6 @@ impl<'a> Dep<'a> {
                 DepMod::Gt => DepModVer::Gt(self.version_unchecked()),
                 DepMod::Lt => DepModVer::Lt(self.version_unchecked()),
             }
-        }
-    }
-    pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depend_t) -> Dep<'a> {
-        Dep {
-            inner: ptr,
-            phantom: PhantomData,
         }
     }
 }

@@ -667,7 +667,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Depend {
     type Output = Dep<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
-        self.inner as *mut c_void
+        Dep::as_ptr(self) as *mut c_void
     }
 }
 
@@ -683,7 +683,7 @@ unsafe impl<'a> AsAlpmListItemPtr<'a> for Dep<'a> {
     type Output = Dep<'a>;
 
     fn as_ptr(&self) -> *mut c_void {
-        self.inner as *mut c_void
+        Dep::as_ptr(self) as *mut c_void
     }
 }
 
