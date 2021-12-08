@@ -132,17 +132,26 @@ impl Depend {
         let s = CString::new(s).unwrap();
         let dep = unsafe { alpm_dep_from_string(s.as_ptr()) };
         assert!(!dep.is_null(), "failed to create dep from string");
-        unsafe { Depend { dep: Dep::from_ptr(dep) } }
+        unsafe {
+            Depend {
+                dep: Dep::from_ptr(dep),
+            }
+        }
     }
 
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depend_t) -> Depend {
-        Depend { dep: Dep::from_ptr(ptr) }
+        Depend {
+            dep: Dep::from_ptr(ptr),
+        }
     }
 }
 
 impl<'a> Dep<'a> {
     pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_depend_t) -> Dep<'b> {
-        Dep { inner: ptr, _marker: PhantomData }
+        Dep {
+            inner: ptr,
+            _marker: PhantomData,
+        }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_depend_t {

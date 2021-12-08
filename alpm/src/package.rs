@@ -76,7 +76,10 @@ impl<'h> Package<'h> {
 
 impl<'h> Pkg<'h> {
     pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Pkg {
-        Pkg { handle, pkg: NonNull::new_unchecked(pkg) }
+        Pkg {
+            handle,
+            pkg: NonNull::new_unchecked(pkg),
+        }
     }
 
     pub(crate) fn as_ptr(self) -> *mut alpm_pkg_t {

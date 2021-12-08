@@ -92,7 +92,10 @@ impl<'h> DbMut<'h> {
 
 impl<'h> Db<'h> {
     pub(crate) unsafe fn new(handle: &Alpm, db: *mut alpm_db_t) -> Db {
-        Db { handle, db: NonNull::new_unchecked(db) }
+        Db {
+            handle,
+            db: NonNull::new_unchecked(db),
+        }
     }
 
     pub fn as_ptr(self) -> *mut alpm_db_t {
