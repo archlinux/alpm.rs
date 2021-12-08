@@ -129,10 +129,7 @@ impl<'h> Db<'h> {
         let name = CString::new(name).unwrap();
         let group = unsafe { alpm_db_get_group(self.as_ptr(), name.as_ptr()) };
         self.handle.check_null(group)?;
-        Ok(Group {
-            handle: self.handle,
-            inner: group,
-        })
+        unsafe { Ok(Group::new(self.handle, group)) }
     }
 
     pub fn set_usage(&self, usage: Usage) -> Result<()> {

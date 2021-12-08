@@ -746,16 +746,10 @@ unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for LoadedPackage<'a> {
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Group<'a> {
     type Borrow = Self;
     unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
-        Group {
-            inner: ptr as *mut alpm_group_t,
-            handle,
-        }
+        Group::new(handle, ptr as *mut alpm_group_t)
     }
     unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        Group {
-            inner: ptr as *mut alpm_group_t,
-            handle,
-        }
+        Group::new(handle, ptr as *mut alpm_group_t)
     }
 }
 

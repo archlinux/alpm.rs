@@ -13,6 +13,7 @@ use std::io::{self, Read};
 use std::marker::PhantomData;
 use std::mem::{transmute, ManuallyDrop};
 use std::os::raw::c_uchar;
+use std::ptr::NonNull;
 use std::slice;
 use std::{cmp::Ordering, ops::Deref};
 
@@ -975,7 +976,7 @@ impl<'a> ImportKeyQuestion<'a> {
 
 pub struct Group<'a> {
     pub(crate) handle: &'a Alpm,
-    pub(crate) inner: *mut alpm_group_t,
+    inner: NonNull<alpm_group_t>,
 }
 
 impl<'a> fmt::Debug for Group<'a> {
@@ -988,12 +989,23 @@ impl<'a> fmt::Debug for Group<'a> {
 }
 
 impl<'a> Group<'a> {
+    pub(crate) unsafe fn new<'b>(handle: &'b Alpm, ptr: *mut alpm_group_t) -> Group<'b> {
+        Group {
+            handle,
+            inner: NonNull::new_unchecked(ptr),
+        }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut alpm_group_t {
+        self.inner.as_ptr()
+    }
+
     pub fn name(&self) -> &'a str {
-        unsafe { from_cstr((*self.inner).name) }
+        unsafe { from_cstr((*self.as_ptr()).name) }
     }
 
     pub fn packages(&self) -> AlpmList<'a, Package<'a>> {
-        let pkgs = unsafe { (*self.inner).packages };
+        let pkgs = unsafe { (*self.as_ptr()).packages };
         AlpmList::from_parts(self.handle, pkgs)
     }
 }
