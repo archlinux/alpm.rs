@@ -24,6 +24,7 @@ impl std::fmt::Debug for Alpm {
     }
 }
 
+// TODO unsound: remove
 unsafe impl Send for Alpm {}
 
 impl Drop for Alpm {
