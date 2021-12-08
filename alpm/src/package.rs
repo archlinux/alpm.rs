@@ -287,7 +287,7 @@ impl<'h> Pkg<'h> {
         let mut len = 0;
         let ret = unsafe { alpm_pkg_get_sig(self.as_ptr(), &mut sig, &mut len) };
         self.handle.check_ret(ret)?;
-        let sig = Signature { sig, len };
+        let sig = unsafe { Signature::new(sig, len) };
         Ok(sig)
     }
 }

@@ -777,14 +777,10 @@ unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Dep<'a> {
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Backup {
     type Borrow = Self;
     unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
-        Backup::from_ptr(
-            ptr as *mut alpm_backup_t,
-        )
+        Backup::from_ptr(ptr as *mut alpm_backup_t)
     }
     unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        Backup::from_ptr(
-            ptr as *mut alpm_backup_t,
-        )
+        Backup::from_ptr(ptr as *mut alpm_backup_t)
     }
 }
 

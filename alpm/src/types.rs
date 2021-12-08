@@ -1095,7 +1095,9 @@ impl fmt::Debug for Backup {
 
 impl Backup {
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_backup_t) -> Backup {
-        Backup { inner: NonNull::new_unchecked(ptr) }
+        Backup {
+            inner: NonNull::new_unchecked(ptr),
+        }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_backup_t {
@@ -1228,13 +1230,24 @@ pub enum DownloadResult {
 }
 
 pub struct Signature {
-    pub(crate) sig: *mut c_uchar,
-    pub(crate) len: usize,
+    sig: NonNull<c_uchar>,
+    len: usize,
 }
 
 impl Signature {
+    pub(crate) unsafe fn new(sig: *mut c_uchar, len: usize) -> Signature {
+        Signature {
+            sig: NonNull::new_unchecked(sig),
+            len,
+        }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut c_uchar {
+        self.sig.as_ptr()
+    }
+
     pub fn sig(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.sig, self.len) }
+        unsafe { slice::from_raw_parts(self.as_ptr(), self.len) }
     }
 }
 
@@ -1254,6 +1267,6 @@ impl Deref for Signature {
 
 impl Drop for Signature {
     fn drop(&mut self) {
-        unsafe { crate::free(self.sig as _) }
+        unsafe { crate::free(self.as_ptr() as _) }
     }
 }
