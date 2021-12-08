@@ -1011,8 +1011,8 @@ impl<'a> Group<'a> {
 }
 
 pub struct ChangeLog<'a> {
-    pub(crate) pkg: &'a Pkg<'a>,
-    pub(crate) stream: *mut c_void,
+    pub(crate) pkg: Pkg<'a>,
+    stream: NonNull<c_void>,
 }
 
 impl<'a> fmt::Debug for ChangeLog<'a> {
@@ -1023,7 +1023,7 @@ impl<'a> fmt::Debug for ChangeLog<'a> {
 
 impl<'a> Drop for ChangeLog<'a> {
     fn drop(&mut self) {
-        unsafe { alpm_pkg_changelog_close(self.pkg.as_ptr(), self.stream) };
+        unsafe { alpm_pkg_changelog_close(self.pkg.as_ptr(), self.as_ptr()) };
     }
 }
 
@@ -1034,10 +1034,23 @@ impl<'a> Read for ChangeLog<'a> {
                 buf.as_mut_ptr() as *mut c_void,
                 buf.len(),
                 self.pkg.as_ptr(),
-                self.stream,
+                self.as_ptr(),
             )
         };
         Ok(ret)
+    }
+}
+
+impl<'a> ChangeLog<'a> {
+    pub(crate) unsafe fn new<'b>(pkg: Pkg<'b>, ptr: *mut c_void) -> ChangeLog<'b> {
+        ChangeLog {
+            pkg,
+            stream: NonNull::new_unchecked(ptr),
+        }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut c_void {
+        self.stream.as_ptr()
     }
 }
 

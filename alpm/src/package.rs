@@ -249,12 +249,7 @@ impl<'h> Pkg<'h> {
     pub fn changelog(&self) -> Result<ChangeLog> {
         let changelog = unsafe { alpm_pkg_changelog_open(self.as_ptr()) };
         self.handle.check_null(changelog)?;
-
-        let changelog = ChangeLog {
-            pkg: self,
-            stream: changelog,
-        };
-
+        let changelog = unsafe { ChangeLog::new(*self, changelog) };
         Ok(changelog)
     }
 
