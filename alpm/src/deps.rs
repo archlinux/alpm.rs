@@ -8,9 +8,10 @@ use std::ffi::{c_void, CString};
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem::transmute;
+use std::ptr::NonNull;
 
 pub struct Dep<'a> {
-    inner: *mut alpm_depend_t,
+    inner: NonNull<alpm_depend_t>,
     _marker: PhantomData<&'a ()>,
 }
 
@@ -36,7 +37,7 @@ pub struct Depend {
 
 impl Clone for Depend {
     fn clone(&self) -> Self {
-        let ptr = unsafe { alpm_dep_compute_string(self.inner) };
+        let ptr = unsafe { alpm_dep_compute_string(self.inner.as_ptr()) };
         assert!(!ptr.is_null(), "failed to compute string for dep");
         let dep = unsafe { alpm_dep_from_string(ptr) };
         assert!(!dep.is_null(), "failed to create dep from string");
@@ -88,7 +89,7 @@ impl<'a> AsDep for &Dep<'a> {
 
 impl Drop for Depend {
     fn drop(&mut self) {
-        unsafe { alpm_dep_free(self.dep.inner) }
+        unsafe { alpm_dep_free(self.dep.as_ptr()) }
     }
 }
 
@@ -104,7 +105,7 @@ impl<'a> PartialEq for Dep<'a> {
 impl<'a> fmt::Display for Dep<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         unsafe {
-            let cs = alpm_dep_compute_string(self.inner);
+            let cs = alpm_dep_compute_string(self.as_ptr());
             assert!(!cs.is_null(), "failed to compute string for dep");
             let s = from_cstr(cs);
             let err = f.write_str(s);
@@ -117,7 +118,7 @@ impl<'a> fmt::Display for Dep<'a> {
 impl<'a> From<Dep<'a>> for Vec<u8> {
     fn from(dep: Dep<'a>) -> Vec<u8> {
         unsafe {
-            let cs = alpm_dep_compute_string(dep.inner);
+            let cs = alpm_dep_compute_string(dep.as_ptr());
             assert!(!cs.is_null(), "failed to compute string for dep");
             let s = std::ffi::CStr::from_ptr(cs);
             let s = s.to_bytes().to_vec();
@@ -149,13 +150,13 @@ impl Depend {
 impl<'a> Dep<'a> {
     pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_depend_t) -> Dep<'b> {
         Dep {
-            inner: ptr,
+            inner: NonNull::new_unchecked(ptr),
             _marker: PhantomData,
         }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_depend_t {
-        self.inner
+        self.inner.as_ptr()
     }
 
     pub fn dep(&self) -> Dep {
@@ -167,27 +168,27 @@ impl<'a> Dep<'a> {
     }
 
     pub fn name(&self) -> &'a str {
-        unsafe { from_cstr((*self.inner).name) }
+        unsafe { from_cstr((*self.as_ptr()).name) }
     }
 
     pub fn version(&self) -> Option<&'a Ver> {
-        unsafe { (*self.inner).version.as_ref().map(|p| Ver::from_ptr(p)) }
+        unsafe { (*self.as_ptr()).version.as_ref().map(|p| Ver::from_ptr(p)) }
     }
 
     unsafe fn version_unchecked(&self) -> &'a Ver {
-        Ver::from_ptr((*self.inner).version)
+        Ver::from_ptr((*self.as_ptr()).version)
     }
 
     pub fn desc(&self) -> Option<&'a str> {
-        unsafe { from_cstr_optional((*self.inner).desc) }
+        unsafe { from_cstr_optional((*self.as_ptr()).desc) }
     }
 
     pub fn name_hash(&self) -> u64 {
-        unsafe { (*self.inner).name_hash as u64 }
+        unsafe { (*self.as_ptr()).name_hash as u64 }
     }
 
     pub fn depmod(&self) -> DepMod {
-        unsafe { transmute::<alpm_depmod_t, DepMod>((*self.inner).mod_) }
+        unsafe { transmute::<alpm_depmod_t, DepMod>((*self.as_ptr()).mod_) }
     }
 
     pub fn depmodver(&self) -> DepModVer {
