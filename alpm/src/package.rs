@@ -263,7 +263,7 @@ impl<'h> Pkg<'h> {
         let archive = unsafe { alpm_pkg_mtree_open(self.as_ptr()) };
         self.handle.check_null(archive)?;
 
-        let archive = MTree { pkg: self, archive };
+        let archive = unsafe { MTree::new(self, archive) };
 
         Ok(archive)
     }
