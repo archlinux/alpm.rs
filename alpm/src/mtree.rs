@@ -10,7 +10,7 @@ use libarchive3_sys::ffi::*;
 use std::{fmt, ptr};
 
 pub struct MTree<'h> {
-    pkg: &'h Pkg<'h>,
+    pkg: Pkg<'h>,
     archive: NonNull<archive>,
 }
 
@@ -48,7 +48,7 @@ impl<'h> Iterator for MTree<'h> {
 }
 
 impl<'h> MTree<'h> {
-    pub(crate) unsafe fn new<'a>(pkg: &'a Pkg<'a>, archive: *mut archive) -> MTree<'a> {
+    pub(crate) unsafe fn new<'a>(pkg: Pkg<'a>, archive: *mut archive) -> MTree<'a> {
         MTree {
             pkg,
             archive: NonNull::new_unchecked(archive),
