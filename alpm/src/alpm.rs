@@ -3,6 +3,7 @@ use crate::{Callbacks, Error, Result};
 
 use std::ffi::{c_void, CString};
 use std::os::raw::c_int;
+use std::ptr::NonNull;
 
 use alpm_sys::*;
 use bitflags::bitflags;
@@ -13,7 +14,7 @@ extern "C" {
 
 #[allow(dead_code)]
 pub struct Alpm {
-    handle: *mut alpm_handle_t,
+    handle: NonNull<alpm_handle_t>,
     pub(crate) cbs: Callbacks,
 }
 
@@ -27,7 +28,7 @@ unsafe impl Send for Alpm {}
 
 impl Drop for Alpm {
     fn drop(&mut self) {
-        unsafe { alpm_release(self.handle) };
+        unsafe { alpm_release(self.as_ptr()) };
     }
 }
 
@@ -40,18 +41,21 @@ impl Alpm {
 
         let handle = unsafe { alpm_initialize(root.as_ptr(), db_path.as_ptr(), &mut err) };
 
-        if handle.is_null() {
-            unsafe { return Err(Error::new(err)) };
+        match NonNull::new(handle) {
+            None => unsafe { Err(Error::new(err)) },
+            Some(handle) => Ok(Alpm {
+                handle,
+                cbs: Callbacks::default(),
+            }),
         }
+    }
 
-        Ok(Alpm {
-            handle,
-            cbs: Callbacks::default(),
-        })
+    pub fn new2(root: &str, db_path: &str) -> Result<Alpm> {
+        Alpm::new(root, db_path)
     }
 
     pub fn release(self) -> std::result::Result<(), ()> {
-        if unsafe { alpm_release(self.handle) } == 0 {
+        if unsafe { alpm_release(self.as_ptr()) } == 0 {
             std::mem::forget(self);
             Ok(())
         } else {
@@ -62,13 +66,13 @@ impl Alpm {
 
     pub(crate) unsafe fn from_ptr(handle: *mut alpm_handle_t) -> Alpm {
         Alpm {
-            handle,
+            handle: NonNull::new_unchecked(handle),
             cbs: Callbacks::default(),
         }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_handle_t {
-        self.handle
+        self.handle.as_ptr()
     }
 
     pub(crate) fn check_ret(&self, int: c_int) -> Result<()> {
