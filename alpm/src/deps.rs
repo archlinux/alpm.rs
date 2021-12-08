@@ -295,7 +295,7 @@ impl<'a> DepMissing<'a> {
         }
     }
 
-    pub(crate) fn as_ptr<'b>(&self) -> *mut alpm_depmissing_t {
+    pub(crate) fn as_ptr(&self) -> *mut alpm_depmissing_t {
         self.inner.as_ptr()
     }
 
