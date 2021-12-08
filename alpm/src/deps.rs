@@ -249,8 +249,8 @@ unsafe impl<'a> Send for DepMissing<'a> {}
 unsafe impl<'a> Sync for DepMissing<'a> {}
 
 pub struct DepMissing<'a> {
-    pub(crate) inner: *mut alpm_depmissing_t,
-    pub(crate) phantom: PhantomData<&'a ()>,
+    inner: NonNull<alpm_depmissing_t>,
+    _marker: PhantomData<&'a ()>,
 }
 
 impl<'a> fmt::Debug for DepMissing<'a> {
@@ -283,24 +283,35 @@ impl fmt::Debug for DependMissing {
 
 impl Drop for DependMissing {
     fn drop(&mut self) {
-        unsafe { alpm_depmissing_free(self.inner.inner) }
+        unsafe { alpm_depmissing_free(self.inner.as_ptr()) }
     }
 }
 
 impl<'a> DepMissing<'a> {
+    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_depmissing_t) -> DepMissing<'b> {
+        DepMissing {
+            inner: NonNull::new_unchecked(ptr),
+            _marker: PhantomData,
+        }
+    }
+
+    pub(crate) fn as_ptr<'b>(&self) -> *mut alpm_depmissing_t {
+        self.inner.as_ptr()
+    }
+
     pub fn target(&self) -> &str {
-        let target = unsafe { (*self.inner).target };
+        let target = unsafe { (*self.as_ptr()).target };
         unsafe { from_cstr(target) }
     }
 
     pub fn depend(&self) -> Dep {
-        let depend = unsafe { (*self.inner).depend };
+        let depend = unsafe { (*self.as_ptr()).depend };
 
         unsafe { Dep::from_ptr(depend) }
     }
 
     pub fn causing_pkg(&self) -> Option<&str> {
-        let causing_pkg = unsafe { (*self.inner).causingpkg };
+        let causing_pkg = unsafe { (*self.as_ptr()).causingpkg };
         if causing_pkg.is_null() {
             None
         } else {

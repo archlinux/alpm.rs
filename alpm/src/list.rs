@@ -817,18 +817,12 @@ unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for DependMissing {
     type Borrow = DepMissing<'b>;
     unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
         DependMissing {
-            inner: DepMissing {
-                inner: ptr as *mut alpm_depmissing_t,
-                phantom: PhantomData,
-            },
+            inner: DepMissing::from_ptr(ptr as *mut alpm_depmissing_t),
         }
     }
 
     unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        DepMissing {
-            inner: ptr as *mut alpm_depmissing_t,
-            phantom: PhantomData,
-        }
+        DepMissing::from_ptr(ptr as *mut alpm_depmissing_t)
     }
 }
 
