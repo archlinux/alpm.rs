@@ -232,7 +232,7 @@ impl<'h> Pkg<'h> {
 
     pub fn files(&self) -> FileList {
         let files = unsafe { *alpm_pkg_get_files(self.as_ptr()) };
-        FileList { inner: files }
+        unsafe { FileList::new(files) }
     }
 
     pub fn backup(&self) -> AlpmList<'h, Backup> {
@@ -328,6 +328,16 @@ mod tests {
 
         assert!(files.contains("etc/").unwrap().is_some());
         assert_eq!(pkg.filename(), "");
+    }
+
+    #[test]
+    fn test_files_null() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
+        let pkg = db.pkg("filesystem").unwrap();
+        let files = pkg.files();
+
+        assert_eq!(files.files().len(), 0);
     }
 
     #[test]

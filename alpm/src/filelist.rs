@@ -3,6 +3,7 @@ use crate::Result;
 
 use alpm_sys::*;
 
+use std::cell::UnsafeCell;
 use std::ffi::CString;
 use std::fmt;
 use std::mem;
@@ -38,8 +39,9 @@ impl File {
     }
 }
 
+// TODO unsound: needs lifetime on handle
 pub struct FileList {
-    pub(crate) inner: alpm_filelist_t,
+    inner: UnsafeCell<alpm_filelist_t>,
 }
 
 impl fmt::Debug for FileList {
@@ -49,22 +51,28 @@ impl fmt::Debug for FileList {
 }
 
 impl FileList {
+    pub(crate) unsafe fn new(files: alpm_filelist_t) -> FileList {
+        FileList {
+            inner: UnsafeCell::new(files),
+        }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut alpm_filelist_t {
+        self.inner.get()
+    }
+
     pub fn files(&self) -> &[File] {
-        if self.inner.files.is_null() {
+        let files = unsafe { *self.as_ptr() };
+        if files.files.is_null() {
             unsafe { slice::from_raw_parts(mem::align_of::<File>() as *const File, 0) }
         } else {
-            unsafe { slice::from_raw_parts(self.inner.files as *const File, self.inner.count) }
+            unsafe { slice::from_raw_parts(files.files as *const File, files.count) }
         }
     }
 
     pub fn contains<S: Into<Vec<u8>>>(&self, path: S) -> Result<Option<File>> {
         let path = CString::new(path).unwrap();
-        let file = unsafe {
-            alpm_filelist_contains(
-                &self.inner as *const alpm_filelist_t as *mut alpm_filelist_t,
-                path.as_ptr(),
-            )
-        };
+        let file = unsafe { alpm_filelist_contains(self.as_ptr(), path.as_ptr()) };
 
         if file.is_null() {
             Ok(None)
