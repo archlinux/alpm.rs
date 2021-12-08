@@ -1078,8 +1078,10 @@ pub enum CommitResult<'a> {
     Ok,
 }
 
+// TODO: unsound: need lifetime on handle
+#[derive(Copy, Clone)]
 pub struct Backup {
-    pub(crate) inner: *mut alpm_backup_t,
+    inner: NonNull<alpm_backup_t>,
 }
 
 impl fmt::Debug for Backup {
@@ -1092,12 +1094,20 @@ impl fmt::Debug for Backup {
 }
 
 impl Backup {
+    pub(crate) unsafe fn from_ptr(ptr: *mut alpm_backup_t) -> Backup {
+        Backup { inner: NonNull::new_unchecked(ptr) }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut alpm_backup_t {
+        self.inner.as_ptr()
+    }
+
     pub fn hash(&self) -> &str {
-        unsafe { from_cstr((*self.inner).hash) }
+        unsafe { from_cstr((*self.as_ptr()).hash) }
     }
 
     pub fn name(&self) -> &str {
-        unsafe { from_cstr((*self.inner).name) }
+        unsafe { from_cstr((*self.as_ptr()).name) }
     }
 }
 

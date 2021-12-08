@@ -25,7 +25,7 @@ impl<'a> AsPkg for LoadedPackage<'a> {
     }
 }
 
-// TODO unsound
+// TODO unsound: autofix if we can change pkg to unsized type ala str
 impl<'a> std::ops::Deref for LoadedPackage<'a> {
     type Target = Pkg<'a>;
 
