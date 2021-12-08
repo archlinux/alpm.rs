@@ -25,6 +25,7 @@ impl<'a> AsPkg for LoadedPackage<'a> {
     }
 }
 
+// TODO unsound
 impl<'a> std::ops::Deref for LoadedPackage<'a> {
     type Target = Pkg<'a>;
 
@@ -34,7 +35,7 @@ impl<'a> std::ops::Deref for LoadedPackage<'a> {
 }
 
 impl<'a> LoadedPackage<'a> {
-    pub fn pkg(&'a self) -> Pkg<'a> {
+    pub fn pkg(&'a self) -> Pkg {
         self.pkg
     }
 }
