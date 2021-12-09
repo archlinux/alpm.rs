@@ -265,7 +265,7 @@ where
 
 impl<'a> AlpmList<'a, String> {
     pub fn as_str<'b>(&'b self) -> AlpmList<'a, &'b str> {
-        AlpmList::from_parts(self.handle, self.list)
+        unsafe { AlpmList::from_parts(self.handle, self.list) }
     }
 }
 
@@ -277,7 +277,7 @@ where
     pub fn to_list_mut(&self) -> AlpmListMut<'a, T> {
         let list = unsafe { alpm_list_copy(self.list) };
         AlpmListMut {
-            list: AlpmList::from_parts(self.handle, list),
+            list: unsafe { AlpmList::from_parts(self.handle, list) },
         }
     }
 }
@@ -365,7 +365,7 @@ where
         self.list.list = unsafe { alpm_list_remove_item(self.list.list, item) };
         unsafe { (*item).next = ptr::null_mut() };
         unsafe { (*item).prev = ptr::null_mut() };
-        AlpmListMut::from_parts(self.handle, item)
+        unsafe { AlpmListMut::from_parts(self.handle, item) }
     }
 
     pub fn as_list(&self) -> AlpmList<'a, T> {
@@ -504,7 +504,7 @@ where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
     fn drop(&mut self) {
-        AlpmListMut::<T>::from_parts(self.list.handle, self.current);
+        unsafe { AlpmListMut::<T>::from_parts(self.list.handle, self.current) };
     }
 }
 
@@ -605,7 +605,7 @@ where
 }
 
 impl<'a, T> AlpmList<'a, T> {
-    pub(crate) fn from_parts(handle: &'a Alpm, list: *mut alpm_list_t) -> AlpmList<'a, T> {
+    pub(crate) unsafe fn from_parts(handle: &'a Alpm, list: *mut alpm_list_t) -> AlpmList<'a, T> {
         AlpmList {
             handle,
             list,
@@ -620,11 +620,14 @@ where
 {
     pub fn new(handle: &'a Alpm) -> AlpmListMut<'a, T> {
         AlpmListMut {
-            list: AlpmList::from_parts(handle, ptr::null_mut()),
+            list: unsafe { AlpmList::from_parts(handle, ptr::null_mut()) },
         }
     }
 
-    pub(crate) fn from_parts(handle: &'a Alpm, list: *mut alpm_list_t) -> AlpmListMut<'a, T> {
+    pub(crate) unsafe fn from_parts(
+        handle: &'a Alpm,
+        list: *mut alpm_list_t,
+    ) -> AlpmListMut<'a, T> {
         AlpmListMut {
             list: AlpmList::from_parts(handle, list),
         }

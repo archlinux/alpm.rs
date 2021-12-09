@@ -109,7 +109,7 @@ impl<'h> Db<'h> {
 
     pub fn servers(&self) -> AlpmList<'h, &'h str> {
         let list = unsafe { alpm_db_get_servers(self.as_ptr()) };
-        AlpmList::from_parts(self.handle, list)
+        unsafe { AlpmList::from_parts(self.handle, list) }
     }
 
     pub fn pkg<S: Into<Vec<u8>>>(&self, name: S) -> Result<Package<'h>> {
@@ -122,7 +122,7 @@ impl<'h> Db<'h> {
     #[doc(alias = "pkgcache")]
     pub fn pkgs(&self) -> AlpmList<'h, Package<'h>> {
         let pkgs = unsafe { alpm_db_get_pkgcache(self.as_ptr()) };
-        AlpmList::from_parts(self.handle, pkgs)
+        unsafe { AlpmList::from_parts(self.handle, pkgs) }
     }
 
     pub fn group<S: Into<Vec<u8>>>(&self, name: S) -> Result<Group<'h>> {
@@ -145,14 +145,14 @@ impl<'h> Db<'h> {
         let list = unsafe { list.into_raw_alpm_list() };
         let ok = unsafe { alpm_db_search(self.as_ptr(), list.list(), &mut ret) };
         self.handle.check_ret(ok)?;
-        Ok(AlpmListMut::from_parts(self.handle, ret))
+        unsafe { Ok(AlpmListMut::from_parts(self.handle, ret)) }
     }
 
     #[doc(alias = "groupcache")]
     pub fn groups(&self) -> Result<AlpmListMut<'h, Group<'h>>> {
         let groups = unsafe { alpm_db_get_groupcache(self.as_ptr()) };
         self.handle.check_null(groups)?;
-        Ok(AlpmListMut::from_parts(self.handle, groups))
+        unsafe { Ok(AlpmListMut::from_parts(self.handle, groups)) }
     }
 
     pub fn siglevel(&self) -> SigLevel {

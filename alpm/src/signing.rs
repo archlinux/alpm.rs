@@ -238,6 +238,6 @@ impl Alpm {
         };
 
         self.check_ret(ret)?;
-        Ok(AlpmListMut::from_parts(self, keys))
+        unsafe { Ok(AlpmListMut::from_parts(self, keys)) }
     }
 }

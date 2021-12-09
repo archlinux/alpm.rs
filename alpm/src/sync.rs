@@ -30,7 +30,7 @@ impl Alpm {
     ) -> AlpmListMut<'a, Package<'a>> {
         let name = CString::new(s).unwrap();
         let ret = unsafe { alpm_find_group_pkgs(dbs.list, name.as_ptr()) };
-        AlpmListMut::from_parts(self, ret)
+        unsafe { AlpmListMut::from_parts(self, ret) }
     }
 }
 

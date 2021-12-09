@@ -363,7 +363,7 @@ impl Alpm {
                 reverse_deps,
             )
         };
-        AlpmListMut::from_parts(self, ret)
+        unsafe { AlpmListMut::from_parts(self, ret) }
     }
 }
 

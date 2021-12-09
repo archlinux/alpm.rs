@@ -917,7 +917,7 @@ impl<'a> RemovePkgsQuestion<'a> {
 
     pub fn packages(&'a self) -> AlpmList<'a, Package> {
         let list = unsafe { (*self.inner).packages };
-        AlpmList::from_parts(&self.handle, list)
+        unsafe { AlpmList::from_parts(&self.handle, list) }
     }
 }
 
@@ -934,7 +934,7 @@ impl<'a> SelectProviderQuestion<'a> {
 
     pub fn providers(&self) -> AlpmList<Package> {
         let list = unsafe { (*self.inner).providers };
-        AlpmList::from_parts(&self.handle, list)
+        unsafe { AlpmList::from_parts(&self.handle, list) }
     }
 
     pub fn depend(&self) -> Dep {
@@ -1006,7 +1006,7 @@ impl<'a> Group<'a> {
 
     pub fn packages(&self) -> AlpmList<'a, Package<'a>> {
         let pkgs = unsafe { (*self.as_ptr()).packages };
-        AlpmList::from_parts(self.handle, pkgs)
+        unsafe { AlpmList::from_parts(self.handle, pkgs) }
     }
 }
 
