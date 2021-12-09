@@ -163,7 +163,7 @@ impl<'a> FileConflict<'a> {
         unsafe { from_cstr((*self.as_ptr()).file) }
     }
 
-    // TODO: check s can be null
+    // TODO: target is "" when empty. should be null instead.
     pub fn conflicting_target(&self) -> Option<&'a str> {
         let s = unsafe { from_cstr((*self.as_ptr()).target) };
 
