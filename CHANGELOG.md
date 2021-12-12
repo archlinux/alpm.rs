@@ -1,5 +1,11 @@
 # Changelog
 
+## alpm v2.2.1 (2021-12-12)
+
+### Fixed
+
+- Revery breaking change that broke existing user code
+
 ## alpm v2.2.0 (2021-12-09)
 
 ### Fixed
