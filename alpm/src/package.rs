@@ -37,7 +37,7 @@ pub struct Package<'h> {
 
 #[derive(Copy, Clone)]
 pub struct Pkg<'h> {
-    pub(crate) handle: &'h Alpm,
+    handle: &'h Alpm,
     pkg: NonNull<alpm_pkg_t>,
 }
 
@@ -84,6 +84,10 @@ impl<'h> Pkg<'h> {
 
     pub(crate) fn as_ptr(self) -> *mut alpm_pkg_t {
         self.pkg.as_ptr()
+    }
+
+    pub(crate) fn handle(&self) -> &Alpm {
+        self.handle
     }
 
     pub fn name(&self) -> &'h str {

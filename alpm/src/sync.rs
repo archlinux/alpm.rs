@@ -12,7 +12,7 @@ impl<'a> Package<'a> {
         if ret.is_null() {
             None
         } else {
-            unsafe { Some(Package::new(self.handle, ret)) }
+            unsafe { Some(Package::new(self.handle(), ret)) }
         }
     }
 
