@@ -421,7 +421,7 @@ mod tests {
         let missing = handle.check_deps(
             pkgs.iter(),
             vec![rem].iter(),
-            &AlpmListMut::new(&handle),
+            &AlpmListMut::new(),
             true,
         );
         assert_eq!(missing.len(), 9);

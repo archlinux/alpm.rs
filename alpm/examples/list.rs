@@ -47,7 +47,7 @@ fn main() {
     // However creating lists is usually not necessary as any function that accepts a list will
     // also accept an iterator intead. Though that function will just build the iterator into an
     // alpm_list anyway. So if you already have a list it's more effiecient to use that.
-    let mut list = AlpmListMut::new(&handle);
+    let mut list = AlpmListMut::new();
 
     // and push things
     // but only certain supported types
