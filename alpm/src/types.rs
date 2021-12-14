@@ -975,7 +975,7 @@ impl<'a> ImportKeyQuestion<'a> {
 }
 
 pub struct Group<'a> {
-    pub(crate) handle: &'a Alpm,
+    handle: &'a Alpm,
     inner: NonNull<alpm_group_t>,
 }
 

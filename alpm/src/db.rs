@@ -14,7 +14,7 @@ use alpm_sys::*;
 #[doc(alias("repo", "repository"))]
 pub struct Db<'h> {
     db: NonNull<alpm_db_t>,
-    pub(crate) handle: &'h Alpm,
+    handle: &'h Alpm,
 }
 
 impl<'h> fmt::Debug for Db<'h> {
@@ -96,6 +96,10 @@ impl<'h> Db<'h> {
             handle,
             db: NonNull::new_unchecked(db),
         }
+    }
+
+    pub(crate) fn handle(&self) -> &Alpm {
+        self.handle
     }
 
     pub fn as_ptr(self) -> *mut alpm_db_t {
