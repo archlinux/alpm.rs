@@ -302,7 +302,7 @@ mod tests {
         assert_eq!(res.len(), 1);
         assert_eq!(res[0].name(), "mkinitcpio-nfs-utils");
 
-        let mut list: AlpmListMut<String> = AlpmListMut::new(&handle);
+        let mut list: AlpmListMut<String> = AlpmListMut::new();
         list.push("pacman".to_string());
 
         let pkgs = db.search(&list).unwrap();
