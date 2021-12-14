@@ -1,12 +1,13 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, AlpmListMut, Group, IntoRawAlpmList, Package, Result, SigLevel, Usage,
+    Alpm, AlpmList, AlpmListMut, Group, IntoRawAlpmList, Package, Result, SigLevel, Usage, Error
 };
 
 use std::ffi::CString;
 use std::fmt;
 use std::ops::Deref;
 use std::ptr::NonNull;
+use std::os::raw::c_int;
 
 use alpm_sys::*;
 
@@ -100,6 +101,26 @@ impl<'h> Db<'h> {
 
     pub(crate) fn handle(&self) -> &Alpm {
         self.handle
+    }
+
+    pub(crate) fn last_error(&self) -> Error {
+        unsafe { Error::new(alpm_errno(alpm_db_get_handle(self.as_ptr()))) }
+    }
+
+    pub(crate) fn check_ret(&self, int: c_int) -> Result<()> {
+        if int != 0 {
+            Err(self.last_error())
+        } else {
+            Ok(())
+        }
+    }
+
+    pub(crate) fn check_null<T>(&self, ptr: *const T) -> Result<()> {
+        if ptr.is_null() {
+            Err(self.last_error())
+        } else {
+            Ok(())
+        }
     }
 
     pub fn as_ptr(self) -> *mut alpm_db_t {
