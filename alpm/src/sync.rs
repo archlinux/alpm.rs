@@ -12,8 +12,7 @@ impl<'a> Package<'a> {
         if ret.is_null() {
             None
         } else {
-            todo!()
-            //unsafe { Some(Package::new(self.handle(), ret)) }
+            unsafe { Some(Package::from_ptr(ret)) }
         }
     }
 
@@ -31,7 +30,7 @@ impl Alpm {
     ) -> AlpmListMut<'a, Package<'a>> {
         let name = CString::new(s).unwrap();
         let ret = unsafe { alpm_find_group_pkgs(dbs.list, name.as_ptr()) };
-        unsafe { AlpmListMut::from_parts(self, ret) }
+        unsafe { AlpmListMut::from_ptr(ret) }
     }
 }
 

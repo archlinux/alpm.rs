@@ -13,7 +13,7 @@ impl Alpm {
         let list = unsafe { urls.into_raw_alpm_list() };
         let ret = unsafe { alpm_fetch_pkgurl(self.as_ptr(), list.list(), &mut out) };
         self.check_ret(ret)?;
-        let fetched = unsafe { AlpmListMut::from_parts(self, out) };
+        let fetched = unsafe { AlpmListMut::from_ptr(out) };
         Ok(fetched)
     }
 }

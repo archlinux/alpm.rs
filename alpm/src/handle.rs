@@ -27,12 +27,12 @@ impl Alpm {
 
     pub fn hookdirs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_hookdirs(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn cachedirs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_cachedirs(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn lockfile(&self) -> &str {
@@ -49,37 +49,37 @@ impl Alpm {
 
     pub fn noupgrades(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_noupgrades(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn noextracts(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_noextracts(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn ignorepkgs(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_ignorepkgs(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn ignoregroups(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_ignoregroups(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn overwrite_files(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_overwrite_files(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn assume_installed(&self) -> AlpmList<'_, Depend> {
         let list = unsafe { alpm_option_get_assumeinstalled(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn architectures(&self) -> AlpmList<'_, &str> {
         let list = unsafe { alpm_option_get_architectures(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn check_space(&self) -> bool {
@@ -343,17 +343,17 @@ impl Alpm {
 
     pub fn localdb(&self) -> Db {
         let db = unsafe { alpm_get_localdb(self.as_ptr()) };
-        unsafe { Db::new(self, db) }
+        unsafe { Db::from_ptr(db) }
     }
 
     pub fn syncdbs(&self) -> AlpmList<Db> {
         let dbs = unsafe { alpm_get_syncdbs(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, dbs) }
+        unsafe { AlpmList::from_ptr(dbs) }
     }
 
     pub fn syncdbs_mut(&mut self) -> AlpmList<DbMut> {
         let dbs = unsafe { alpm_get_syncdbs(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, dbs) }
+        unsafe { AlpmList::from_ptr(dbs) }
     }
 
     pub fn set_check_space(&self, b: bool) {

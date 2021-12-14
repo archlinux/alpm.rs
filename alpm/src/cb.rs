@@ -532,7 +532,7 @@ extern "C" fn eventcb<C: EventCbTrait>(ctx: *mut c_void, event: *mut alpm_event_
     let _ = panic::catch_unwind(|| {
         let cb = unsafe { &*(ctx as *const C) };
 
-        let event = unsafe { AnyEvent::new(cb.handle(), event) };
+        let event = unsafe { AnyEvent::new(event) };
         cb.call(event);
     });
 }
@@ -540,7 +540,7 @@ extern "C" fn eventcb<C: EventCbTrait>(ctx: *mut c_void, event: *mut alpm_event_
 extern "C" fn questioncb<C: QuestionCbTrait>(ctx: *mut c_void, question: *mut alpm_question_t) {
     let _ = panic::catch_unwind(|| {
         let cb = unsafe { &*(ctx as *const C) };
-        let question = unsafe { AnyQuestion::new(cb.handle(), question) };
+        let question = unsafe { AnyQuestion::new(question) };
         cb.call(question);
     });
 }

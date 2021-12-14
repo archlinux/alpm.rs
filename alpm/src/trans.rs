@@ -44,13 +44,13 @@ impl Alpm {
         if let Err(err) = err {
             let ret = match err {
                 Error::PkgInvalidArch => unsafe {
-                    PrepareResult::PkgInvalidArch(AlpmListMut::from_parts(self, list))
+                    PrepareResult::PkgInvalidArch(AlpmListMut::from_ptr(list))
                 },
                 Error::UnsatisfiedDeps => unsafe {
-                    PrepareResult::UnsatisfiedDeps(AlpmListMut::from_parts(self, list))
+                    PrepareResult::UnsatisfiedDeps(AlpmListMut::from_ptr(list))
                 },
                 Error::ConflictingDeps => unsafe {
-                    PrepareResult::ConflictingDeps(AlpmListMut::from_parts(self, list))
+                    PrepareResult::ConflictingDeps(AlpmListMut::from_ptr(list))
                 },
                 _ => PrepareResult::Ok,
             };
@@ -69,10 +69,10 @@ impl Alpm {
         if let Err(err) = err {
             let ret = match err {
                 Error::FileConflicts => unsafe {
-                    CommitResult::FileConflict(AlpmListMut::from_parts(self, list))
+                    CommitResult::FileConflict(AlpmListMut::from_ptr(list))
                 },
                 Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => unsafe {
-                    CommitResult::PkgInvalid(AlpmListMut::from_parts(self, list))
+                    CommitResult::PkgInvalid(AlpmListMut::from_ptr(list))
                 },
                 _ => CommitResult::Ok,
             };
@@ -90,12 +90,12 @@ impl Alpm {
 
     pub fn trans_add(&self) -> AlpmList<Package> {
         let list = unsafe { alpm_trans_get_add(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn trans_remove(&self) -> AlpmList<Package> {
         let list = unsafe { alpm_trans_get_remove(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn trans_release(&mut self) -> Result<()> {
