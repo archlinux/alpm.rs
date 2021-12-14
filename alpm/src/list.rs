@@ -20,9 +20,9 @@ extern "C" {
 pub unsafe trait IntoAlpmListItem<'a, 'b> {
     type Borrow: fmt::Debug;
     #[doc(hidden)]
-    unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self;
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self;
     #[doc(hidden)]
-    unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow;
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow;
 }
 
 pub unsafe trait AsAlpmListItemPtr<'a> {
@@ -179,9 +179,8 @@ where
 }
 
 pub struct AlpmList<'a, T> {
-    pub(crate) handle: &'a Alpm,
+    pub(crate) _marker: PhantomData<(&'a Alpm, T)>,
     pub(crate) list: *mut alpm_list_t,
-    pub(crate) _marker: PhantomData<T>,
 }
 
 impl<'a, T> fmt::Debug for AlpmList<'a, T>
@@ -197,7 +196,6 @@ where
 impl<'a, T> Clone for AlpmList<'a, T> {
     fn clone(&self) -> Self {
         AlpmList {
-            handle: self.handle,
             list: self.list,
             _marker: self._marker,
         }
@@ -242,7 +240,7 @@ where
         let mut curr = list;
 
         while !curr.is_null() {
-            let item = unsafe { T::ptr_into_alpm_list_item(self.handle, (*curr).data) };
+            let item = unsafe { T::ptr_into_alpm_list_item((*curr).data) };
             drop(item);
             curr = unsafe { (*curr).next };
         }
@@ -267,7 +265,7 @@ where
         if self.is_empty() {
             None
         } else {
-            unsafe { Some(T::ptr_as_alpm_list_item(self.handle, (*self.list).data)) }
+            unsafe { Some(T::ptr_as_alpm_list_item((*self.list).data)) }
         }
     }
 
@@ -276,7 +274,7 @@ where
         if item.is_null() {
             None
         } else {
-            unsafe { Some(T::ptr_as_alpm_list_item(self.handle, (*item).data)) }
+            unsafe { Some(T::ptr_as_alpm_list_item((*item).data)) }
         }
     }
 
@@ -287,7 +285,7 @@ where
 
 impl<'a> AlpmList<'a, String> {
     pub fn as_str<'b>(&'b self) -> AlpmList<'a, &'b str> {
-        unsafe { AlpmList::from_parts(self.handle, self.list) }
+        unsafe { AlpmList::from_ptr(self.list) }
     }
 }
 
@@ -299,7 +297,7 @@ where
     pub fn to_list_mut(&self) -> AlpmListMut<'a, T> {
         let list = unsafe { alpm_list_copy(self.list) };
         AlpmListMut {
-            list: unsafe { AlpmList::from_parts(self.handle, list) },
+            list: unsafe { AlpmList::from_ptr(list) },
         }
     }
 }
@@ -346,7 +344,7 @@ where
         let mut curr = list;
 
         while !curr.is_null() {
-            let item = unsafe { T::ptr_into_alpm_list_item(self.handle, (*curr).data) };
+            let item = unsafe { T::ptr_into_alpm_list_item((*curr).data) };
             let next = unsafe { (*curr).next };
             if !f(&item) {
                 drop(item);
@@ -368,26 +366,21 @@ where
 
         let item = unsafe { alpm_list_nth(self.list.list, n) };
         unsafe { self.list.list = alpm_list_remove_item(self.list.list, item) };
-        let ret = unsafe {
-            Some(T::ptr_into_alpm_list_item(
-                self.handle,
-                (*self.list.list).data,
-            ))
-        };
+        let ret = unsafe { Some(T::ptr_into_alpm_list_item((*self.list.list).data)) };
         unsafe { free(item as _) };
         ret
     }
 
     pub fn remove_list(&mut self, n: usize) -> AlpmListMut<'a, T> {
         if n >= self.len() {
-            return AlpmListMut::new(self.handle);
+            return AlpmListMut::new();
         }
 
         let item = unsafe { alpm_list_nth(self.list.list, n) };
         self.list.list = unsafe { alpm_list_remove_item(self.list.list, item) };
         unsafe { (*item).next = ptr::null_mut() };
         unsafe { (*item).prev = ptr::null_mut() };
-        unsafe { AlpmListMut::from_parts(self.handle, item) }
+        unsafe { AlpmListMut::from_ptr(item) }
     }
 
     pub fn as_list(&self) -> AlpmList<'a, T> {
@@ -526,7 +519,7 @@ where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
     fn drop(&mut self) {
-        unsafe { AlpmListMut::<T>::from_parts(self.list.handle, self.current) };
+        unsafe { AlpmListMut::<T>::from_ptr(self.current) };
     }
 }
 
@@ -543,7 +536,7 @@ where
         let data = self.next_data();
 
         match data {
-            Some(data) => unsafe { Some(T::ptr_into_alpm_list_item(self.list.handle, data)) },
+            Some(data) => unsafe { Some(T::ptr_into_alpm_list_item(data)) },
             None => None,
         }
     }
@@ -563,7 +556,7 @@ where
         let data = self.next_data();
 
         match data {
-            Some(data) => unsafe { Some(T::ptr_as_alpm_list_item(self.list.handle, data)) },
+            Some(data) => unsafe { Some(T::ptr_as_alpm_list_item(data)) },
             None => None,
         }
     }
@@ -583,7 +576,7 @@ where
         let data = self.next_data();
 
         match data {
-            Some(data) => unsafe { Some(T::ptr_as_alpm_list_item(self.list.handle, data)) },
+            Some(data) => unsafe { Some(T::ptr_as_alpm_list_item(data)) },
             None => None,
         }
     }
@@ -627,9 +620,8 @@ where
 }
 
 impl<'a, T> AlpmList<'a, T> {
-    pub(crate) unsafe fn from_parts(handle: &'a Alpm, list: *mut alpm_list_t) -> AlpmList<'a, T> {
+    pub(crate) unsafe fn from_ptr(list: *mut alpm_list_t) -> AlpmList<'a, T> {
         AlpmList {
-            handle,
             list,
             _marker: PhantomData,
         }
@@ -640,18 +632,15 @@ impl<'a, T> AlpmListMut<'a, T>
 where
     for<'b> T: IntoAlpmListItem<'a, 'b>,
 {
-    pub fn new(handle: &'a Alpm) -> AlpmListMut<'a, T> {
+    pub fn new() -> AlpmListMut<'a, T> {
         AlpmListMut {
-            list: unsafe { AlpmList::from_parts(handle, ptr::null_mut()) },
+            list: unsafe { AlpmList::from_ptr(ptr::null_mut()) },
         }
     }
 
-    pub(crate) unsafe fn from_parts(
-        handle: &'a Alpm,
-        list: *mut alpm_list_t,
-    ) -> AlpmListMut<'a, T> {
+    pub(crate) unsafe fn from_ptr(list: *mut alpm_list_t) -> AlpmListMut<'a, T> {
         AlpmListMut {
-            list: AlpmList::from_parts(handle, list),
+            list: AlpmList::from_ptr(list),
         }
     }
 }
@@ -738,132 +727,132 @@ unsafe impl<'a> Push<'a> for Dep<'a> {}
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Package<'a> {
     type Borrow = Self;
-    unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
-        Package::new(handle, ptr as *mut alpm_pkg_t)
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
+        Package::from_ptr(ptr as *mut alpm_pkg_t)
     }
-    unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        Package::new(handle, ptr as *mut alpm_pkg_t)
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
+        Package::from_ptr(ptr as *mut alpm_pkg_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Group<'a> {
     type Borrow = Self;
-    unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
-        Group::new(handle, ptr as *mut alpm_group_t)
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
+        Group::from_ptr(ptr as *mut alpm_group_t)
     }
-    unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        Group::new(handle, ptr as *mut alpm_group_t)
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
+        Group::from_ptr(ptr as *mut alpm_group_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Depend {
     type Borrow = Dep<'b>;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         Depend::from_ptr(ptr as *mut alpm_depend_t)
     }
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         Dep::from_ptr(ptr as *mut alpm_depend_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Dep<'a> {
     type Borrow = Self;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         Dep::from_ptr(ptr as *mut alpm_depend_t)
     }
 
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         Dep::from_ptr(ptr as *mut alpm_depend_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Backup {
     type Borrow = Self;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         Backup::from_ptr(ptr as *mut alpm_backup_t)
     }
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         Backup::from_ptr(ptr as *mut alpm_backup_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for OwnedFileConflict {
     type Borrow = FileConflict<'b>;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         OwnedFileConflict {
             inner: FileConflict::from_ptr(ptr as *mut alpm_fileconflict_t),
         }
     }
 
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         FileConflict::from_ptr(ptr as *mut alpm_fileconflict_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for DependMissing {
     type Borrow = DepMissing<'b>;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         DependMissing {
             inner: DepMissing::from_ptr(ptr as *mut alpm_depmissing_t),
         }
     }
 
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         DepMissing::from_ptr(ptr as *mut alpm_depmissing_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for OwnedConflict {
     type Borrow = Conflict<'b>;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         OwnedConflict::from_ptr(ptr as *mut alpm_conflict_t)
     }
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         Conflict::from_ptr(ptr as *mut alpm_conflict_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Conflict<'a> {
     type Borrow = Self;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         Conflict::from_ptr(ptr as *mut alpm_conflict_t)
     }
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         Conflict::from_ptr(ptr as *mut alpm_conflict_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for Db<'a> {
     type Borrow = Self;
-    unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
-        Db::new(handle, ptr as *mut alpm_db_t)
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
+        Db::from_ptr(ptr as *mut alpm_db_t)
     }
-    unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
-        Db::new(handle, ptr as *mut alpm_db_t)
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
+        Db::from_ptr(ptr as *mut alpm_db_t)
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for DbMut<'a> {
     type Borrow = Self;
-    unsafe fn ptr_into_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         DbMut {
-            inner: Db::new(handle, ptr as *mut alpm_db_t),
+            inner: Db::from_ptr(ptr as *mut alpm_db_t),
         }
     }
-    unsafe fn ptr_as_alpm_list_item(handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         DbMut {
-            inner: Db::new(handle, ptr as *mut alpm_db_t),
+            inner: Db::from_ptr(ptr as *mut alpm_db_t),
         }
     }
 }
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for &'a str {
     type Borrow = Self;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         let s = CStr::from_ptr(ptr as *mut c_char);
         s.to_str().unwrap()
     }
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         let s = CStr::from_ptr(ptr as *mut c_char);
         s.to_str().unwrap()
     }
@@ -871,13 +860,13 @@ unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for &'a str {
 
 unsafe impl<'a, 'b> IntoAlpmListItem<'a, 'b> for String {
     type Borrow = &'b str;
-    unsafe fn ptr_into_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self {
+    unsafe fn ptr_into_alpm_list_item(ptr: *mut c_void) -> Self {
         let s = CStr::from_ptr(ptr as *mut c_char);
         let s = s.to_str().unwrap().to_string();
         free(ptr);
         s
     }
-    unsafe fn ptr_as_alpm_list_item(_handle: &'a Alpm, ptr: *mut c_void) -> Self::Borrow {
+    unsafe fn ptr_as_alpm_list_item(ptr: *mut c_void) -> Self::Borrow {
         let s = CStr::from_ptr(ptr as *mut c_char);
         s.to_str().unwrap()
     }

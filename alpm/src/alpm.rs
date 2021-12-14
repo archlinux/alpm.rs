@@ -77,13 +77,6 @@ impl Alpm {
         }
     }
 
-    pub(crate) unsafe fn from_ptr(handle: *mut alpm_handle_t) -> Alpm {
-        Alpm {
-            handle: NonNull::new_unchecked(handle),
-            cbs: Callbacks::default(),
-        }
-    }
-
     pub(crate) fn as_ptr(&self) -> *mut alpm_handle_t {
         self.handle.as_ptr()
     }

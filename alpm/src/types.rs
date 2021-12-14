@@ -3,7 +3,7 @@ use crate::utils::*;
 #[cfg(not(feature = "git"))]
 use crate::PgpKey;
 use crate::{
-    Alpm, AlpmList, AlpmListMut, Conflict, Db, Dep, DependMissing, Error, OwnedConflict,
+    AlpmList, AlpmListMut, Conflict, Db, Dep, DependMissing, Error, OwnedConflict,
     OwnedFileConflict, Package, Pkg,
 };
 
@@ -11,7 +11,7 @@ use std::ffi::c_void;
 use std::fmt;
 use std::io::{self, Read};
 use std::marker::PhantomData;
-use std::mem::{transmute, ManuallyDrop};
+use std::mem::transmute;
 use std::os::raw::c_uchar;
 use std::ptr::NonNull;
 use std::slice;
@@ -168,7 +168,6 @@ pub enum PackageOperation<'a> {
 }
 
 pub struct PackageOperationEvent<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *const alpm_event_package_operation_t,
     marker: PhantomData<&'a ()>,
 }
@@ -182,7 +181,6 @@ impl<'a> fmt::Debug for PackageOperationEvent<'a> {
 }
 
 pub struct OptDepRemovalEvent<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *const alpm_event_optdep_removal_t,
     marker: PhantomData<&'a ()>,
 }
@@ -236,7 +234,6 @@ impl<'a> fmt::Debug for PkgDownloadEvent<'a> {
 }
 
 pub struct PacnewCreatedEvent<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *const alpm_event_pacnew_created_t,
     marker: PhantomData<&'a ()>,
 }
@@ -253,7 +250,6 @@ impl<'a> fmt::Debug for PacnewCreatedEvent<'a> {
 }
 
 pub struct PacsaveCreatedEvent<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *const alpm_event_pacsave_created_t,
     marker: PhantomData<&'a ()>,
 }
@@ -319,7 +315,6 @@ impl<'a> fmt::Debug for PkgRetrieveStartEvent<'a> {
 
 pub struct AnyEvent<'a> {
     inner: *const alpm_event_t,
-    handle: *mut alpm_handle_t,
     marker: PhantomData<&'a ()>,
 }
 
@@ -374,12 +369,8 @@ pub enum Event<'a> {
 }
 
 impl<'a> AnyEvent<'a> {
-    pub(crate) unsafe fn new(
-        handle: *mut alpm_handle_t,
-        inner: *const alpm_event_t,
-    ) -> AnyEvent<'a> {
+    pub(crate) unsafe fn new(inner: *const alpm_event_t) -> AnyEvent<'a> {
         AnyEvent {
-            handle,
             inner,
             marker: PhantomData,
         }
@@ -388,8 +379,6 @@ impl<'a> AnyEvent<'a> {
     pub fn event(&self) -> Event<'a> {
         let event = self.inner;
         let event_type = self.event_type();
-        let handle = unsafe { Alpm::from_ptr(self.handle) };
-        let handle = ManuallyDrop::new(handle);
 
         match &event_type {
             EventType::CheckDepsStart => Event::CheckDepsStart,
@@ -403,13 +392,11 @@ impl<'a> AnyEvent<'a> {
             EventType::TransactionStart => Event::TransactionStart,
             EventType::TransactionDone => Event::TransactionDone,
             EventType::PackageOperationStart => Event::PackageOperation(PackageOperationEvent {
-                handle,
                 inner: unsafe { &(*event).package_operation },
 
                 marker: PhantomData,
             }),
             EventType::PackageOperationDone => Event::PackageOperation(PackageOperationEvent {
-                handle,
                 inner: unsafe { &(*event).package_operation },
                 marker: PhantomData,
             }),
@@ -427,7 +414,6 @@ impl<'a> AnyEvent<'a> {
             EventType::DiskSpaceStart => Event::DiskSpaceStart,
             EventType::DiskSpaceDone => Event::DiskSpaceDone,
             EventType::OptDepRemoval => Event::OptDepRemoval(OptDepRemovalEvent {
-                handle,
                 inner: unsafe { &(*event).optdep_removal },
                 marker: PhantomData,
             }),
@@ -440,12 +426,10 @@ impl<'a> AnyEvent<'a> {
             EventType::KeyDownloadStart => Event::KeyDownloadStart,
             EventType::KeyDownloadDone => Event::KeyringDone,
             EventType::PacnewCreated => Event::PacnewCreated(PacnewCreatedEvent {
-                handle,
                 inner: unsafe { &(*event).pacnew_created },
                 marker: PhantomData,
             }),
             EventType::PacsaveCreated => Event::PacsaveCreated(PacsaveCreatedEvent {
-                handle,
                 inner: unsafe { &(*event).pacsave_created },
                 marker: PhantomData,
             }),
@@ -469,8 +453,8 @@ impl<'a> AnyEvent<'a> {
 
 impl<'a> PackageOperationEvent<'a> {
     pub fn operation(&self) -> PackageOperation {
-        let oldpkg = unsafe { Package::new(&self.handle, (*self.inner).oldpkg) };
-        let newpkg = unsafe { Package::new(&self.handle, (*self.inner).newpkg) };
+        let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
+        let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
 
         let op = unsafe { (*self.inner).operation };
         match op {
@@ -491,7 +475,7 @@ impl<'a> PackageOperationEvent<'a> {
 
 impl<'a> OptDepRemovalEvent<'a> {
     pub fn pkg(&self) -> Package {
-        unsafe { Package::new(&self.handle, (*self.inner).pkg) }
+        unsafe { Package::from_ptr((*self.inner).pkg) }
     }
 
     pub fn optdep(&self) -> Dep {
@@ -526,14 +510,14 @@ impl<'a> PacnewCreatedEvent<'a> {
     pub fn oldpkg(&self) -> Option<Package> {
         unsafe {
             (*self.inner).oldpkg.as_ref()?;
-            Some(Package::new(&self.handle, (*self.inner).oldpkg))
+            Some(Package::from_ptr((*self.inner).oldpkg))
         }
     }
 
     pub fn newpkg(&self) -> Option<Package> {
         unsafe {
             (*self.inner).newpkg.as_ref()?;
-            Some(Package::new(&self.handle, (*self.inner).newpkg))
+            Some(Package::from_ptr((*self.inner).newpkg))
         }
     }
 
@@ -546,7 +530,7 @@ impl<'a> PacsaveCreatedEvent<'a> {
     pub fn oldpkg(&self) -> Option<Package> {
         unsafe {
             (*self.inner).oldpkg.as_ref()?;
-            Some(Package::new(&self.handle, (*self.inner).oldpkg))
+            Some(Package::from_ptr((*self.inner).oldpkg))
         }
     }
 
@@ -591,7 +575,6 @@ impl<'a> PkgRetrieveStartEvent<'a> {
 }
 
 pub struct InstallIgnorepkgQuestion<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_install_ignorepkg_t,
     marker: PhantomData<&'a ()>,
 }
@@ -606,7 +589,6 @@ impl<'a> fmt::Debug for InstallIgnorepkgQuestion<'a> {
 }
 
 pub struct ReplaceQuestion<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_replace_t,
     marker: PhantomData<&'a ()>,
 }
@@ -652,7 +634,6 @@ impl<'a> fmt::Debug for CorruptedQuestion<'a> {
 }
 
 pub struct RemovePkgsQuestion<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_remove_pkgs_t,
     marker: PhantomData<&'a ()>,
 }
@@ -667,7 +648,6 @@ impl<'a> fmt::Debug for RemovePkgsQuestion<'a> {
 }
 
 pub struct SelectProviderQuestion<'a> {
-    handle: ManuallyDrop<Alpm>,
     inner: *mut alpm_question_select_provider_t,
     marker: PhantomData<&'a ()>,
 }
@@ -707,7 +687,6 @@ impl<'a> fmt::Debug for ImportKeyQuestion<'a> {
 }
 
 pub struct AnyQuestion<'a> {
-    handle: *mut alpm_handle_t,
     inner: *mut alpm_question_t,
     marker: PhantomData<&'a ()>,
 }
@@ -744,32 +723,24 @@ pub enum QuestionType {
 }
 
 impl<'a> AnyQuestion<'a> {
-    pub(crate) unsafe fn new(
-        handle: *mut alpm_handle_t,
-        question: *mut alpm_question_t,
-    ) -> AnyQuestion<'a> {
+    pub(crate) unsafe fn new(question: *mut alpm_question_t) -> AnyQuestion<'a> {
         AnyQuestion {
             inner: question,
-            handle,
             marker: PhantomData,
         }
     }
 
     pub fn question(&self) -> Question<'a> {
         let question_type = self.question_type();
-        let handle = unsafe { Alpm::from_ptr(self.handle) };
-        let handle = ManuallyDrop::new(handle);
 
         match &question_type {
             QuestionType::InstallIgnorepkg => {
                 Question::InstallIgnorepkg(InstallIgnorepkgQuestion {
-                    handle,
                     inner: unsafe { &mut (*self.inner).install_ignorepkg },
                     marker: PhantomData,
                 })
             }
             QuestionType::ReplacePkg => Question::Replace(ReplaceQuestion {
-                handle,
                 inner: unsafe { &mut (*self.inner).replace },
                 marker: PhantomData,
             }),
@@ -782,13 +753,11 @@ impl<'a> AnyQuestion<'a> {
                 marker: PhantomData,
             }),
             QuestionType::RemovePkgs => Question::RemovePkgs(RemovePkgsQuestion {
-                handle,
                 inner: unsafe { &mut (*self.inner).remove_pkgs },
                 marker: PhantomData,
             }),
 
             QuestionType::SelectProvider => Question::SelectProvider(SelectProviderQuestion {
-                handle,
                 inner: unsafe { &mut (*self.inner).select_provider },
                 marker: PhantomData,
             }),
@@ -824,7 +793,7 @@ impl<'a> InstallIgnorepkgQuestion<'a> {
     }
 
     pub fn pkg(&self) -> Package {
-        unsafe { Package::new(&self.handle, (*self.inner).pkg) }
+        unsafe { Package::from_ptr((*self.inner).pkg) }
     }
 }
 
@@ -844,15 +813,15 @@ impl<'a> ReplaceQuestion<'a> {
     }
 
     pub fn newpkg(&self) -> Package {
-        unsafe { Package::new(&self.handle, (*self.inner).newpkg) }
+        unsafe { Package::from_ptr((*self.inner).newpkg) }
     }
 
     pub fn oldpkg(&self) -> Package {
-        unsafe { Package::new(&self.handle, (*self.inner).oldpkg) }
+        unsafe { Package::from_ptr((*self.inner).oldpkg) }
     }
 
     pub fn newdb(&self) -> Db {
-        unsafe { Db::new(&self.handle, (*self.inner).newdb) }
+        unsafe { Db::from_ptr((*self.inner).newdb) }
     }
 }
 
@@ -917,7 +886,7 @@ impl<'a> RemovePkgsQuestion<'a> {
 
     pub fn packages(&'a self) -> AlpmList<'a, Package> {
         let list = unsafe { (*self.inner).packages };
-        unsafe { AlpmList::from_parts(&self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 }
 
@@ -934,7 +903,7 @@ impl<'a> SelectProviderQuestion<'a> {
 
     pub fn providers(&self) -> AlpmList<Package> {
         let list = unsafe { (*self.inner).providers };
-        unsafe { AlpmList::from_parts(&self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn depend(&self) -> Dep {
@@ -975,7 +944,7 @@ impl<'a> ImportKeyQuestion<'a> {
 }
 
 pub struct Group<'a> {
-    handle: &'a Alpm,
+    _marker: PhantomData<&'a Package<'a>>,
     inner: NonNull<alpm_group_t>,
 }
 
@@ -989,9 +958,9 @@ impl<'a> fmt::Debug for Group<'a> {
 }
 
 impl<'a> Group<'a> {
-    pub(crate) unsafe fn new<'b>(handle: &'b Alpm, ptr: *mut alpm_group_t) -> Group<'b> {
+    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_group_t) -> Group<'b> {
         Group {
-            handle,
+            _marker: PhantomData,
             inner: NonNull::new_unchecked(ptr),
         }
     }
@@ -1006,7 +975,7 @@ impl<'a> Group<'a> {
 
     pub fn packages(&self) -> AlpmList<'a, Package<'a>> {
         let pkgs = unsafe { (*self.as_ptr()).packages };
-        unsafe { AlpmList::from_parts(self.handle, pkgs) }
+        unsafe { AlpmList::from_ptr(pkgs) }
     }
 }
 

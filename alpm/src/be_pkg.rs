@@ -61,7 +61,7 @@ impl Alpm {
         };
         self.check_ret(ret)?;
         Ok(LoadedPackage {
-            pkg: unsafe { Pkg::new(self, pkg) },
+            pkg: unsafe { Pkg::from_ptr(pkg) },
         })
     }
 }

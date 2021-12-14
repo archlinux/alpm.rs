@@ -1,17 +1,18 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, AlpmListMut, Backup, ChangeLog, Db, Dep, FileList, PackageFrom, PackageReason,
-    PackageValidation, Result, Signature, Ver, Error,
+    Alpm, AlpmList, AlpmListMut, Backup, ChangeLog, Db, Dep, Error, FileList, PackageFrom,
+    PackageReason, PackageValidation, Result, Signature, Ver,
 };
 
 #[cfg(feature = "mtree")]
 use crate::MTree;
 
+use std::marker::PhantomData;
 use std::mem::transmute;
 use std::ops::Deref;
+use std::os::raw::c_int;
 use std::ptr::NonNull;
 use std::{fmt, ptr};
-use std::os::raw::c_int;
 
 use alpm_sys::*;
 
@@ -38,7 +39,7 @@ pub struct Package<'h> {
 
 #[derive(Copy, Clone)]
 pub struct Pkg<'h> {
-    handle: &'h Alpm,
+    _marker: PhantomData<&'h Alpm>,
     pkg: NonNull<alpm_pkg_t>,
 }
 
@@ -68,19 +69,23 @@ impl<'h> Deref for Package<'h> {
 }
 
 impl<'h> Package<'h> {
-    pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Package {
+    pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> Package<'a> {
         Package {
-            pkg: Pkg::new(handle, pkg),
+            pkg: Pkg::from_ptr(pkg),
         }
     }
 }
 
 impl<'h> Pkg<'h> {
-    pub(crate) unsafe fn new(handle: &Alpm, pkg: *mut alpm_pkg_t) -> Pkg {
+    pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> Pkg<'a> {
         Pkg {
-            handle,
+            _marker: PhantomData,
             pkg: NonNull::new_unchecked(pkg),
         }
+    }
+
+    pub(crate) fn handle_ptr(self) -> *mut alpm_handle_t {
+        unsafe { alpm_pkg_get_handle(self.as_ptr()) }
     }
 
     pub(crate) fn as_ptr(self) -> *mut alpm_pkg_t {
@@ -88,7 +93,7 @@ impl<'h> Pkg<'h> {
     }
 
     pub(crate) fn last_error(&self) -> Error {
-        unsafe { Error::new(alpm_errno(alpm_pkg_get_handle(self.as_ptr()))) }
+        unsafe { Error::new(alpm_errno(self.handle_ptr())) }
     }
 
     pub(crate) fn check_ret(&self, int: c_int) -> Result<()> {
@@ -113,12 +118,11 @@ impl<'h> Pkg<'h> {
     }
 
     pub fn check_md5sum(&self) -> Result<()> {
-        self.handle
-            .check_ret(unsafe { alpm_pkg_checkmd5sum(self.as_ptr()) })
+        self.check_ret(unsafe { alpm_pkg_checkmd5sum(self.as_ptr()) })
     }
 
     pub fn should_ignore(&self) -> bool {
-        let ret = unsafe { alpm_pkg_should_ignore(self.handle.as_ptr(), self.as_ptr()) };
+        let ret = unsafe { alpm_pkg_should_ignore(self.handle_ptr(), self.as_ptr()) };
         ret != 0
     }
 
@@ -208,47 +212,47 @@ impl<'h> Pkg<'h> {
 
     pub fn licenses(&self) -> AlpmList<'h, &'h str> {
         let list = unsafe { alpm_pkg_get_licenses(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn groups(&self) -> AlpmList<'h, &'h str> {
         let list = unsafe { alpm_pkg_get_groups(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn depends(&self) -> AlpmList<'h, Dep<'h>> {
         let list = unsafe { alpm_pkg_get_depends(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn optdepends(&self) -> AlpmList<'h, Dep<'h>> {
         let list = unsafe { alpm_pkg_get_optdepends(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn checkdepends(&self) -> AlpmList<'h, Dep<'h>> {
         let list = unsafe { alpm_pkg_get_checkdepends(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn makedepends(&self) -> AlpmList<'h, Dep<'h>> {
         let list = unsafe { alpm_pkg_get_makedepends(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn conflicts(&self) -> AlpmList<'h, Dep<'h>> {
         let list = unsafe { alpm_pkg_get_conflicts(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn provides(&self) -> AlpmList<'h, Dep<'h>> {
         let list = unsafe { alpm_pkg_get_provides(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn replaces(&self) -> AlpmList<'h, Dep<'h>> {
         let list = unsafe { alpm_pkg_get_replaces(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn files(&self) -> FileList {
@@ -258,13 +262,13 @@ impl<'h> Pkg<'h> {
 
     pub fn backup(&self) -> AlpmList<'h, Backup> {
         let list = unsafe { alpm_pkg_get_backup(self.as_ptr()) };
-        unsafe { AlpmList::from_parts(self.handle, list) }
+        unsafe { AlpmList::from_ptr(list) }
     }
 
     pub fn db(&self) -> Option<Db<'h>> {
         let db = unsafe { alpm_pkg_get_db(self.as_ptr()) };
         self.check_null(db).ok()?;
-        unsafe { Some(Db::new(self.handle, db)) }
+        unsafe { Some(Db::from_ptr(db)) }
     }
 
     pub fn changelog(&self) -> Result<ChangeLog> {
@@ -286,12 +290,12 @@ impl<'h> Pkg<'h> {
 
     pub fn required_by(&self) -> AlpmListMut<'h, String> {
         let list = unsafe { alpm_pkg_compute_requiredby(self.as_ptr()) };
-        unsafe { AlpmListMut::from_parts(self.handle, list) }
+        unsafe { AlpmListMut::from_ptr(list) }
     }
 
     pub fn optional_for(&self) -> AlpmListMut<'h, String> {
         let list = unsafe { alpm_pkg_compute_optionalfor(self.as_ptr()) };
-        unsafe { AlpmListMut::from_parts(self.handle, list) }
+        unsafe { AlpmListMut::from_ptr(list) }
     }
 
     pub fn base64_sig(&self) -> Option<&'h str> {

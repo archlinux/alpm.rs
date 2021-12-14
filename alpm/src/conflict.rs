@@ -188,7 +188,7 @@ impl Alpm {
     ) -> AlpmListMut<OwnedConflict> {
         let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_checkconflicts(self.as_ptr(), list.list()) };
-        unsafe { AlpmListMut::from_parts(self, ret) }
+        unsafe { AlpmListMut::from_ptr(ret) }
     }
 }
 
