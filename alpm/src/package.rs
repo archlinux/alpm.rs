@@ -87,10 +87,6 @@ impl<'h> Pkg<'h> {
         self.pkg.as_ptr()
     }
 
-    pub(crate) fn handle(&self) -> &Alpm {
-        self.handle
-    }
-
     pub(crate) fn last_error(&self) -> Error {
         unsafe { Error::new(alpm_errno(alpm_pkg_get_handle(self.as_ptr()))) }
     }
@@ -267,13 +263,13 @@ impl<'h> Pkg<'h> {
 
     pub fn db(&self) -> Option<Db<'h>> {
         let db = unsafe { alpm_pkg_get_db(self.as_ptr()) };
-        self.handle.check_null(db).ok()?;
+        self.check_null(db).ok()?;
         unsafe { Some(Db::new(self.handle, db)) }
     }
 
     pub fn changelog(&self) -> Result<ChangeLog> {
         let changelog = unsafe { alpm_pkg_changelog_open(self.as_ptr()) };
-        self.handle.check_null(changelog)?;
+        self.check_null(changelog)?;
         let changelog = unsafe { ChangeLog::new(*self, changelog) };
         Ok(changelog)
     }
@@ -281,7 +277,7 @@ impl<'h> Pkg<'h> {
     #[cfg(feature = "mtree")]
     pub fn mtree(&self) -> Result<MTree> {
         let archive = unsafe { alpm_pkg_mtree_open(self.as_ptr()) };
-        self.handle.check_null(archive)?;
+        self.check_null(archive)?;
 
         let archive = unsafe { MTree::new(*self, archive) };
 
@@ -311,7 +307,7 @@ impl<'h> Pkg<'h> {
         let mut sig = ptr::null_mut();
         let mut len = 0;
         let ret = unsafe { alpm_pkg_get_sig(self.as_ptr(), &mut sig, &mut len) };
-        self.handle.check_ret(ret)?;
+        self.check_ret(ret)?;
         let sig = unsafe { Signature::new(sig, len) };
         Ok(sig)
     }

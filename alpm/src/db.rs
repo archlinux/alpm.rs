@@ -75,19 +75,19 @@ impl<'h> DbMut<'h> {
     pub fn add_server<S: Into<Vec<u8>>>(&self, server: S) -> Result<()> {
         let server = CString::new(server).unwrap();
         let ret = unsafe { alpm_db_add_server(self.as_ptr(), server.as_ptr()) };
-        self.handle.check_ret(ret)
+        self.check_ret(ret)
     }
 
     pub fn set_servers<'a, L: IntoRawAlpmList<'a, String>>(&self, list: L) -> Result<()> {
         let list = unsafe { list.into_raw_alpm_list() };
         let ret = unsafe { alpm_db_set_servers(self.as_ptr(), list.list()) };
-        self.handle.check_ret(ret)
+        self.check_ret(ret)
     }
 
     pub fn remove_server<S: Into<Vec<u8>>>(&self, server: S) -> Result<()> {
         let server = CString::new(server).unwrap();
         let ret = unsafe { alpm_db_remove_server(self.as_ptr(), server.as_ptr()) };
-        self.handle.check_ret(ret)
+        self.check_ret(ret)
     }
 }
 
@@ -97,10 +97,6 @@ impl<'h> Db<'h> {
             handle,
             db: NonNull::new_unchecked(db),
         }
-    }
-
-    pub(crate) fn handle(&self) -> &Alpm {
-        self.handle
     }
 
     pub(crate) fn last_error(&self) -> Error {
@@ -140,7 +136,7 @@ impl<'h> Db<'h> {
     pub fn pkg<S: Into<Vec<u8>>>(&self, name: S) -> Result<Package<'h>> {
         let name = CString::new(name).unwrap();
         let pkg = unsafe { alpm_db_get_pkg(self.as_ptr(), name.as_ptr()) };
-        self.handle.check_null(pkg)?;
+        self.check_null(pkg)?;
         unsafe { Ok(Package::new(self.handle, pkg)) }
     }
 
@@ -153,13 +149,13 @@ impl<'h> Db<'h> {
     pub fn group<S: Into<Vec<u8>>>(&self, name: S) -> Result<Group<'h>> {
         let name = CString::new(name).unwrap();
         let group = unsafe { alpm_db_get_group(self.as_ptr(), name.as_ptr()) };
-        self.handle.check_null(group)?;
+        self.check_null(group)?;
         unsafe { Ok(Group::new(self.handle, group)) }
     }
 
     pub fn set_usage(&self, usage: Usage) -> Result<()> {
         let ret = unsafe { alpm_db_set_usage(self.as_ptr(), usage.bits() as i32) };
-        self.handle.check_ret(ret)
+        self.check_ret(ret)
     }
 
     pub fn search<L>(&self, list: L) -> Result<AlpmListMut<'h, Package<'h>>>
@@ -169,14 +165,14 @@ impl<'h> Db<'h> {
         let mut ret = std::ptr::null_mut();
         let list = unsafe { list.into_raw_alpm_list() };
         let ok = unsafe { alpm_db_search(self.as_ptr(), list.list(), &mut ret) };
-        self.handle.check_ret(ok)?;
+        self.check_ret(ok)?;
         unsafe { Ok(AlpmListMut::from_parts(self.handle, ret)) }
     }
 
     #[doc(alias = "groupcache")]
     pub fn groups(&self) -> Result<AlpmListMut<'h, Group<'h>>> {
         let groups = unsafe { alpm_db_get_groupcache(self.as_ptr()) };
-        self.handle.check_null(groups)?;
+        self.check_null(groups)?;
         unsafe { Ok(AlpmListMut::from_parts(self.handle, groups)) }
     }
 
@@ -187,14 +183,14 @@ impl<'h> Db<'h> {
 
     pub fn is_valid(&self) -> Result<()> {
         let ret = unsafe { alpm_db_get_valid(self.as_ptr()) };
-        self.handle.check_ret(ret)
+        self.check_ret(ret)
     }
 
     pub fn usage(&self) -> Result<Usage> {
         let mut usage = 0;
 
         let ret = unsafe { alpm_db_get_usage(self.as_ptr(), &mut usage) };
-        self.handle.check_ret(ret)?;
+        self.check_ret(ret)?;
 
         let usage = Usage::from_bits(usage as u32).unwrap();
         Ok(usage)
