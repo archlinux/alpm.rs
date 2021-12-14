@@ -197,7 +197,7 @@ impl<'a> Package<'a> {
         let valid = match ret {
             0 => true,
             1 => false,
-            _ => return Err(self.handle().last_error()),
+            _ => return Err(self.last_error()),
         };
 
         Ok((valid, siglist))
@@ -211,7 +211,7 @@ impl<'a> Db<'a> {
         let valid = match ret {
             0 => true,
             1 => false,
-            _ => return Err(self.handle().last_error()),
+            _ => return Err(self.last_error()),
         };
 
         Ok((valid, siglist))
