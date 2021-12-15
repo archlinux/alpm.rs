@@ -418,12 +418,7 @@ mod tests {
         let pkgs = pkgs1.iter().collect::<Vec<_>>();
         drop(pkgs1);
         let rem = handle.localdb().pkg("ncurses").unwrap();
-        let missing = handle.check_deps(
-            pkgs.iter(),
-            vec![rem].iter(),
-            &AlpmListMut::new(),
-            true,
-        );
+        let missing = handle.check_deps(pkgs.iter(), vec![rem].iter(), &AlpmListMut::new(), true);
         assert_eq!(missing.len(), 9);
     }
 

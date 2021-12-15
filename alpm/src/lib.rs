@@ -18,6 +18,7 @@ mod error;
 mod filelist;
 mod handle;
 mod list;
+pub mod list2;
 mod log;
 #[cfg(feature = "mtree")]
 mod mtree;
