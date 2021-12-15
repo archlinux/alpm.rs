@@ -18,6 +18,8 @@ mod error;
 mod filelist;
 mod handle;
 mod list;
+mod list_mut;
+mod list_with;
 mod log;
 #[cfg(feature = "mtree")]
 mod mtree;
@@ -27,9 +29,9 @@ mod signing;
 mod sync;
 mod trans;
 mod types;
+mod unions;
 mod util;
 mod utils;
-
 mod version;
 
 pub use crate::add::*;
@@ -46,6 +48,8 @@ pub use crate::error::*;
 pub use crate::filelist::*;
 pub use crate::handle::*;
 pub use crate::list::*;
+pub use crate::list_mut::*;
+pub use crate::list_with::*;
 #[cfg(feature = "mtree")]
 pub use crate::mtree::*;
 pub use crate::package::*;
@@ -54,5 +58,6 @@ pub use crate::signing::*;
 pub use crate::sync::*;
 pub use crate::trans::*;
 pub use crate::types::*;
+pub use crate::unions::*;
 pub use crate::util::*;
 pub use crate::version::*;

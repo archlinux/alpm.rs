@@ -88,12 +88,12 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn trans_add(&self) -> AlpmList<Package> {
+    pub fn trans_add(&self) -> AlpmList<&Package> {
         let list = unsafe { alpm_trans_get_add(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn trans_remove(&self) -> AlpmList<Package> {
+    pub fn trans_remove(&self) -> AlpmList<&Package> {
         let list = unsafe { alpm_trans_get_remove(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }

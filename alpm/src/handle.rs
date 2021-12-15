@@ -1,7 +1,5 @@
 use crate::utils::*;
-use crate::{
-    Alpm, AlpmList, AsDep, Db, DbMut, Dep, Depend, IntoRawAlpmList, Match, Result, SigLevel,
-};
+use crate::{Alpm, AlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel, WithAlpmList};
 
 use alpm_sys::*;
 use std::cmp::Ordering;
@@ -39,8 +37,8 @@ impl Alpm {
         unsafe { from_cstr(alpm_option_get_lockfile(self.as_ptr())) }
     }
 
-    pub fn gpgdir(&self) -> &str {
-        unsafe { from_cstr_optional2(alpm_option_get_gpgdir(self.as_ptr())) }
+    pub fn gpgdir(&self) -> Option<&str> {
+        unsafe { from_cstr_optional(alpm_option_get_gpgdir(self.as_ptr())) }
     }
 
     pub fn use_syslog(&self) -> bool {
@@ -96,10 +94,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_hookdirs<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_hookdirs(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_hookdirs<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_hookdirs(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_hookdir<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
@@ -118,10 +117,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_cachedirs<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_cachedirs(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_cachedirs<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_cachedirs(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_cachedir<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
@@ -161,10 +161,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_noupgrades<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_noupgrades(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_noupgrades<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_noupgrades(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_noupgrade<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
@@ -194,10 +195,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_noextracts<'a, T: IntoRawAlpmList<'a, String>>(&'a mut self, list: T) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_noextracts(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_noextracts<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_noextracts(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_noextract<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
@@ -227,10 +229,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignorepkgs<'a, T: IntoRawAlpmList<'a, String>>(&mut self, list: T) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_ignorepkgs(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_ignorepkgs<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_ignorepkgs(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_ignorepkg<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
@@ -249,13 +252,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignoregroups<'a, T: IntoRawAlpmList<'a, String>>(
-        &'a mut self,
-        list: T,
-    ) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_ignoregroups(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_ignoregroups<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_ignoregroups(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_ignoregroup<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
@@ -274,13 +275,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_overwrite_files<'a, T: IntoRawAlpmList<'a, String>>(
-        &'a mut self,
-        list: T,
-    ) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_overwrite_files(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_overwrite_files<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_overwrite_files(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_overwrite_file<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
@@ -298,17 +297,15 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_assume_installed<'a, T: IntoRawAlpmList<'a, Dep<'a>>>(
-        &'a mut self,
-        list: T,
-    ) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_assumeinstalled(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_assume_installed<'a, T: WithAlpmList<&'a Dep>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_assumeinstalled(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
-    pub fn remove_assume_installed<D: AsDep>(&mut self, s: D) -> Result<bool> {
-        let ret = unsafe { alpm_option_remove_assumeinstalled(self.as_ptr(), s.as_dep().as_ptr()) };
+    pub fn remove_assume_installed(&mut self, s: &Dep) -> Result<bool> {
+        let ret = unsafe { alpm_option_remove_assumeinstalled(self.as_ptr(), s.as_ptr()) };
         if ret == 1 {
             Ok(true)
         } else {
@@ -322,13 +319,11 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_architectures<'a, T: IntoRawAlpmList<'a, String>>(
-        &'a mut self,
-        list: T,
-    ) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_option_set_architectures(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_architectures<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_option_set_architectures(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_architecture<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<bool> {
@@ -341,12 +336,12 @@ impl Alpm {
         }
     }
 
-    pub fn localdb(&self) -> Db {
+    pub fn localdb(&self) -> &Db {
         let db = unsafe { alpm_get_localdb(self.as_ptr()) };
         unsafe { Db::from_ptr(db) }
     }
 
-    pub fn syncdbs(&self) -> AlpmList<Db> {
+    pub fn syncdbs(&self) -> AlpmList<&Db> {
         let dbs = unsafe { alpm_get_syncdbs(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(dbs) }
     }
@@ -422,7 +417,7 @@ mod tests {
         assert!(!handle.use_syslog());
         assert!(handle.assume_installed().is_empty());
         assert!(!handle.dbext().is_empty());
-        assert!(handle.gpgdir().is_empty());
+        assert!(handle.gpgdir().is_none());
         assert!(handle.logfile().is_none());
     }
 

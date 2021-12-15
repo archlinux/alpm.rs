@@ -1,38 +1,38 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmListMut, AsAlpmListItemPtr, AsPkg, Dep, IntoRawAlpmList};
+use crate::{Alpm, AlpmListMut, Dep, Pkg, WithAlpmList};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
 
+use std::cell::UnsafeCell;
 use std::fmt;
-use std::marker::PhantomData;
 use std::mem::transmute;
 use std::ptr::NonNull;
 
 pub struct OwnedConflict {
-    conflict: Conflict<'static>,
+    inner: NonNull<alpm_conflict_t>,
 }
 
 impl OwnedConflict {
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_conflict_t) -> OwnedConflict {
         OwnedConflict {
-            conflict: Conflict::from_ptr(ptr),
+            inner: NonNull::new_unchecked(ptr),
         }
     }
 }
 
 impl fmt::Debug for OwnedConflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&self.conflict, f)
+        Conflict::fmt(self, f)
     }
 }
 
-pub struct Conflict<'a> {
-    inner: NonNull<alpm_conflict_t>,
-    _marker: PhantomData<&'a ()>,
+#[repr(transparent)]
+pub struct Conflict {
+    inner: UnsafeCell<alpm_conflict_t>,
 }
 
-impl<'a> fmt::Debug for Conflict<'a> {
+impl fmt::Debug for Conflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Conflict")
             .field("package1", &self.package1())
@@ -45,29 +45,26 @@ impl<'a> fmt::Debug for Conflict<'a> {
 }
 
 impl std::ops::Deref for OwnedConflict {
-    type Target = Conflict<'static>;
+    type Target = Conflict;
 
     fn deref(&self) -> &Self::Target {
-        &self.conflict
+        unsafe { Conflict::from_ptr(self.inner.as_ptr()) }
     }
 }
 
 impl Drop for OwnedConflict {
     fn drop(&mut self) {
-        unsafe { alpm_conflict_free(self.conflict.as_ptr()) }
+        unsafe { alpm_conflict_free(self.inner.as_ptr()) }
     }
 }
 
-impl<'a> Conflict<'a> {
-    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_conflict_t) -> Conflict<'b> {
-        Conflict {
-            inner: NonNull::new_unchecked(ptr),
-            _marker: PhantomData,
-        }
+impl Conflict {
+    pub(crate) unsafe fn from_ptr<'a>(ptr: *mut alpm_conflict_t) -> &'a Conflict {
+        &*(ptr as *mut Conflict)
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_conflict_t {
-        self.inner.as_ptr()
+        self.inner.get()
     }
 
     pub fn package1_hash(&self) -> u64 {
@@ -84,15 +81,15 @@ impl<'a> Conflict<'a> {
         }
     }
 
-    pub fn package1(&self) -> &'a str {
+    pub fn package1(&self) -> &str {
         unsafe { from_cstr((*self.as_ptr()).package1) }
     }
 
-    pub fn package2(&self) -> &'a str {
+    pub fn package2(&self) -> &str {
         unsafe { from_cstr((*self.as_ptr()).package2) }
     }
 
-    pub fn reason(&self) -> Dep<'a> {
+    pub fn reason(&self) -> &Dep {
         unsafe { Dep::from_ptr((*self.as_ptr()).reason) }
     }
 }
@@ -104,12 +101,12 @@ pub enum FileConflictType {
     Filesystem = ALPM_FILECONFLICT_FILESYSTEM as u32,
 }
 
-pub struct FileConflict<'a> {
-    inner: NonNull<alpm_fileconflict_t>,
-    _marker: PhantomData<&'a ()>,
+#[repr(transparent)]
+pub struct FileConflict {
+    inner: UnsafeCell<alpm_fileconflict_t>,
 }
 
-impl<'a> fmt::Debug for FileConflict<'a> {
+impl fmt::Debug for FileConflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FileConflict")
             .field("target", &self.target())
@@ -121,15 +118,23 @@ impl<'a> fmt::Debug for FileConflict<'a> {
 }
 
 impl std::ops::Deref for OwnedFileConflict {
-    type Target = FileConflict<'static>;
+    type Target = FileConflict;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        unsafe { FileConflict::from_ptr(self.inner.as_ptr()) }
     }
 }
 
 pub struct OwnedFileConflict {
-    pub(crate) inner: FileConflict<'static>,
+    pub(crate) inner: NonNull<alpm_fileconflict_t>,
+}
+
+impl OwnedFileConflict {
+    pub(crate) unsafe fn from_ptr(ptr: *mut alpm_fileconflict_t) -> OwnedFileConflict {
+        OwnedFileConflict {
+            inner: NonNull::new_unchecked(ptr),
+        }
+    }
 }
 
 impl fmt::Debug for OwnedFileConflict {
@@ -138,19 +143,16 @@ impl fmt::Debug for OwnedFileConflict {
     }
 }
 
-impl<'a> FileConflict<'a> {
-    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_fileconflict_t) -> FileConflict<'b> {
-        FileConflict {
-            inner: NonNull::new_unchecked(ptr),
-            _marker: PhantomData,
-        }
+impl FileConflict {
+    pub(crate) unsafe fn from_ptr<'a>(ptr: *mut alpm_fileconflict_t) -> &'a FileConflict {
+        &*(ptr as *mut FileConflict)
     }
 
-    pub(crate) unsafe fn as_ptr(&self) -> *mut alpm_fileconflict_t {
-        self.inner.as_ptr()
+    pub(crate) fn as_ptr(&self) -> *mut alpm_fileconflict_t {
+        self.inner.get()
     }
 
-    pub fn target(&self) -> &'a str {
+    pub fn target(&self) -> &str {
         unsafe { from_cstr((*self.as_ptr()).target) }
     }
 
@@ -159,12 +161,12 @@ impl<'a> FileConflict<'a> {
         unsafe { transmute::<alpm_fileconflicttype_t, FileConflictType>(t) }
     }
 
-    pub fn file(&self) -> &'a str {
+    pub fn file(&self) -> &str {
         unsafe { from_cstr((*self.as_ptr()).file) }
     }
 
     // TODO: target is "" when empty. should be null instead.
-    pub fn conflicting_target(&self) -> Option<&'a str> {
+    pub fn conflicting_target(&self) -> Option<&str> {
         let s = unsafe { from_cstr((*self.as_ptr()).target) };
 
         if s.is_empty() {
@@ -182,13 +184,14 @@ impl Drop for OwnedFileConflict {
 }
 
 impl Alpm {
-    pub fn check_conflicts<'a, P: 'a + AsPkg + AsAlpmListItemPtr<'a>, L: IntoRawAlpmList<'a, P>>(
+    pub fn check_conflicts<'a, L: WithAlpmList<&'a Pkg>>(
         &self,
         list: L,
     ) -> AlpmListMut<OwnedConflict> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_checkconflicts(self.as_ptr(), list.list()) };
-        unsafe { AlpmListMut::from_ptr(ret) }
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_checkconflicts(self.as_ptr(), list.as_ptr()) };
+            unsafe { AlpmListMut::from_ptr(ret) }
+        })
     }
 }
 

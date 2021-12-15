@@ -1,32 +1,30 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, AlpmListMut, Error, Group, IntoRawAlpmList, Package, Result, SigLevel, Usage,
+    Alpm, AlpmList, AlpmListMut, Error, Group, Package, Result, SigLevel, Usage, WithAlpmList,
 };
 
+use std::cell::UnsafeCell;
 use std::ffi::CString;
 use std::fmt;
-use std::marker::PhantomData;
 use std::ops::Deref;
 use std::os::raw::c_int;
-use std::ptr::NonNull;
 
 use alpm_sys::*;
 
-#[derive(Copy, Clone)]
 #[doc(alias("repo", "repository"))]
-pub struct Db<'h> {
-    _marker: PhantomData<&'h Alpm>,
-    db: NonNull<alpm_db_t>,
+#[repr(transparent)]
+pub struct Db {
+    db: UnsafeCell<alpm_db_t>,
 }
 
-impl<'h> fmt::Debug for Db<'h> {
+impl fmt::Debug for Db {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Db").field("name", &self.name()).finish()
     }
 }
 
 pub struct DbMut<'h> {
-    pub(crate) inner: Db<'h>,
+    pub(crate) inner: &'h Db,
 }
 
 impl<'h> fmt::Debug for DbMut<'h> {
@@ -36,15 +34,15 @@ impl<'h> fmt::Debug for DbMut<'h> {
 }
 
 impl<'h> Deref for DbMut<'h> {
-    type Target = Db<'h>;
+    type Target = Db;
 
-    fn deref(&self) -> &Db<'h> {
-        &self.inner
+    fn deref(&self) -> &Db {
+        self.inner
     }
 }
 
 impl Alpm {
-    pub fn register_syncdb<S: Into<Vec<u8>>>(&self, name: S, sig_level: SigLevel) -> Result<Db> {
+    pub fn register_syncdb<S: Into<Vec<u8>>>(&self, name: S, sig_level: SigLevel) -> Result<&Db> {
         let name = CString::new(name).unwrap();
 
         let db =
@@ -69,6 +67,12 @@ impl Alpm {
 }
 
 impl<'h> DbMut<'h> {
+    pub(crate) unsafe fn from_ptr<'a>(db: *mut alpm_db_t) -> DbMut<'a> {
+        DbMut {
+            inner: Db::from_ptr(db),
+        }
+    }
+
     pub fn unregister(self) {
         unsafe { alpm_db_unregister(self.as_ptr()) };
     }
@@ -79,10 +83,11 @@ impl<'h> DbMut<'h> {
         self.check_ret(ret)
     }
 
-    pub fn set_servers<'a, L: IntoRawAlpmList<'a, String>>(&self, list: L) -> Result<()> {
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ret = unsafe { alpm_db_set_servers(self.as_ptr(), list.list()) };
-        self.check_ret(ret)
+    pub fn set_servers<'a, L: WithAlpmList<&'a str>>(&self, list: L) -> Result<()> {
+        list.with_alpm_list(|list| {
+            let ret = unsafe { alpm_db_set_servers(self.as_ptr(), list.as_ptr()) };
+            self.check_ret(ret)
+        })
     }
 
     pub fn remove_server<S: Into<Vec<u8>>>(&self, server: S) -> Result<()> {
@@ -92,15 +97,12 @@ impl<'h> DbMut<'h> {
     }
 }
 
-impl<'h> Db<'h> {
-    pub(crate) unsafe fn from_ptr<'a>(db: *mut alpm_db_t) -> Db<'a> {
-        Db {
-            _marker: PhantomData,
-            db: NonNull::new_unchecked(db),
-        }
+impl Db {
+    pub(crate) unsafe fn from_ptr<'a>(db: *mut alpm_db_t) -> &'a Db {
+        &*(db as *mut Db)
     }
 
-    pub(crate) fn handle_ptr(self) -> *mut alpm_handle_t {
+    pub(crate) fn handle_ptr(&self) -> *mut alpm_handle_t {
         unsafe { alpm_db_get_handle(self.as_ptr()) }
     }
 
@@ -124,21 +126,21 @@ impl<'h> Db<'h> {
         }
     }
 
-    pub fn as_ptr(self) -> *mut alpm_db_t {
-        self.db.as_ptr()
+    pub fn as_ptr(&self) -> *mut alpm_db_t {
+        self.db.get()
     }
 
-    pub fn name(&self) -> &'h str {
+    pub fn name(&self) -> &str {
         let name = unsafe { alpm_db_get_name(self.as_ptr()) };
         unsafe { from_cstr(name) }
     }
 
-    pub fn servers(&self) -> AlpmList<'h, &'h str> {
+    pub fn servers(&self) -> AlpmList<&str> {
         let list = unsafe { alpm_db_get_servers(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn pkg<S: Into<Vec<u8>>>(&self, name: S) -> Result<Package<'h>> {
+    pub fn pkg<S: Into<Vec<u8>>>(&self, name: S) -> Result<&Package> {
         let name = CString::new(name).unwrap();
         let pkg = unsafe { alpm_db_get_pkg(self.as_ptr(), name.as_ptr()) };
         self.check_null(pkg)?;
@@ -146,12 +148,12 @@ impl<'h> Db<'h> {
     }
 
     #[doc(alias = "pkgcache")]
-    pub fn pkgs(&self) -> AlpmList<'h, Package<'h>> {
+    pub fn pkgs(&self) -> AlpmList<&Package> {
         let pkgs = unsafe { alpm_db_get_pkgcache(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(pkgs) }
     }
 
-    pub fn group<S: Into<Vec<u8>>>(&self, name: S) -> Result<Group<'h>> {
+    pub fn group<S: Into<Vec<u8>>>(&self, name: S) -> Result<&Group> {
         let name = CString::new(name).unwrap();
         let group = unsafe { alpm_db_get_group(self.as_ptr(), name.as_ptr()) };
         self.check_null(group)?;
@@ -163,19 +165,20 @@ impl<'h> Db<'h> {
         self.check_ret(ret)
     }
 
-    pub fn search<L>(&self, list: L) -> Result<AlpmListMut<'h, Package<'h>>>
+    pub fn search<'a, L>(&'a self, list: L) -> Result<AlpmListMut<&'a Package>>
     where
-        L: IntoRawAlpmList<'h, String>,
+        L: WithAlpmList<&'a str>,
     {
-        let mut ret = std::ptr::null_mut();
-        let list = unsafe { list.into_raw_alpm_list() };
-        let ok = unsafe { alpm_db_search(self.as_ptr(), list.list(), &mut ret) };
-        self.check_ret(ok)?;
-        unsafe { Ok(AlpmListMut::from_ptr(ret)) }
+        list.with_alpm_list(|list| {
+            let mut ret = std::ptr::null_mut();
+            let ok = unsafe { alpm_db_search(self.as_ptr(), list.as_ptr(), &mut ret) };
+            self.check_ret(ok)?;
+            unsafe { Ok(AlpmListMut::from_ptr(ret)) }
+        })
     }
 
     #[doc(alias = "groupcache")]
-    pub fn groups(&self) -> Result<AlpmListMut<'h, Group<'h>>> {
+    pub fn groups(&self) -> Result<AlpmListMut<&Group>> {
         let groups = unsafe { alpm_db_get_groupcache(self.as_ptr()) };
         self.check_null(groups)?;
         unsafe { Ok(AlpmListMut::from_ptr(groups)) }
@@ -237,7 +240,7 @@ mod tests {
             .iter()
             .map(|s| s.to_string())
             .collect::<Vec<_>>();
-        db.set_servers(servers2.iter()).unwrap();
+        db.set_servers(servers2.into_iter()).unwrap();
 
         assert_eq!(servers, db.servers().iter().collect::<Vec<_>>());
     }

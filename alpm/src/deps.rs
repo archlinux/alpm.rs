@@ -1,21 +1,21 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, AlpmListMut, Db, IntoRawAlpmList, Package, Ver};
+use crate::{free, Alpm, AlpmList, AlpmListMut, Db, Package, Pkg, Ver, WithAlpmList};
 
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
 
+use std::cell::UnsafeCell;
 use std::ffi::{c_void, CString};
 use std::fmt;
-use std::marker::PhantomData;
 use std::mem::transmute;
 use std::ptr::NonNull;
 
-pub struct Dep<'a> {
-    inner: NonNull<alpm_depend_t>,
-    _marker: PhantomData<&'a ()>,
+#[repr(transparent)]
+pub struct Dep {
+    inner: alpm_depend_t,
 }
 
-impl<'a> fmt::Debug for Dep<'a> {
+impl fmt::Debug for Dep {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Dep")
             .field("name", &self.name())
@@ -27,19 +27,25 @@ impl<'a> fmt::Debug for Dep<'a> {
     }
 }
 
-unsafe impl<'a> Send for Dep<'a> {}
-unsafe impl<'a> Sync for Dep<'a> {}
+unsafe impl Send for Dep {}
+unsafe impl Sync for Dep {}
 
-#[derive(PartialEq)]
 pub struct Depend {
-    dep: Dep<'static>,
+    dep: NonNull<alpm_depend_t>,
+}
+
+impl PartialEq for Depend {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_dep() == other.as_dep()
+    }
 }
 
 impl Clone for Depend {
     fn clone(&self) -> Self {
-        let ptr = unsafe { alpm_dep_compute_string(self.inner.as_ptr()) };
+        let ptr = unsafe { alpm_dep_compute_string(self.as_ptr()) };
         assert!(!ptr.is_null(), "failed to compute string for dep");
         let dep = unsafe { alpm_dep_from_string(ptr) };
+        unsafe { free(ptr as _) };
         assert!(!dep.is_null(), "failed to create dep from string");
         unsafe { Depend::from_ptr(dep) }
     }
@@ -47,43 +53,21 @@ impl Clone for Depend {
 
 impl fmt::Debug for Depend {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&self.as_dep(), f)
+        fmt::Debug::fmt(self.as_dep(), f)
     }
 }
 
 impl fmt::Display for Depend {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.dep.fmt(f)
+        self.as_dep().fmt(f)
     }
 }
 
 impl std::ops::Deref for Depend {
-    type Target = Dep<'static>;
+    type Target = Dep;
 
     fn deref(&self) -> &Self::Target {
-        &self.dep
-    }
-}
-
-pub trait AsDep {
-    fn as_dep(&self) -> Dep;
-}
-
-impl<'a> AsDep for Depend {
-    fn as_dep(&self) -> Dep {
-        self.dep()
-    }
-}
-
-impl<'a> AsDep for Dep<'a> {
-    fn as_dep(&self) -> Dep {
-        self.dep()
-    }
-}
-
-impl<'a> AsDep for &Dep<'a> {
-    fn as_dep(&self) -> Dep {
-        self.dep()
+        unsafe { &*(self.dep.as_ptr() as *mut alpm_depend_t as *const alpm_depend_t as *const Dep) }
     }
 }
 
@@ -93,7 +77,7 @@ impl Drop for Depend {
     }
 }
 
-impl<'a> PartialEq for Dep<'a> {
+impl PartialEq for Dep {
     fn eq(&self, other: &Self) -> bool {
         self.name() == other.name()
             && self.depmod() == other.depmod()
@@ -102,7 +86,7 @@ impl<'a> PartialEq for Dep<'a> {
     }
 }
 
-impl<'a> fmt::Display for Dep<'a> {
+impl fmt::Display for Dep {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         unsafe {
             let cs = alpm_dep_compute_string(self.as_ptr());
@@ -115,8 +99,8 @@ impl<'a> fmt::Display for Dep<'a> {
     }
 }
 
-impl<'a> From<Dep<'a>> for Vec<u8> {
-    fn from(dep: Dep<'a>) -> Vec<u8> {
+impl From<Dep> for Vec<u8> {
+    fn from(dep: Dep) -> Vec<u8> {
         unsafe {
             let cs = alpm_dep_compute_string(dep.as_ptr());
             assert!(!cs.is_null(), "failed to compute string for dep");
@@ -135,31 +119,32 @@ impl Depend {
         assert!(!dep.is_null(), "failed to create dep from string");
         unsafe {
             Depend {
-                dep: Dep::from_ptr(dep),
+                dep: NonNull::new_unchecked(dep),
             }
         }
     }
 
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depend_t) -> Depend {
         Depend {
-            dep: Dep::from_ptr(ptr),
+            dep: NonNull::new_unchecked(ptr),
         }
+    }
+
+    pub fn as_dep(&self) -> &Dep {
+        self
     }
 }
 
-impl<'a> Dep<'a> {
-    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_depend_t) -> Dep<'b> {
-        Dep {
-            inner: NonNull::new_unchecked(ptr),
-            _marker: PhantomData,
-        }
+impl Dep {
+    pub(crate) unsafe fn from_ptr<'a>(ptr: *const alpm_depend_t) -> &'a Dep {
+        &*(ptr as *const Dep)
     }
 
-    pub(crate) fn as_ptr(&self) -> *mut alpm_depend_t {
-        self.inner.as_ptr()
+    pub(crate) fn as_ptr(&self) -> *const alpm_depend_t {
+        &self.inner
     }
 
-    pub fn dep(&self) -> Dep {
+    pub fn dep(&self) -> &Dep {
         unsafe { Dep::from_ptr(self.as_ptr()) }
     }
 
@@ -167,19 +152,19 @@ impl<'a> Dep<'a> {
         Depend::new(self.to_string())
     }
 
-    pub fn name(&self) -> &'a str {
+    pub fn name(&self) -> &str {
         unsafe { from_cstr((*self.as_ptr()).name) }
     }
 
-    pub fn version(&self) -> Option<&'a Ver> {
+    pub fn version(&self) -> Option<&Ver> {
         unsafe { (*self.as_ptr()).version.as_ref().map(|p| Ver::from_ptr(p)) }
     }
 
-    unsafe fn version_unchecked(&self) -> &'a Ver {
+    unsafe fn version_unchecked(&self) -> &Ver {
         Ver::from_ptr((*self.as_ptr()).version)
     }
 
-    pub fn desc(&self) -> Option<&'a str> {
+    pub fn desc(&self) -> Option<&str> {
         unsafe { from_cstr_optional((*self.as_ptr()).desc) }
     }
 
@@ -245,15 +230,12 @@ pub enum DepMod {
     Lt = ALPM_DEP_MOD_LT as u32,
 }
 
-unsafe impl<'a> Send for DepMissing<'a> {}
-unsafe impl<'a> Sync for DepMissing<'a> {}
-
-pub struct DepMissing<'a> {
-    inner: NonNull<alpm_depmissing_t>,
-    _marker: PhantomData<&'a ()>,
+#[repr(transparent)]
+pub struct DepMissing {
+    inner: UnsafeCell<alpm_depmissing_t>,
 }
 
-impl<'a> fmt::Debug for DepMissing<'a> {
+impl fmt::Debug for DepMissing {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("DepMissing")
             .field("target", &self.target())
@@ -264,15 +246,15 @@ impl<'a> fmt::Debug for DepMissing<'a> {
 }
 
 impl std::ops::Deref for DependMissing {
-    type Target = DepMissing<'static>;
+    type Target = DepMissing;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        unsafe { DepMissing::from_ptr(self.inner.as_ptr()) }
     }
 }
 
 pub struct DependMissing {
-    pub(crate) inner: DepMissing<'static>,
+    inner: NonNull<alpm_depmissing_t>,
 }
 
 impl fmt::Debug for DependMissing {
@@ -287,16 +269,21 @@ impl Drop for DependMissing {
     }
 }
 
-impl<'a> DepMissing<'a> {
-    pub(crate) unsafe fn from_ptr<'b>(ptr: *mut alpm_depmissing_t) -> DepMissing<'b> {
-        DepMissing {
+impl DependMissing {
+    pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depmissing_t) -> DependMissing {
+        DependMissing {
             inner: NonNull::new_unchecked(ptr),
-            _marker: PhantomData,
         }
+    }
+}
+
+impl DepMissing {
+    pub(crate) unsafe fn from_ptr<'a>(ptr: *mut alpm_depmissing_t) -> &'a DepMissing {
+        &*(ptr as *mut DepMissing)
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_depmissing_t {
-        self.inner.as_ptr()
+        self.inner.get()
     }
 
     pub fn target(&self) -> &str {
@@ -304,7 +291,7 @@ impl<'a> DepMissing<'a> {
         unsafe { from_cstr(target) }
     }
 
-    pub fn depend(&self) -> Dep {
+    pub fn depend(&self) -> &Dep {
         let depend = unsafe { (*self.as_ptr()).depend };
 
         unsafe { Dep::from_ptr(depend) }
@@ -320,12 +307,12 @@ impl<'a> DepMissing<'a> {
     }
 }
 
-impl<'a> AlpmList<'a, Db<'a>> {
-    pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<Package<'a>> {
+impl<'a> AlpmList<'a, &'a Db> {
+    pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<&'a Package> {
         let dep = CString::new(dep).unwrap();
         let handle = self.first().map(|p| p.handle_ptr())?;
 
-        let pkg = unsafe { alpm_find_dbs_satisfier(handle, self.list, dep.as_ptr()) };
+        let pkg = unsafe { alpm_find_dbs_satisfier(handle, self.as_ptr(), dep.as_ptr()) };
         if pkg.is_null() {
             None
         } else {
@@ -334,11 +321,11 @@ impl<'a> AlpmList<'a, Db<'a>> {
     }
 }
 
-impl<'a> AlpmList<'a, Package<'a>> {
-    pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<Package<'a>> {
+impl<'a> AlpmList<'a, &'a Package> {
+    pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<&'a Package> {
         let dep = CString::new(dep).unwrap();
 
-        let pkg = unsafe { alpm_find_satisfier(self.list, dep.as_ptr()) };
+        let pkg = unsafe { alpm_find_satisfier(self.as_ptr(), dep.as_ptr()) };
         if pkg.is_null() {
             None
         } else {
@@ -350,27 +337,29 @@ impl<'a> AlpmList<'a, Package<'a>> {
 impl Alpm {
     pub fn check_deps<'a>(
         &self,
-        pkgs: impl IntoRawAlpmList<'a, Package<'a>>,
-        rem: impl IntoRawAlpmList<'a, Package<'a>>,
-        upgrade: impl IntoRawAlpmList<'a, Package<'a>>,
+        pkgs: impl WithAlpmList<&'a Pkg>,
+        rem: impl WithAlpmList<&'a Pkg>,
+        upgrade: impl WithAlpmList<&'a Pkg>,
         reverse_deps: bool,
     ) -> AlpmListMut<DependMissing> {
         let reverse_deps = if reverse_deps { 1 } else { 0 };
 
-        let pkgs = unsafe { pkgs.into_raw_alpm_list() };
-        let rem = unsafe { rem.into_raw_alpm_list() };
-        let upgrade = unsafe { upgrade.into_raw_alpm_list() };
-
-        let ret = unsafe {
-            alpm_checkdeps(
-                self.as_ptr(),
-                pkgs.list(),
-                rem.list(),
-                upgrade.list(),
-                reverse_deps,
-            )
-        };
-        unsafe { AlpmListMut::from_ptr(ret) }
+        pkgs.with_alpm_list(|pkgs| {
+            rem.with_alpm_list(|rem| {
+                upgrade.with_alpm_list(|upgrade| {
+                    let ret = unsafe {
+                        alpm_checkdeps(
+                            self.as_ptr(),
+                            pkgs.as_ptr(),
+                            rem.as_ptr(),
+                            upgrade.as_ptr(),
+                            reverse_deps,
+                        )
+                    };
+                    unsafe { AlpmListMut::from_ptr(ret) }
+                })
+            })
+        })
     }
 }
 
@@ -421,7 +410,7 @@ mod tests {
         let missing = handle.check_deps(
             pkgs.iter(),
             vec![rem].iter(),
-            &AlpmListMut::new(),
+            AlpmListMut::<&Pkg>::new(),
             true,
         );
         assert_eq!(missing.len(), 9);

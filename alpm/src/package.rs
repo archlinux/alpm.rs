@@ -1,49 +1,31 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, AlpmListMut, Backup, ChangeLog, Db, Dep, Error, FileList, PackageFrom,
-    PackageReason, PackageValidation, Result, Signature, Ver,
+    AlpmList, AlpmListMut, Backup, ChangeLog, Db, Dep, Error, FileList, PackageFrom, PackageReason,
+    PackageValidation, Result, Signature, Ver,
 };
 
 #[cfg(feature = "mtree")]
 use crate::MTree;
 
-use std::marker::PhantomData;
+use std::cell::UnsafeCell;
 use std::mem::transmute;
 use std::ops::Deref;
 use std::os::raw::c_int;
-use std::ptr::NonNull;
 use std::{fmt, ptr};
 
 use alpm_sys::*;
 
-pub trait AsPkg {
-    fn as_pkg(&self) -> Pkg;
+#[repr(transparent)]
+pub struct Package {
+    pkg: UnsafeCell<alpm_pkg_t>,
 }
 
-impl<'h> AsPkg for Package<'h> {
-    fn as_pkg(&self) -> Pkg {
-        self.pkg
-    }
+#[repr(transparent)]
+pub struct Pkg {
+    pkg: UnsafeCell<alpm_pkg_t>,
 }
 
-impl<'h> AsPkg for Pkg<'h> {
-    fn as_pkg(&self) -> Pkg {
-        *self
-    }
-}
-
-#[derive(Copy, Clone)]
-pub struct Package<'h> {
-    pub(crate) pkg: Pkg<'h>,
-}
-
-#[derive(Copy, Clone)]
-pub struct Pkg<'h> {
-    _marker: PhantomData<&'h Alpm>,
-    pkg: NonNull<alpm_pkg_t>,
-}
-
-impl<'h> fmt::Debug for Pkg<'h> {
+impl fmt::Debug for Pkg {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Pkg")
             .field("name", &self.name())
@@ -52,7 +34,7 @@ impl<'h> fmt::Debug for Pkg<'h> {
     }
 }
 
-impl<'h> fmt::Debug for Package<'h> {
+impl fmt::Debug for Package {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Package")
             .field("name", &self.name())
@@ -61,35 +43,30 @@ impl<'h> fmt::Debug for Package<'h> {
     }
 }
 
-impl<'h> Deref for Package<'h> {
-    type Target = Pkg<'h>;
+impl Deref for Package {
+    type Target = Pkg;
     fn deref(&self) -> &Self::Target {
-        &self.pkg
+        unsafe { Pkg::from_ptr(self.pkg.get()) }
     }
 }
 
-impl<'h> Package<'h> {
-    pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> Package<'a> {
-        Package {
-            pkg: Pkg::from_ptr(pkg),
-        }
+impl Package {
+    pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> &'a Package {
+        &*(pkg as *mut Package)
     }
 }
 
-impl<'h> Pkg<'h> {
-    pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> Pkg<'a> {
-        Pkg {
-            _marker: PhantomData,
-            pkg: NonNull::new_unchecked(pkg),
-        }
+impl Pkg {
+    pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> &'a Pkg {
+        &*(pkg as *mut Pkg)
     }
 
-    pub(crate) fn handle_ptr(self) -> *mut alpm_handle_t {
+    pub(crate) fn handle_ptr(&self) -> *mut alpm_handle_t {
         unsafe { alpm_pkg_get_handle(self.as_ptr()) }
     }
 
-    pub(crate) fn as_ptr(self) -> *mut alpm_pkg_t {
-        self.pkg.as_ptr()
+    pub(crate) fn as_ptr(&self) -> *mut alpm_pkg_t {
+        self.pkg.get()
     }
 
     pub(crate) fn last_error(&self) -> Error {
@@ -112,7 +89,7 @@ impl<'h> Pkg<'h> {
         }
     }
 
-    pub fn name(&self) -> &'h str {
+    pub fn name(&self) -> &str {
         let name = unsafe { alpm_pkg_get_name(self.as_ptr()) };
         unsafe { from_cstr(name) }
     }
@@ -126,17 +103,17 @@ impl<'h> Pkg<'h> {
         ret != 0
     }
 
-    pub fn filename(&self) -> &'h str {
+    pub fn filename(&self) -> Option<&str> {
         let name = unsafe { alpm_pkg_get_filename(self.as_ptr()) };
-        unsafe { from_cstr_optional2(name) }
+        unsafe { from_cstr_optional(name) }
     }
 
-    pub fn base(&self) -> Option<&'h str> {
+    pub fn base(&self) -> Option<&str> {
         let base = unsafe { alpm_pkg_get_base(self.as_ptr()) };
         unsafe { from_cstr_optional(base) }
     }
 
-    pub fn version(&self) -> &'h Ver {
+    pub fn version(&self) -> &Ver {
         let version = unsafe { alpm_pkg_get_version(self.as_ptr()) };
         unsafe { Ver::from_ptr(version) }
     }
@@ -146,12 +123,12 @@ impl<'h> Pkg<'h> {
         unsafe { transmute::<_alpm_pkgfrom_t, PackageFrom>(origin) }
     }
 
-    pub fn desc(&self) -> Option<&'h str> {
+    pub fn desc(&self) -> Option<&str> {
         let desc = unsafe { alpm_pkg_get_desc(self.as_ptr()) };
         unsafe { from_cstr_optional(desc) }
     }
 
-    pub fn url(&self) -> Option<&'h str> {
+    pub fn url(&self) -> Option<&str> {
         let url = unsafe { alpm_pkg_get_url(self.as_ptr()) };
         unsafe { from_cstr_optional(url) }
     }
@@ -170,22 +147,22 @@ impl<'h> Pkg<'h> {
         }
     }
 
-    pub fn packager(&self) -> Option<&'h str> {
+    pub fn packager(&self) -> Option<&str> {
         let packager = unsafe { alpm_pkg_get_packager(self.as_ptr()) };
         unsafe { from_cstr_optional(packager) }
     }
 
-    pub fn md5sum(&self) -> Option<&'h str> {
+    pub fn md5sum(&self) -> Option<&str> {
         let md5sum = unsafe { alpm_pkg_get_md5sum(self.as_ptr()) };
         unsafe { from_cstr_optional(md5sum) }
     }
 
-    pub fn sha256sum(&self) -> Option<&'h str> {
+    pub fn sha256sum(&self) -> Option<&str> {
         let sha256sum = unsafe { alpm_pkg_get_sha256sum(self.as_ptr()) };
         unsafe { from_cstr_optional(sha256sum) }
     }
 
-    pub fn arch(&self) -> Option<&'h str> {
+    pub fn arch(&self) -> Option<&str> {
         let arch = unsafe { alpm_pkg_get_arch(self.as_ptr()) };
         unsafe { from_cstr_optional(arch) }
     }
@@ -210,47 +187,47 @@ impl<'h> Pkg<'h> {
         PackageValidation::from_bits(validation as u32).unwrap()
     }
 
-    pub fn licenses(&self) -> AlpmList<'h, &'h str> {
+    pub fn licenses(&self) -> AlpmList<&str> {
         let list = unsafe { alpm_pkg_get_licenses(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn groups(&self) -> AlpmList<'h, &'h str> {
+    pub fn groups(&self) -> AlpmList<&str> {
         let list = unsafe { alpm_pkg_get_groups(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn depends(&self) -> AlpmList<'h, Dep<'h>> {
+    pub fn depends(&self) -> AlpmList<&Dep> {
         let list = unsafe { alpm_pkg_get_depends(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn optdepends(&self) -> AlpmList<'h, Dep<'h>> {
+    pub fn optdepends(&self) -> AlpmList<&Dep> {
         let list = unsafe { alpm_pkg_get_optdepends(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn checkdepends(&self) -> AlpmList<'h, Dep<'h>> {
+    pub fn checkdepends(&self) -> AlpmList<&Dep> {
         let list = unsafe { alpm_pkg_get_checkdepends(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn makedepends(&self) -> AlpmList<'h, Dep<'h>> {
+    pub fn makedepends(&self) -> AlpmList<&Dep> {
         let list = unsafe { alpm_pkg_get_makedepends(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn conflicts(&self) -> AlpmList<'h, Dep<'h>> {
+    pub fn conflicts(&self) -> AlpmList<&Dep> {
         let list = unsafe { alpm_pkg_get_conflicts(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn provides(&self) -> AlpmList<'h, Dep<'h>> {
+    pub fn provides(&self) -> AlpmList<&Dep> {
         let list = unsafe { alpm_pkg_get_provides(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn replaces(&self) -> AlpmList<'h, Dep<'h>> {
+    pub fn replaces(&self) -> AlpmList<&Dep> {
         let list = unsafe { alpm_pkg_get_replaces(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
@@ -260,12 +237,12 @@ impl<'h> Pkg<'h> {
         unsafe { FileList::new(files) }
     }
 
-    pub fn backup(&self) -> AlpmList<'h, Backup> {
+    pub fn backup(&self) -> AlpmList<&Backup> {
         let list = unsafe { alpm_pkg_get_backup(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn db(&self) -> Option<Db<'h>> {
+    pub fn db(&self) -> Option<&Db> {
         let db = unsafe { alpm_pkg_get_db(self.as_ptr()) };
         self.check_null(db).ok()?;
         unsafe { Some(Db::from_ptr(db)) }
@@ -274,7 +251,7 @@ impl<'h> Pkg<'h> {
     pub fn changelog(&self) -> Result<ChangeLog> {
         let changelog = unsafe { alpm_pkg_changelog_open(self.as_ptr()) };
         self.check_null(changelog)?;
-        let changelog = unsafe { ChangeLog::new(*self, changelog) };
+        let changelog = unsafe { ChangeLog::new(self, changelog) };
         Ok(changelog)
     }
 
@@ -288,17 +265,17 @@ impl<'h> Pkg<'h> {
         Ok(archive)
     }
 
-    pub fn required_by(&self) -> AlpmListMut<'h, String> {
+    pub fn required_by(&self) -> AlpmListMut<String> {
         let list = unsafe { alpm_pkg_compute_requiredby(self.as_ptr()) };
         unsafe { AlpmListMut::from_ptr(list) }
     }
 
-    pub fn optional_for(&self) -> AlpmListMut<'h, String> {
+    pub fn optional_for(&self) -> AlpmListMut<String> {
         let list = unsafe { alpm_pkg_compute_optionalfor(self.as_ptr()) };
         unsafe { AlpmListMut::from_ptr(list) }
     }
 
-    pub fn base64_sig(&self) -> Option<&'h str> {
+    pub fn base64_sig(&self) -> Option<&str> {
         let base64_sig = unsafe { alpm_pkg_get_base64_sig(self.as_ptr()) };
         unsafe { from_cstr_optional(base64_sig) }
     }
@@ -320,7 +297,7 @@ impl<'h> Pkg<'h> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::SigLevel;
+    use crate::{Alpm, SigLevel};
     use std::io::Read;
     use std::mem::size_of;
 
@@ -347,12 +324,12 @@ mod tests {
         let pkg = db.pkg("filesystem").unwrap();
         let files = pkg.files();
 
-        for file in files.files() {
+        for file in files.files().unwrap() {
             println!("{}", file.name());
         }
 
-        assert!(files.contains("etc/").unwrap().is_some());
-        assert_eq!(pkg.filename(), "");
+        assert!(files.contains("etc/").is_some());
+        assert!(pkg.filename().is_none());
     }
 
     #[test]
@@ -362,7 +339,7 @@ mod tests {
         let pkg = db.pkg("filesystem").unwrap();
         let files = pkg.files();
 
-        assert_eq!(files.files().len(), 0);
+        assert!(files.files().is_none());
     }
 
     #[test]
@@ -410,6 +387,16 @@ mod tests {
 
     #[test]
     fn test_pkg_optimization() {
-        assert!(size_of::<Pkg>() == size_of::<Option<Pkg>>());
+        assert!(size_of::<&Pkg>() == size_of::<&Option<Pkg>>());
+    }
+
+    #[test]
+    fn test_lifetime() {
+        let handle = Alpm::new("/", "tests/db").unwrap();
+        let db = handle.register_syncdb("extra", SigLevel::NONE).unwrap();
+        let pkg = db.pkg("ostree").unwrap();
+        drop(db);
+        //drop(handle);
+        println!("{}", pkg.name());
     }
 }

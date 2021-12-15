@@ -25,9 +25,6 @@ impl std::fmt::Debug for Alpm {
     }
 }
 
-// TODO unsound: remove
-unsafe impl Send for Alpm {}
-
 impl Drop for Alpm {
     fn drop(&mut self) {
         unsafe { alpm_release(self.as_ptr()) };

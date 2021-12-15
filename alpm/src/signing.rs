@@ -87,12 +87,12 @@ impl PgpKey {
         unsafe { from_cstr(self.inner.uid) }
     }
 
-    pub fn name(&self) -> &str {
-        unsafe { from_cstr_optional2(self.inner.name) }
+    pub fn name(&self) -> Option<&str> {
+        unsafe { from_cstr_optional(self.inner.name) }
     }
 
-    pub fn email(&self) -> &str {
-        unsafe { from_cstr_optional2(self.inner.email) }
+    pub fn email(&self) -> Option<&str> {
+        unsafe { from_cstr_optional(self.inner.email) }
     }
 
     pub fn created(&self) -> i64 {
@@ -190,10 +190,10 @@ impl SigList {
     }
 }
 
-impl<'a> Package<'a> {
+impl Package {
     pub fn check_signature(&self) -> Result<(bool, SigList)> {
         let mut siglist = SigList::new();
-        let ret = unsafe { alpm_pkg_check_pgp_signature(self.pkg.as_ptr(), &mut siglist.inner) };
+        let ret = unsafe { alpm_pkg_check_pgp_signature(self.as_ptr(), &mut siglist.inner) };
         let valid = match ret {
             0 => true,
             1 => false,
@@ -204,7 +204,7 @@ impl<'a> Package<'a> {
     }
 }
 
-impl<'a> Db<'a> {
+impl Db {
     pub fn check_signature(&self) -> Result<(bool, SigList)> {
         let mut siglist = SigList::new();
         let ret = unsafe { alpm_db_check_pgp_signature(self.as_ptr(), &mut siglist.inner) };
@@ -219,11 +219,11 @@ impl<'a> Db<'a> {
 }
 
 impl Alpm {
-    pub fn extract_keyid<'a, S: Into<Vec<u8>>>(
-        &'a self,
+    pub fn extract_keyid<S: Into<Vec<u8>>>(
+        &self,
         ident: S,
         sig: &[u8],
-    ) -> Result<AlpmListMut<'a, String>> {
+    ) -> Result<AlpmListMut<String>> {
         let ident = CString::new(ident).unwrap();
         let mut keys = ptr::null_mut();
 

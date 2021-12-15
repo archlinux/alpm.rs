@@ -1,4 +1,4 @@
-use crate::{Alpm, AsPkg, Pkg, Result, SigLevel};
+use crate::{Alpm, Pkg, Result, SigLevel};
 
 use alpm_sys::*;
 
@@ -8,7 +8,7 @@ use std::ptr;
 
 #[derive(Debug)]
 pub struct LoadedPackage<'a> {
-    pub(crate) pkg: Pkg<'a>,
+    pub(crate) pkg: &'a Pkg,
 }
 
 impl<'a> Drop for LoadedPackage<'a> {
@@ -19,23 +19,22 @@ impl<'a> Drop for LoadedPackage<'a> {
     }
 }
 
-impl<'a> AsPkg for LoadedPackage<'a> {
-    fn as_pkg(&self) -> Pkg {
+impl<'a> std::ops::Deref for LoadedPackage<'a> {
+    type Target = Pkg;
+
+    fn deref(&self) -> &Self::Target {
         self.pkg
     }
 }
 
-// TODO unsound: autofix if we can change pkg to unsized type ala str
-impl<'a> std::ops::Deref for LoadedPackage<'a> {
-    type Target = Pkg<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.pkg
-    }
-}
-
 impl<'a> LoadedPackage<'a> {
-    pub fn pkg(&'a self) -> Pkg {
+    pub(crate) unsafe fn from_ptr<'b>(pkg: *mut alpm_pkg_t) -> LoadedPackage<'b> {
+        LoadedPackage {
+            pkg: Pkg::from_ptr(pkg),
+        }
+    }
+
+    pub fn pkg(&'a self) -> &Pkg {
         self.pkg
     }
 }

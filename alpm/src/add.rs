@@ -4,22 +4,21 @@ use alpm_sys::*;
 
 use std::fmt;
 
+#[doc(hidden)]
 pub unsafe trait IntoPkgAdd: fmt::Debug {
-    #[doc(hidden)]
     unsafe fn as_alpm_pkg_t(&self) -> *mut alpm_pkg_t;
-    #[doc(hidden)]
     unsafe fn added(self);
 }
 
-unsafe impl<'a> IntoPkgAdd for Package<'a> {
+unsafe impl IntoPkgAdd for &Package {
     unsafe fn as_alpm_pkg_t(&self) -> *mut alpm_pkg_t {
-        self.pkg.as_ptr()
+        self.as_ptr()
     }
     unsafe fn added(self) {}
 }
 unsafe impl<'a> IntoPkgAdd for LoadedPackage<'a> {
     unsafe fn as_alpm_pkg_t(&self) -> *mut alpm_pkg_t {
-        self.pkg.as_ptr()
+        self.as_ptr()
     }
     unsafe fn added(self) {
         std::mem::forget(self);
