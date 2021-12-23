@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel, WithAlpmList};
+use crate::{Alpm, AlpmList, AsAlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
 
 use alpm_sys::*;
 use std::cmp::Ordering;
@@ -94,8 +94,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_hookdirs<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_hookdirs<'a, T: AsAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_hookdirs(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -117,8 +117,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_cachedirs<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_cachedirs<'a, T: AsAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_cachedirs(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -161,8 +161,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_noupgrades<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_noupgrades<'a, T: AsAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_noupgrades(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -195,8 +195,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_noextracts<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_noextracts<'a, T: AsAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_noextracts(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -229,8 +229,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignorepkgs<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_ignorepkgs<'a, T: AsAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_ignorepkgs(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -252,8 +252,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_ignoregroups<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_ignoregroups<'a, T: AsAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_ignoregroups(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -275,8 +275,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_overwrite_files<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_overwrite_files<'a, T: AsAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_overwrite_files(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -297,8 +297,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_assume_installed<'a, T: WithAlpmList<&'a Dep>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_assume_installed<'a, T: AsAlpmList<&'a Dep>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_assumeinstalled(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -319,8 +319,8 @@ impl Alpm {
         self.check_ret(ret)
     }
 
-    pub fn set_architectures<'a, T: WithAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_architectures<'a, T: AsAlpmList<&'a str>>(&mut self, list: T) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_option_set_architectures(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })

@@ -1,6 +1,6 @@
 use crate::utils::*;
 use crate::{
-    Alpm, AlpmList, AlpmListMut, Error, Group, Package, Result, SigLevel, Usage, WithAlpmList,
+    Alpm, AlpmList, AlpmListMut, AsAlpmList, Error, Group, Package, Result, SigLevel, Usage,
 };
 
 use std::cell::UnsafeCell;
@@ -83,8 +83,8 @@ impl<'h> DbMut<'h> {
         self.check_ret(ret)
     }
 
-    pub fn set_servers<'a, L: WithAlpmList<&'a str>>(&self, list: L) -> Result<()> {
-        list.with_alpm_list(|list| {
+    pub fn set_servers<'a, L: AsAlpmList<&'a str>>(&self, list: L) -> Result<()> {
+        list.with(|list| {
             let ret = unsafe { alpm_db_set_servers(self.as_ptr(), list.as_ptr()) };
             self.check_ret(ret)
         })
@@ -167,9 +167,9 @@ impl Db {
 
     pub fn search<'a, L>(&'a self, list: L) -> Result<AlpmListMut<&'a Package>>
     where
-        L: WithAlpmList<&'a str>,
+        L: AsAlpmList<&'a str>,
     {
-        list.with_alpm_list(|list| {
+        list.with(|list| {
             let mut ret = std::ptr::null_mut();
             let ok = unsafe { alpm_db_search(self.as_ptr(), list.as_ptr(), &mut ret) };
             self.check_ret(ok)?;

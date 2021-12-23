@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmListMut, Dep, Pkg, WithAlpmList};
+use crate::{Alpm, AlpmListMut, AsAlpmList, Dep, Pkg};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
@@ -184,11 +184,11 @@ impl Drop for OwnedFileConflict {
 }
 
 impl Alpm {
-    pub fn check_conflicts<'a, L: WithAlpmList<&'a Pkg>>(
+    pub fn check_conflicts<'a, L: AsAlpmList<&'a Pkg>>(
         &self,
         list: L,
     ) -> AlpmListMut<OwnedConflict> {
-        list.with_alpm_list(|list| {
+        list.with(|list| {
             let ret = unsafe { alpm_checkconflicts(self.as_ptr(), list.as_ptr()) };
             unsafe { AlpmListMut::from_ptr(ret) }
         })

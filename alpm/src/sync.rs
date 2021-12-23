@@ -1,12 +1,12 @@
-use crate::{Alpm, AlpmList, AlpmListMut, Db, Package, Result, WithAlpmList};
+use crate::{Alpm, AlpmList, AlpmListMut, AsAlpmList, Db, Package, Result};
 
 use std::ffi::CString;
 
 use alpm_sys::*;
 
 impl Package {
-    pub fn sync_new_version<'a, T: WithAlpmList<&'a Db>>(&self, dbs: T) -> Option<&'a Package> {
-        dbs.with_alpm_list(|dbs| {
+    pub fn sync_new_version<'a, T: AsAlpmList<&'a Db>>(&self, dbs: T) -> Option<&'a Package> {
+        dbs.with(|dbs| {
             let ret = unsafe { alpm_sync_get_new_version(self.as_ptr(), dbs.as_ptr()) };
 
             if ret.is_null() {

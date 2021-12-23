@@ -2,37 +2,34 @@ use crate::{AlpmList, AlpmListMut, BorrowAlpmListItem, IntoAlpmListItem, IntoAlp
 
 use std::iter::FromIterator;
 
-pub trait WithAlpmList<T> {
-    fn with_alpm_list<R, F: FnOnce(AlpmList<T>) -> R>(self, f: F) -> R;
+pub trait AsAlpmList<T> {
+    fn with<R, F: FnOnce(AlpmList<T>) -> R>(self, f: F) -> R;
 }
 
-impl<'l, T> WithAlpmList<T> for AlpmList<'l, T> {
-    fn with_alpm_list<R, F: FnOnce(AlpmList<'l, T>) -> R>(self, f: F) -> R {
+impl<'l, T> AsAlpmList<T> for AlpmList<'l, T> {
+    fn with<R, F: FnOnce(AlpmList<'l, T>) -> R>(self, f: F) -> R {
         f(self)
     }
 }
 
-impl<'b, T: IntoAlpmListItem + BorrowAlpmListItem<'b>> WithAlpmList<T::Borrow> for AlpmListMut<T> {
-    fn with_alpm_list<R, F: FnOnce(AlpmList<T::Borrow>) -> R>(self, f: F) -> R {
+impl<'b, T: IntoAlpmListItem + BorrowAlpmListItem<'b>> AsAlpmList<T::Borrow> for AlpmListMut<T> {
+    fn with<R, F: FnOnce(AlpmList<T::Borrow>) -> R>(self, f: F) -> R {
         f(self.list())
     }
 }
 
-impl<'b, T: IntoAlpmListItem + BorrowAlpmListItem<'b>> WithAlpmList<T::Borrow> for &AlpmListMut<T> {
-    fn with_alpm_list<R, F: FnOnce(AlpmList<T::Borrow>) -> R>(self, f: F) -> R {
+impl<'b, T: IntoAlpmListItem + BorrowAlpmListItem<'b>> AsAlpmList<T::Borrow> for &AlpmListMut<T> {
+    fn with<R, F: FnOnce(AlpmList<T::Borrow>) -> R>(self, f: F) -> R {
         f(self.list())
     }
 }
 
-impl<'a, T: IntoAlpmListPtr, I> WithAlpmList<<T::Output as BorrowAlpmListItem<'a>>::Borrow> for I
+impl<'a, T: IntoAlpmListPtr, I> AsAlpmList<<T::Output as BorrowAlpmListItem<'a>>::Borrow> for I
 where
     I: Iterator<Item = T>,
     T::Output: BorrowAlpmListItem<'a>,
 {
-    fn with_alpm_list<
-        R,
-        F: FnOnce(AlpmList<<T::Output as BorrowAlpmListItem<'a>>::Borrow>) -> R,
-    >(
+    fn with<R, F: FnOnce(AlpmList<<T::Output as BorrowAlpmListItem<'a>>::Borrow>) -> R>(
         self,
         f: F,
     ) -> R {
@@ -47,12 +44,12 @@ mod tests {
     use super::*;
     use crate::{Dep, Depend};
 
-    fn foo<'a>(list: impl WithAlpmList<&'a Dep>) {
-        list.with_alpm_list(|list| assert_eq!(list.iter().nth(1).unwrap().name(), "bb"));
+    fn foo<'a>(list: impl AsAlpmList<&'a Dep>) {
+        list.with(|list| assert_eq!(list.iter().nth(1).unwrap().name(), "bb"));
     }
 
-    fn bar<'a>(list: impl WithAlpmList<&'a str>) {
-        list.with_alpm_list(|list| assert_eq!(list.iter().nth(1).unwrap(), "bb"));
+    fn bar<'a>(list: impl AsAlpmList<&'a str>) {
+        list.with(|list| assert_eq!(list.iter().nth(1).unwrap(), "bb"));
     }
 
     fn deps() -> Vec<Depend> {
