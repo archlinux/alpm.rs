@@ -34,20 +34,20 @@ impl Alpm {
                 unsafe { pkg.added() };
                 Ok(())
             }
-            Err(err) => Err(AddError { err, pkg }),
+            Err(err) => Err(AddError { error: err, pkg }),
         }
     }
 }
 
 #[derive(Debug)]
 pub struct AddError<P> {
-    pub err: Error,
+    pub error: Error,
     pub pkg: P,
 }
 
 impl<P> fmt::Display for AddError<P> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&self.err, f)
+        fmt::Display::fmt(&self.error, f)
     }
 }
 
@@ -55,6 +55,6 @@ impl<P: IntoPkgAdd> std::error::Error for AddError<P> {}
 
 impl<P> From<AddError<P>> for Error {
     fn from(err: AddError<P>) -> Error {
-        err.err
+        err.error
     }
 }
