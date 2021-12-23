@@ -1,8 +1,12 @@
-use crate::{Alpm, AlpmList, AlpmListMut, CommitResult, Error, Package, PrepareResult, Result};
+use crate::{Alpm, AlpmList, AlpmListMut, DependMissing, Error, OwnedConflict, Package, Result};
 
 use alpm_sys::_alpm_transflag_t::*;
 use alpm_sys::*;
 
+use std::error::Error as StdError;
+use std::fmt::{Debug, Display};
+use std::hint::unreachable_unchecked;
+use std::marker::PhantomData;
 use std::ptr;
 
 use bitflags::bitflags;
@@ -30,54 +34,147 @@ bitflags! {
     }
 }
 
+#[derive(Debug)]
+pub enum PrepareData<'a> {
+    PkgInvalidArch(AlpmListMut<&'a Package>),
+    UnsatisfiedDeps(AlpmListMut<DependMissing>),
+    ConflictingDeps(AlpmListMut<OwnedConflict>),
+}
+
+pub struct PrepareError<'a> {
+    error: Error,
+    data: *mut alpm_list_t,
+    _marker: PhantomData<&'a ()>,
+}
+
+impl<'a> Debug for PrepareError<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PrepareError")
+            .field("error", &self.error())
+            .field("data", &self.data())
+            .finish()
+    }
+}
+
+impl<'a> Display for PrepareError<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.error, f)
+    }
+}
+
+impl<'a> From<PrepareError<'a>> for Error {
+    fn from(err: PrepareError<'a>) -> Error {
+        err.error
+    }
+}
+
+impl<'a> StdError for PrepareError<'a> {}
+
+impl<'a> PrepareError<'a> {
+    pub fn error(&self) -> Error {
+        self.error
+    }
+
+    pub fn data(&self) -> PrepareData {
+        match self.error {
+            Error::PkgInvalidArch => unsafe {
+                PrepareData::PkgInvalidArch(AlpmListMut::from_ptr(self.data))
+            },
+            Error::UnsatisfiedDeps => unsafe {
+                PrepareData::UnsatisfiedDeps(AlpmListMut::from_ptr(self.data))
+            },
+            Error::ConflictingDeps => unsafe {
+                PrepareData::ConflictingDeps(AlpmListMut::from_ptr(self.data))
+            },
+            _ => unsafe { unreachable_unchecked() },
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum CommitData {
+    FileConflict(AlpmListMut<OwnedConflict>),
+    PkgInvalid(AlpmListMut<String>),
+}
+
+pub struct CommitError {
+    error: Error,
+    data: *mut alpm_list_t,
+}
+
+impl Debug for CommitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CommitError")
+            .field("error", &self.error())
+            .field("data", &self.data())
+            .finish()
+    }
+}
+
+impl Display for CommitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.error, f)
+    }
+}
+
+impl From<CommitError> for Error {
+    fn from(err: CommitError) -> Error {
+        err.error
+    }
+}
+
+impl StdError for CommitError {}
+
+impl CommitError {
+    pub fn error(&self) -> Error {
+        self.error
+    }
+
+    pub fn data(&self) -> CommitData {
+        match self.error {
+            Error::FileConflicts => unsafe {
+                CommitData::FileConflict(AlpmListMut::from_ptr(self.data))
+            },
+            Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => unsafe {
+                CommitData::PkgInvalid(AlpmListMut::from_ptr(self.data))
+            },
+            _ => unsafe { unreachable_unchecked() },
+        }
+    }
+}
+
 impl Alpm {
     pub fn trans_flags(self) -> TransFlag {
         let flags = unsafe { alpm_trans_get_flags(self.as_ptr()) };
         TransFlag::from_bits(flags as u32).unwrap()
     }
 
-    pub fn trans_prepare(&mut self) -> std::result::Result<(), (PrepareResult, Error)> {
+    pub fn trans_prepare(&mut self) -> std::result::Result<(), PrepareError> {
         let mut list = ptr::null_mut();
         let ret = unsafe { alpm_trans_prepare(self.as_ptr(), &mut list) };
         let err = self.check_ret(ret);
 
         if let Err(err) = err {
-            let ret = match err {
-                Error::PkgInvalidArch => unsafe {
-                    PrepareResult::PkgInvalidArch(AlpmListMut::from_ptr(list))
-                },
-                Error::UnsatisfiedDeps => unsafe {
-                    PrepareResult::UnsatisfiedDeps(AlpmListMut::from_ptr(list))
-                },
-                Error::ConflictingDeps => unsafe {
-                    PrepareResult::ConflictingDeps(AlpmListMut::from_ptr(list))
-                },
-                _ => PrepareResult::Ok,
-            };
-
-            Err((ret, err))
+            Err(PrepareError {
+                error: err,
+                data: list,
+                _marker: PhantomData,
+            })
         } else {
             Ok(())
         }
     }
 
-    pub fn trans_commit(&mut self) -> std::result::Result<(), (CommitResult, Error)> {
+    pub fn trans_commit(&mut self) -> std::result::Result<(), CommitError> {
         let mut list = ptr::null_mut();
         let ret = unsafe { alpm_trans_commit(self.as_ptr(), &mut list) };
         let err = self.check_ret(ret);
 
         if let Err(err) = err {
-            let ret = match err {
-                Error::FileConflicts => unsafe {
-                    CommitResult::FileConflict(AlpmListMut::from_ptr(list))
-                },
-                Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => unsafe {
-                    CommitResult::PkgInvalid(AlpmListMut::from_ptr(list))
-                },
-                _ => CommitResult::Ok,
-            };
-
-            Err((ret, err))
+            Err(CommitError {
+                error: err,
+                data: list,
+            })
         } else {
             Ok(())
         }
@@ -151,6 +248,6 @@ mod tests {
         handle.trans_prepare().unwrap();
         // Due to age the mirror now returns 404 for the package.
         // But we're only testing that the function is called correctly anyway.
-        assert!(handle.trans_commit().unwrap_err().1 == Error::Retrieve);
+        assert!(handle.trans_commit().unwrap_err().error() == Error::Retrieve);
     }
 }

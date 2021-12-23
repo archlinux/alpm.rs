@@ -1,6 +1,6 @@
 use crate::utils::*;
 
-use crate::{AlpmList, AlpmListMut, DependMissing, OwnedConflict, OwnedFileConflict, Package, Pkg};
+use crate::{AlpmList, Package, Pkg};
 
 use std::cell::UnsafeCell;
 use std::ffi::c_void;
@@ -191,23 +191,6 @@ pub enum Match {
     No,
     Yes,
     Inverted,
-}
-
-#[derive(Debug)]
-#[must_use]
-pub enum PrepareResult<'a> {
-    PkgInvalidArch(AlpmListMut<&'a Package>),
-    UnsatisfiedDeps(AlpmListMut<DependMissing>),
-    ConflictingDeps(AlpmListMut<OwnedConflict>),
-    Ok,
-}
-
-#[derive(Debug)]
-#[must_use]
-pub enum CommitResult {
-    FileConflict(AlpmListMut<OwnedFileConflict>),
-    PkgInvalid(AlpmListMut<String>),
-    Ok,
 }
 
 #[repr(transparent)]

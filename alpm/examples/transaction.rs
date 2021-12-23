@@ -35,5 +35,5 @@ fn main() {
 
     // commit the transaction
     // due to age the mirror now returns 404 for the package
-    assert!(handle.trans_commit().unwrap_err().1 == Error::Retrieve);
+    assert!(handle.trans_commit().unwrap_err().error() == Error::Retrieve);
 }
