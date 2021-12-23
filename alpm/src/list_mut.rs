@@ -39,6 +39,9 @@ pub struct AlpmListMut<T: IntoAlpmListItem> {
     list: *mut alpm_list_t,
 }
 
+unsafe impl<T: IntoAlpmListItem + Send> Send for AlpmListMut<T> {}
+unsafe impl<T: IntoAlpmListItem + Sync> Sync for AlpmListMut<T> {}
+
 impl<'a, T: IntoAlpmListItem + BorrowAlpmListItem<'a>> fmt::Debug for AlpmListMut<T>
 where
     T::Borrow: Debug,
@@ -53,6 +56,9 @@ pub struct IntoIter<T: IntoAlpmListItem> {
     start: *mut alpm_list_t,
     _marker: PhantomData<T>,
 }
+
+unsafe impl<T: IntoAlpmListItem + Send> Send for IntoIter<T> {}
+unsafe impl<T: IntoAlpmListItem + Sync> Sync for IntoIter<T> {}
 
 impl<'a, T: IntoAlpmListItem + BorrowAlpmListItem<'a>> Debug for IntoIter<T>
 where

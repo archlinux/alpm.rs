@@ -25,6 +25,9 @@ pub struct AlpmList<'l, T> {
     list: *mut alpm_list_t,
 }
 
+unsafe impl<'l, T: Send> Send for AlpmList<'l, T> {}
+unsafe impl<'l, T: Sync> Sync for AlpmList<'l, T> {}
+
 impl<'l, T> Clone for AlpmList<'l, T> {
     fn clone(&self) -> Self {
         AlpmList {
@@ -107,6 +110,9 @@ pub struct Iter<'l, T> {
     _marker: PhantomData<(&'l (), T)>,
     list: *mut alpm_list_t,
 }
+
+unsafe impl<'l, T: Send> Send for Iter<'l, T> {}
+unsafe impl<'l, T: Sync> Sync for Iter<'l, T> {}
 
 impl<'l, T: IntoAlpmListItem + Debug> Debug for Iter<'l, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -4,7 +4,6 @@ use crate::{free, Alpm, AlpmList, AlpmListMut, AsAlpmList, Db, Package, Pkg, Ver
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
 
-use std::cell::UnsafeCell;
 use std::ffi::{c_void, CString};
 use std::fmt;
 use std::mem::transmute;
@@ -232,8 +231,11 @@ pub enum DepMod {
 
 #[repr(transparent)]
 pub struct DepMissing {
-    inner: UnsafeCell<alpm_depmissing_t>,
+    inner: alpm_depmissing_t,
 }
+
+unsafe impl Sync for DepMissing {}
+unsafe impl Send for DepMissing {}
 
 impl fmt::Debug for DepMissing {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -256,6 +258,9 @@ impl std::ops::Deref for DependMissing {
 pub struct DependMissing {
     inner: NonNull<alpm_depmissing_t>,
 }
+
+unsafe impl Sync for DependMissing {}
+unsafe impl Send for DependMissing {}
 
 impl fmt::Debug for DependMissing {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -282,8 +287,8 @@ impl DepMissing {
         &*(ptr as *mut DepMissing)
     }
 
-    pub(crate) fn as_ptr(&self) -> *mut alpm_depmissing_t {
-        self.inner.get()
+    pub(crate) fn as_ptr(&self) -> *const alpm_depmissing_t {
+        &self.inner
     }
 
     pub fn target(&self) -> &str {

@@ -13,6 +13,9 @@ pub struct File {
     inner: alpm_file_t,
 }
 
+unsafe impl Send for File {}
+unsafe impl Sync for File {}
+
 impl fmt::Debug for File {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("File")
@@ -42,6 +45,13 @@ pub struct FileList<'h> {
     inner: UnsafeCell<alpm_filelist_t>,
     _marker: PhantomData<&'h ()>,
 }
+
+// TODO: unsafe cell is only used to get a mut pointer even though
+// it's never actually mutated
+// Upstream code should ask for a const pointer
+#[allow(clippy::non_send_fields_in_send_ty)]
+unsafe impl<'h> Send for FileList<'h> {}
+unsafe impl<'h> Sync for FileList<'h> {}
 
 impl<'h> fmt::Debug for FileList<'h> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

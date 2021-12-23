@@ -195,8 +195,11 @@ pub enum Match {
 
 #[repr(transparent)]
 pub struct Backup {
-    inner: UnsafeCell<alpm_backup_t>,
+    inner: alpm_backup_t,
 }
+
+unsafe impl Send for Backup {}
+unsafe impl Sync for Backup {}
 
 impl fmt::Debug for Backup {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -212,8 +215,8 @@ impl Backup {
         &*(ptr as *mut Backup)
     }
 
-    pub(crate) fn as_ptr(&self) -> *mut alpm_backup_t {
-        self.inner.get()
+    pub(crate) fn as_ptr(&self) -> *const alpm_backup_t {
+        &self.inner
     }
 
     pub fn hash(&self) -> &str {

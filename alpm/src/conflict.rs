@@ -4,7 +4,6 @@ use crate::{Alpm, AlpmListMut, AsAlpmList, Dep, Pkg};
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
 
-use std::cell::UnsafeCell;
 use std::fmt;
 use std::mem::transmute;
 use std::ptr::NonNull;
@@ -12,6 +11,9 @@ use std::ptr::NonNull;
 pub struct OwnedConflict {
     inner: NonNull<alpm_conflict_t>,
 }
+
+unsafe impl Send for OwnedConflict {}
+unsafe impl Sync for OwnedConflict {}
 
 impl OwnedConflict {
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_conflict_t) -> OwnedConflict {
@@ -29,8 +31,11 @@ impl fmt::Debug for OwnedConflict {
 
 #[repr(transparent)]
 pub struct Conflict {
-    inner: UnsafeCell<alpm_conflict_t>,
+    inner: alpm_conflict_t,
 }
+
+unsafe impl Send for Conflict {}
+unsafe impl Sync for Conflict {}
 
 impl fmt::Debug for Conflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -63,8 +68,8 @@ impl Conflict {
         &*(ptr as *mut Conflict)
     }
 
-    pub(crate) fn as_ptr(&self) -> *mut alpm_conflict_t {
-        self.inner.get()
+    pub(crate) fn as_ptr(&self) -> *const alpm_conflict_t {
+        &self.inner
     }
 
     pub fn package1_hash(&self) -> u64 {
@@ -103,8 +108,11 @@ pub enum FileConflictType {
 
 #[repr(transparent)]
 pub struct FileConflict {
-    inner: UnsafeCell<alpm_fileconflict_t>,
+    inner: alpm_fileconflict_t,
 }
+
+unsafe impl Sync for FileConflict {}
+unsafe impl Send for FileConflict {}
 
 impl fmt::Debug for FileConflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -129,11 +137,18 @@ pub struct OwnedFileConflict {
     pub(crate) inner: NonNull<alpm_fileconflict_t>,
 }
 
+unsafe impl Sync for OwnedFileConflict {}
+unsafe impl Send for OwnedFileConflict {}
+
 impl OwnedFileConflict {
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_fileconflict_t) -> OwnedFileConflict {
         OwnedFileConflict {
             inner: NonNull::new_unchecked(ptr),
         }
+    }
+
+    pub(crate) fn as_ptr(&self) -> *mut alpm_fileconflict_t {
+        self.inner.as_ptr()
     }
 }
 
@@ -148,8 +163,8 @@ impl FileConflict {
         &*(ptr as *mut FileConflict)
     }
 
-    pub(crate) fn as_ptr(&self) -> *mut alpm_fileconflict_t {
-        self.inner.get()
+    pub(crate) fn as_ptr(&self) -> *const alpm_fileconflict_t {
+        &self.inner
     }
 
     pub fn target(&self) -> &str {
