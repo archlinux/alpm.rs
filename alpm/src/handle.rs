@@ -138,13 +138,13 @@ impl Alpm {
         unsafe { from_cstr_optional(alpm_option_get_logfile(self.as_ptr())) }
     }
 
-    pub fn set_logfile<S: Into<Vec<u8>>>(&self, s: S) -> Result<()> {
+    pub fn set_logfile<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
         let ret = unsafe { alpm_option_set_logfile(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
     }
 
-    pub fn set_gpgdir<S: Into<Vec<u8>>>(&self, s: S) -> Result<()> {
+    pub fn set_gpgdir<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
         let s = CString::new(s).unwrap();
         let ret = unsafe { alpm_option_set_gpgdir(self.as_ptr(), s.as_ptr()) };
         self.check_ret(ret)
@@ -356,7 +356,7 @@ impl Alpm {
         unsafe { alpm_option_set_checkspace(self.as_ptr(), b) };
     }
 
-    pub fn set_dbext<S: Into<Vec<u8>>>(&self, s: S) {
+    pub fn set_dbext<S: Into<Vec<u8>>>(&mut self, s: S) {
         let s = CString::new(s).unwrap();
         unsafe { alpm_option_set_dbext(self.as_ptr(), s.as_ptr()) };
     }
