@@ -5,15 +5,15 @@ use crate::AsTarg;
 /// Extention for AlpmList<Db>
 pub trait DbListExt<'a> {
     /// Similar to find_satisfier() but expects a Target instead of a &str.
-    fn find_target_satisfier<T: AsTarg>(&self, target: T) -> Option<Package<'a>>;
+    fn find_target_satisfier<T: AsTarg>(&self, target: T) -> Option<&'a Package>;
     /// Similar to pkg() but expects a Target instead of a &str.
-    fn find_target<T: AsTarg>(&self, target: T) -> Result<Package<'a>>;
+    fn find_target<T: AsTarg>(&self, target: T) -> Result<&'a Package>;
     /// The same as pkg() on Db but will try each Db in order return the first match.
-    fn pkg<S: Into<Vec<u8>>>(&self, pkg: S) -> Result<Package<'a>>;
+    fn pkg<S: Into<Vec<u8>>>(&self, pkg: S) -> Result<&'a Package>;
 }
 
-impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
-    fn find_target_satisfier<T: AsTarg>(&self, target: T) -> Option<Package<'a>> {
+impl<'a> DbListExt<'a> for AlpmList<'a, &'a Db> {
+    fn find_target_satisfier<T: AsTarg>(&self, target: T) -> Option<&'a Package> {
         let target = target.as_targ();
 
         if let Some(repo) = target.repo {
@@ -27,7 +27,7 @@ impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
         }
     }
 
-    fn find_target<T: AsTarg>(&self, target: T) -> Result<Package<'a>> {
+    fn find_target<T: AsTarg>(&self, target: T) -> Result<&'a Package> {
         let target = target.as_targ();
 
         if let Some(repo) = target.repo {
@@ -41,7 +41,7 @@ impl<'a> DbListExt<'a> for AlpmList<'a, Db<'a>> {
         }
     }
 
-    fn pkg<S: Into<Vec<u8>>>(&self, pkg: S) -> Result<Package<'a>> {
+    fn pkg<S: Into<Vec<u8>>>(&self, pkg: S) -> Result<&'a Package> {
         let mut pkg = pkg.into();
         pkg.reserve(1);
         let pkg = self.iter().find_map(|db| db.pkg(pkg.clone()).ok());
