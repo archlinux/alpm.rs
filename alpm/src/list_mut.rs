@@ -28,7 +28,6 @@ pub unsafe trait BorrowAlpmListItem<'a> {
 pub unsafe trait IntoAlpmListPtr: Sized {
     type Output: IntoAlpmListItem;
     fn into_ptr(self) -> *mut c_void {
-        println!("{}", std::any::type_name::<Self>());
         ManuallyDrop::new(self).as_ptr()
     }
     fn as_ptr(&self) -> *mut c_void;
