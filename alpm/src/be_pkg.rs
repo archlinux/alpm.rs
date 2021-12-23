@@ -27,6 +27,12 @@ impl<'a> std::ops::Deref for LoadedPackage<'a> {
     }
 }
 
+impl<'a> AsRef<Pkg> for LoadedPackage<'a> {
+    fn as_ref(&self) -> &Pkg {
+        self
+    }
+}
+
 impl<'a> LoadedPackage<'a> {
     pub(crate) unsafe fn from_ptr<'b>(pkg: *mut alpm_pkg_t) -> LoadedPackage<'b> {
         LoadedPackage {

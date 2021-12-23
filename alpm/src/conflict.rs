@@ -23,6 +23,12 @@ impl OwnedConflict {
     }
 }
 
+impl AsRef<Conflict> for OwnedConflict {
+    fn as_ref(&self) -> &Conflict {
+        self
+    }
+}
+
 impl fmt::Debug for OwnedConflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Conflict::fmt(self, f)
@@ -46,6 +52,12 @@ impl fmt::Debug for Conflict {
             .field("package2_hash", &self.package2_hash())
             .field("reason", &self.reason())
             .finish()
+    }
+}
+
+impl AsRef<Conflict> for Conflict {
+    fn as_ref(&self) -> &Conflict {
+        self
     }
 }
 
@@ -125,6 +137,12 @@ impl fmt::Debug for FileConflict {
     }
 }
 
+impl AsRef<FileConflict> for FileConflict {
+    fn as_ref(&self) -> &FileConflict {
+        self
+    }
+}
+
 impl std::ops::Deref for OwnedFileConflict {
     type Target = FileConflict;
 
@@ -135,6 +153,12 @@ impl std::ops::Deref for OwnedFileConflict {
 
 pub struct OwnedFileConflict {
     pub(crate) inner: NonNull<alpm_fileconflict_t>,
+}
+
+impl AsRef<FileConflict> for OwnedFileConflict {
+    fn as_ref(&self) -> &FileConflict {
+        self
+    }
 }
 
 unsafe impl Sync for OwnedFileConflict {}

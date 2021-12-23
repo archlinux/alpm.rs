@@ -50,6 +50,18 @@ impl Deref for Package {
     }
 }
 
+impl AsRef<Pkg> for Pkg {
+    fn as_ref(&self) -> &Pkg {
+        self
+    }
+}
+
+impl AsRef<Pkg> for Package {
+    fn as_ref(&self) -> &Pkg {
+        self
+    }
+}
+
 impl Package {
     pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> &'a Package {
         &*(pkg as *mut Package)

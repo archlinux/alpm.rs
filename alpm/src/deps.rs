@@ -39,6 +39,12 @@ impl PartialEq for Depend {
     }
 }
 
+impl AsRef<Dep> for Dep {
+    fn as_ref(&self) -> &Dep {
+        self
+    }
+}
+
 impl Clone for Depend {
     fn clone(&self) -> Self {
         let ptr = unsafe { alpm_dep_compute_string(self.as_ptr()) };
@@ -131,6 +137,12 @@ impl Depend {
 
     pub fn as_dep(&self) -> &Dep {
         self
+    }
+}
+
+impl AsRef<Dep> for Depend {
+    fn as_ref(&self) -> &Dep {
+        self.as_dep()
     }
 }
 
@@ -247,6 +259,12 @@ impl fmt::Debug for DepMissing {
     }
 }
 
+impl AsRef<DepMissing> for DepMissing {
+    fn as_ref(&self) -> &DepMissing {
+        self
+    }
+}
+
 impl std::ops::Deref for DependMissing {
     type Target = DepMissing;
 
@@ -265,6 +283,12 @@ unsafe impl Send for DependMissing {}
 impl fmt::Debug for DependMissing {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&self.inner, f)
+    }
+}
+
+impl AsRef<DependMissing> for DependMissing {
+    fn as_ref(&self) -> &DependMissing {
+        self
     }
 }
 
