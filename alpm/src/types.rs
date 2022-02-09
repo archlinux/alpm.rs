@@ -989,7 +989,7 @@ impl<'a> fmt::Debug for Group<'a> {
 }
 
 impl<'a> Group<'a> {
-    pub(crate) unsafe fn new<'b>(handle: &'b Alpm, ptr: *mut alpm_group_t) -> Group<'b> {
+    pub(crate) unsafe fn new(handle: &Alpm, ptr: *mut alpm_group_t) -> Group {
         Group {
             handle,
             inner: NonNull::new_unchecked(ptr),
@@ -1042,7 +1042,7 @@ impl<'a> Read for ChangeLog<'a> {
 }
 
 impl<'a> ChangeLog<'a> {
-    pub(crate) unsafe fn new<'b>(pkg: Pkg<'b>, ptr: *mut c_void) -> ChangeLog<'b> {
+    pub(crate) unsafe fn new(pkg: Pkg, ptr: *mut c_void) -> ChangeLog {
         ChangeLog {
             pkg,
             stream: NonNull::new_unchecked(ptr),
