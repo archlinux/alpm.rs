@@ -44,4 +44,6 @@ fn main() {
     handle
         .register_syncdb("community", SigLevel::USE_DEFAULT)
         .unwrap();
+
+    println!("final value of number was: {}", number.borrow())
 }
