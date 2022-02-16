@@ -1,5 +1,11 @@
 # Changelog
 
+## alpm-utils v1.1.2 (2022-02-16)
+
+### Breaking
+
+- Update pacmanconf to v2.0.0
+
 ## alpm v2.2.1 (2021-12-12)
 
 ### Fixed
