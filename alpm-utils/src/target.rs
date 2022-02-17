@@ -10,7 +10,7 @@ impl<T> AsTarg for T
 where
     T: AsRef<str>,
 {
-    fn as_targ<'a>(&'a self) -> Targ<'a> {
+    fn as_targ(&self) -> Targ {
         Targ::from(self.as_ref())
     }
 }

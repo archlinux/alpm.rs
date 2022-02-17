@@ -1,7 +1,7 @@
 use alpm::{AsDep, DepModVer, Ver};
 
 /// Checks if a dependency is satisfied by a package (name + version).
-pub fn satisfies_dep<'a, S: AsRef<str>, V: AsRef<Ver>>(
+pub fn satisfies_dep<S: AsRef<str>, V: AsRef<Ver>>(
     dep: impl AsDep,
     name: S,
     version: V,
@@ -36,7 +36,7 @@ pub fn satisfies_provide(dep: impl AsDep, provide: impl AsDep) -> bool {
 }
 
 /// Checks if a Dep is satisfied by a name + version + provides combo
-pub fn satisfies<'a, D: AsDep, S: AsRef<str>, V: AsRef<Ver>>(
+pub fn satisfies<D: AsDep, S: AsRef<str>, V: AsRef<Ver>>(
     dep: impl AsDep,
     name: S,
     version: V,
@@ -47,7 +47,7 @@ pub fn satisfies<'a, D: AsDep, S: AsRef<str>, V: AsRef<Ver>>(
 }
 
 /// Checks if a Dep is satisfied by a name + provides (ignoring version) combo
-pub fn satisfies_nover<'a, D: AsDep, S: AsRef<str>>(
+pub fn satisfies_nover<D: AsDep, S: AsRef<str>>(
     dep: impl AsDep,
     name: S,
     mut provides: impl Iterator<Item = D>,
@@ -57,7 +57,7 @@ pub fn satisfies_nover<'a, D: AsDep, S: AsRef<str>>(
 }
 
 /// Checks if a dependency is satisfied by a package (name only).
-pub fn satisfies_dep_nover<'a, S: AsRef<str>>(dep: impl AsDep, name: S) -> bool {
+pub fn satisfies_dep_nover<S: AsRef<str>>(dep: impl AsDep, name: S) -> bool {
     dep.as_dep().name() == name.as_ref()
 }
 
