@@ -6,8 +6,11 @@
 
 #[cfg(feature = "conf")]
 mod conf;
+
 #[cfg(feature = "alpm")]
+mod alpm;
 mod db;
+
 /// Utils for dependency checking.
 #[cfg(feature = "alpm")]
 pub mod depends;
@@ -15,6 +18,8 @@ mod target;
 
 #[cfg(feature = "conf")]
 pub use crate::conf::*;
+
 #[cfg(feature = "alpm")]
+pub use crate::alpm::*;
 pub use crate::db::*;
 pub use crate::target::*;
