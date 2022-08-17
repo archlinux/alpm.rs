@@ -1,31 +1,32 @@
+//! Extension methods for the [`Alpm`] type.
+
 use crate::depends::satisfies_ver;
 use crate::DbListExt;
-use alpm::{Alpm, Depend, Package, PackageReason, Result, SigLevel};
+use alpm::{Alpm, Depend, Package, PackageReason, SigLevel};
 use std::path::Path;
 
 /// Extension methods to the [`Alpm`] type.
 pub trait AlpmExt {
     /// Try to find a [`Package`] that satisfies a given dependency.
-    fn find_local_satisfier<S>(&self, pkg: S) -> Result<Option<Package<'_>>>
+    fn find_local_satisfier<S>(&self, pkg: S) -> Option<Package<'_>>
     where
         S: Into<String>;
 }
 
 impl AlpmExt for Alpm {
-    fn find_local_satisfier<S>(&self, pkg: S) -> Result<Option<Package<'_>>>
+    fn find_local_satisfier<S>(&self, pkg: S) -> Option<Package<'_>>
     where
         S: Into<String>,
     {
         let localdb = self.localdb();
         let pkg = pkg.into();
 
-        if let Ok(alpm_pkg) = localdb.pkg(pkg.as_str()) {
-            if satisfies_ver(Depend::new(pkg.as_str()), alpm_pkg.version()) {
-                return Ok(Some(alpm_pkg));
+        match localdb.pkg(pkg.as_str()) {
+            Ok(alpm_pkg) if satisfies_ver(Depend::new(pkg.as_str()), alpm_pkg.version()) => {
+                Some(alpm_pkg)
             }
+            _ => localdb.pkgs().find_satisfier(pkg),
         }
-
-        Ok(localdb.pkgs().find_satisfier(pkg))
     }
 }
 
