@@ -62,7 +62,7 @@ pub fn satisfies_provide_nover(dep: impl AsDep, provide: impl AsDep) -> bool {
     dep.as_dep().name() == provide.as_dep().name()
 }
 
-pub(crate) fn satisfies_ver<V: AsRef<Ver>>(dep: impl AsDep, version: V) -> bool {
+fn satisfies_ver<V: AsRef<Ver>>(dep: impl AsDep, version: V) -> bool {
     let version = version.as_ref();
     let dep = dep.as_dep();
 
