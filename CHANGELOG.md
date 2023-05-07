@@ -1,5 +1,11 @@
 # Changelog
 
+## alpm v2.2.2 (2023-05-07)
+
+### Fixed
+
+- Fix segfault when calling groups
+
 ## alpm-utils v1.1.2 (2022-02-16)
 
 ### Breaking
@@ -10,7 +16,7 @@
 
 ### Fixed
 
-- Revery breaking change that broke existing user code
+- Revert breaking change that broke existing user code
 
 ## alpm v2.2.0 (2021-12-09)
 
