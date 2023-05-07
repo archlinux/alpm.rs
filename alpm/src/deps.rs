@@ -69,7 +69,7 @@ pub trait AsDep {
     fn as_dep(&self) -> Dep;
 }
 
-impl<'a> AsDep for Depend {
+impl AsDep for Depend {
     fn as_dep(&self) -> Dep {
         self.dep()
     }
