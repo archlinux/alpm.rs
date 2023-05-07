@@ -178,10 +178,10 @@ impl Db {
     }
 
     #[doc(alias = "groupcache")]
-    pub fn groups(&self) -> Result<AlpmListMut<&Group>> {
+    pub fn groups(&self) -> Result<AlpmList<&Group>> {
         let groups = unsafe { alpm_db_get_groupcache(self.as_ptr()) };
         self.check_null(groups)?;
-        unsafe { Ok(AlpmListMut::from_ptr(groups)) }
+        unsafe { Ok(AlpmList::from_ptr(groups)) }
     }
 
     pub fn siglevel(&self) -> SigLevel {
