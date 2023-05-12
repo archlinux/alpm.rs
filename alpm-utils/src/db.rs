@@ -2,7 +2,7 @@ use alpm::{AlpmList, Db, Package, Result};
 
 use crate::AsTarg;
 
-/// Extention for AlpmList<Db>
+/// Extentions for `AlpmList<Db>`.
 pub trait DbListExt<'a> {
     /// Similar to find_satisfier() but expects a Target instead of a &str.
     fn find_target_satisfier<T: AsTarg>(&self, target: T) -> Option<Package<'a>>;
