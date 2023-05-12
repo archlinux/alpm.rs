@@ -8,19 +8,19 @@ use alpm::{Alpm, AlpmList, Db, IntoIter, Package};
 pub trait AlpmExt {
     /// An iterator of [`Package`]s that are found in "sync databases",
     /// typically registered in one's `pacman.conf`.
-    fn native_packages<'a>(&'a self) -> NativePkgs<'a>;
+    fn native_packages(&self) -> NativePkgs<'_>;
 
     /// The opposite of [`AlpmExt::native_packages`]; installed packages that
     /// aren't found in any registered "sync database".
-    fn foreign_packages<'a>(&'a self) -> ForeignPkgs<'a>;
+    fn foreign_packages(&self) -> ForeignPkgs<'_>;
 }
 
 impl AlpmExt for Alpm {
-    fn native_packages<'a>(&'a self) -> NativePkgs<'a> {
+    fn native_packages(&self) -> NativePkgs<'_> {
         NativePkgs::new(self)
     }
 
-    fn foreign_packages<'a>(&'a self) -> ForeignPkgs<'a> {
+    fn foreign_packages(&self) -> ForeignPkgs<'_> {
         ForeignPkgs::new(self)
     }
 }
