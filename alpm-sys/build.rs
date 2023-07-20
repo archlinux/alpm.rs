@@ -43,8 +43,8 @@ fn main() {
 
         let bindings = bindgen::builder()
             .header(header)
-            .whitelist_type("(alpm|ALPM).*")
-            .whitelist_function("(alpm|ALPM).*")
+            .allowlist_type("(alpm|ALPM).*")
+            .allowlist_function("(alpm|ALPM).*")
             .rustified_enum("_alpm_[a-z_]+_t")
             .rustified_enum("alpm_download_event_type_t")
             .constified_enum_module("_alpm_siglevel_t")

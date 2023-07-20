@@ -1,18 +1,18 @@
 [package]
 name = "alpm"
 version = "2.2.2"
-authors = ["morganamilo <morganamilo@gmail.com>"]
-readme = "../README.md"
-edition = "2018"
-
 description = "Rust bindings for libalpm"
-homepage = "http://github.com/archlinux/alpm.rs"
-repository = "http://github.com/archlinux/alpm.rs"
 documentation = "https://docs.rs/alpm"
-license = "GPL-3.0"
-keywords = ["archlinux", "arch", "alpm", "pacman"]
 categories = ["api-bindings"]
 exclude = ["tests"]
+
+authors.workspace = true
+readme.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
 
 [package.metadata.docs.rs]
 no-default-features = true
@@ -28,7 +28,7 @@ checkver = []
 docs-rs = ["alpm-sys/docs-rs"]
 
 [dependencies]
-bitflags = "1.3.2"
+bitflags = "2.3.3"
 libarchive = { version = "0.1.1", optional = true }
 libarchive3-sys = { version = "0.1.2", optional = true }
 alpm-sys = { path = "../alpm-sys", version = "2.1.0" }
@@ -37,7 +37,7 @@ alpm-sys = { path = "../alpm-sys", version = "2.1.0" }
 alpm-sys = { path = "../alpm-sys", version = "2.1.2" }
 
 [dev-dependencies]
-criterion = "0.3.5"
+criterion = "0.5.1"
 
 [[bench]]
 name = "list"

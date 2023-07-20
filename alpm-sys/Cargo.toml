@@ -1,16 +1,17 @@
 [package]
 name = "alpm-sys"
 version = "2.1.2"
-readme = "../README.md"
-authors = ["morganamilo <morganamilo@gmail.com>"]
-
 description = "Raw bindings for libalpm"
-homepage = "http://github.com/archlinux/alpm.rs"
-repository = "http://github.com/archlinux/alpm.rs"
 documentation = "https://docs.rs/alpm_sys"
-license = "GPL-3.0"
-keywords = ["archlinux", "arch", "alpm", "pacman"]
 categories = ["external-ffi-bindings"]
+
+authors.workspace = true
+readme.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
 
 [features]
 git = []
@@ -19,7 +20,7 @@ generate = ["bindgen"]
 docs-rs = []
 
 [build-dependencies]
-bindgen = { version = "0.55.1", optional = true, default-features = false, features = ["runtime"] }
+bindgen = { version = "0.66.1", optional = true, default-features = false, features = ["runtime"] }
 pkg-config = "0.3.19"
 
 [package.metadata.docs.rs]

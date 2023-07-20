@@ -1,15 +1,16 @@
 [package]
 name = "alpm-utils"
 version = "2.0.0"
-authors = ["morganamilo <morganamilo@gmail.com>"]
-edition = "2018"
-
 description = "Helper functions for working with alpm"
-homepage = "http://github.com/archlinux/alpm.rs"
-repository = "http://github.com/archlinux/alpm.rs"
 documentation = "https://docs.rs/alpm-utils"
-license = "GPL-3.0"
-keywords = ["archlinux", "arch", "alpm", "pacman"]
+
+authors.workspace = true
+readme.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
 
 [package.metadata.docs.rs]
 features = ["docs-rs", "pacmanconf"]

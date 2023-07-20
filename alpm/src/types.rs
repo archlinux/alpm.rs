@@ -41,6 +41,7 @@ pub enum FetchResult {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq)]
     pub struct SigLevel: u32 {
         const NONE = 0;
         const PACKAGE = ALPM_SIG_PACKAGE;
@@ -56,6 +57,7 @@ bitflags! {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq)]
     pub struct Usage: u32 {
         const NONE = 0;
         const SYNC = ALPM_DB_USAGE_SYNC;
@@ -67,6 +69,7 @@ bitflags! {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq)]
     pub struct LogLevel: u32 {
         const NONE = 0;
         const ERROR = ALPM_LOG_ERROR;
