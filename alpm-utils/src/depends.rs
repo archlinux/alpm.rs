@@ -1,11 +1,7 @@
 use alpm::{AsDep, DepModVer, Ver};
 
 /// Checks if a dependency is satisfied by a package (name + version).
-pub fn satisfies_dep<S: AsRef<str>, V: AsRef<Ver>>(
-    dep: impl AsDep,
-    name: S,
-    version: V,
-) -> bool {
+pub fn satisfies_dep<S: AsRef<str>, V: AsRef<Ver>>(dep: impl AsDep, name: S, version: V) -> bool {
     let name = name.as_ref();
     let dep = dep.as_dep();
 
