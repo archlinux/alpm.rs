@@ -8,8 +8,6 @@ fn main() {
 
     #[cfg(feature = "static")]
     println!("cargo:rerun-if-changed=/usr/lib/pacman/lib/pkgconfig");
-    #[cfg(feature = "static")]
-    println!("cargo:rustc-link-search=/usr/lib/pacman/lib/");
     println!("cargo:rerun-if-env-changed=ALPM_LIB_DIR");
 
     if cfg!(feature = "static") && Path::new("/usr/lib/pacman/lib/pkgconfig").exists() {
@@ -20,7 +18,8 @@ fn main() {
         println!("cargo:rustc-link-search={}", dir);
     }
 
-    pkg_config::Config::new()
+    #[allow(dead_code)]
+    let lib = pkg_config::Config::new()
         .atleast_version("13.0.0")
         .statik(cfg!(feature = "static"))
         .probe("libalpm")
@@ -28,23 +27,32 @@ fn main() {
 
     #[cfg(feature = "generate")]
     {
-        println!("cargo:rerun-if-env-changed=ALPM_INCLUDE_DIR");
-
         let out_dir = env::var_os("OUT_DIR").unwrap();
         let dest_path = Path::new(&out_dir).join("ffi_generated.rs");
 
-        let alpm_dir = env::var("ALPM_INCLUDE_DIR");
-        let alpm_dir = match alpm_dir {
-            Ok(ref dir) => Path::new(dir),
-            Err(_) => Path::new("/usr/include"),
-        };
+        let header = lib
+            .include_paths
+            .iter()
+            .map(|i| i.join("alpm.h"))
+            .find(|i| i.exists())
+            .expect("could not find alpm.h");
+        let mut include = lib
+            .include_paths
+            .iter()
+            .map(|i| format!("-I{}", i.display().to_string()))
+            .collect::<Vec<_>>();
 
-        let header = alpm_dir.join("alpm.h").to_str().unwrap().to_string();
+        println!("cargo:rerun-if-env-changed=ALPM_INCLUDE_DIR");
+        if let Ok(path) = env::var("ALPM_INCLUDE_DIR") {
+            include.clear();
+            include.insert(0, path);
+        }
 
         let bindings = bindgen::builder()
-            .header(header)
-            .whitelist_type("(alpm|ALPM).*")
-            .whitelist_function("(alpm|ALPM).*")
+            .clang_args(&include)
+            .header(header.display().to_string())
+            .allowlist_type("(alpm|ALPM).*")
+            .allowlist_function("(alpm|ALPM).*")
             .rustified_enum("_alpm_[a-z_]+_t")
             .rustified_enum("alpm_download_event_type_t")
             .constified_enum_module("_alpm_siglevel_t")
@@ -60,6 +68,13 @@ fn main() {
             .opaque_type("alpm_pkg_t")
             .opaque_type("alpm_trans_t")
             .size_t_is_usize(true)
+            .derive_eq(true)
+            .derive_ord(true)
+            .derive_copy(true)
+            .derive_hash(true)
+            .derive_debug(true)
+            .derive_partialeq(true)
+            .derive_debug(true)
             .generate()
             .unwrap();
 

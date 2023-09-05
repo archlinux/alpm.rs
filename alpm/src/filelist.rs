@@ -37,7 +37,8 @@ impl File {
     }
 
     pub fn mode(&self) -> u32 {
-        self.inner.mode
+        #[allow(clippy::useless_conversion)]
+        self.inner.mode.into()
     }
 }
 

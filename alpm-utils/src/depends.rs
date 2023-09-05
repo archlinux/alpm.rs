@@ -1,7 +1,7 @@
-use alpm::{DepModVer, Ver, Dep};
+use alpm::{Dep, DepModVer, Ver};
 
 /// Checks if a dependency is satisfied by a package (name + version).
-pub fn satisfies_dep<'a, S: AsRef<str>, V: AsRef<Ver>>(
+pub fn satisfies_dep<S: AsRef<str>, V: AsRef<Ver>>(
     dep: impl AsRef<Dep>,
     name: S,
     version: V,

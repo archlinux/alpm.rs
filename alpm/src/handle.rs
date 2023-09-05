@@ -439,13 +439,15 @@ mod tests {
         assert!(!handle.check_space());
 
         assert_eq!(handle.default_siglevel(), SigLevel::NONE);
-        handle
-            .set_default_siglevel(SigLevel::PACKAGE | SigLevel::DATABASE)
-            .unwrap();
-        assert_eq!(
-            handle.default_siglevel(),
-            SigLevel::PACKAGE | SigLevel::DATABASE
-        );
+        if crate::Capabilities::new().signatures() {
+            handle
+                .set_default_siglevel(SigLevel::PACKAGE | SigLevel::DATABASE)
+                .unwrap();
+            assert_eq!(
+                handle.default_siglevel(),
+                SigLevel::PACKAGE | SigLevel::DATABASE
+            );
+        }
 
         handle.set_ignorepkgs(["a", "b", "c"].iter()).unwrap();
         let pkgs = handle.ignorepkgs().iter().collect::<Vec<_>>();
