@@ -1,4 +1,4 @@
-use crate::utils::*;
+use crate::{utils::*, Package};
 use crate::{Alpm, AlpmListMut, AsAlpmList, Dep, Pkg};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
@@ -45,13 +45,19 @@ unsafe impl Sync for Conflict {}
 
 impl fmt::Debug for Conflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Conflict")
-            .field("package1", &self.package1())
-            .field("package1_hash", &self.package1_hash())
-            .field("package2", &self.package2())
-            .field("package2_hash", &self.package2_hash())
-            .field("reason", &self.reason())
-            .finish()
+        #[cfg(not(feature = "git"))]
+        {
+            f.debug_struct("Conflict")
+                .field("package1", &self.package1())
+                .field("package2", &self.package2())
+                .field("reason", &self.reason())
+                .finish()
+        }
+        // Implement properly when we merge the no handle code
+        #[cfg(feature = "git")]
+        {
+            f.debug_struct("Conflict").finish()
+        }
     }
 }
 
@@ -84,26 +90,12 @@ impl Conflict {
         &self.inner
     }
 
-    pub fn package1_hash(&self) -> u64 {
-        #[allow(clippy::useless_conversion)]
-        unsafe {
-            (*self.as_ptr()).package1_hash.into()
-        }
+    pub fn package1(&self) -> &Package {
+        unsafe { Package::from_ptr((*self.as_ptr()).package1) }
     }
 
-    pub fn package2_hash(&self) -> u64 {
-        #[allow(clippy::useless_conversion)]
-        unsafe {
-            (*self.as_ptr()).package2_hash.into()
-        }
-    }
-
-    pub fn package1(&self) -> &str {
-        unsafe { from_cstr((*self.as_ptr()).package1) }
-    }
-
-    pub fn package2(&self) -> &str {
-        unsafe { from_cstr((*self.as_ptr()).package2) }
+    pub fn package2(&self) -> &Package {
+        unsafe { Package::from_ptr((*self.as_ptr()).package2) }
     }
 
     pub fn reason(&self) -> &Dep {
