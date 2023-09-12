@@ -34,13 +34,19 @@ pub struct Conflict<'a> {
 
 impl<'a> fmt::Debug for Conflict<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Conflict")
-            .field("package1", &self.package1())
-            .field("package1_hash", &self.package1_hash())
-            .field("package2", &self.package2())
-            .field("package2_hash", &self.package2_hash())
-            .field("reason", &self.reason())
-            .finish()
+        #[cfg(not(feature = "git"))]
+        {
+            f.debug_struct("Conflict")
+                .field("package1", &self.package1())
+                .field("package2", &self.package2())
+                .field("reason", &self.reason())
+                .finish()
+        }
+        // Implement properly when we merge the no handle code
+        #[cfg(feature = "git")]
+        {
+            f.debug_struct("Conflict").finish()
+        }
     }
 }
 
@@ -70,6 +76,7 @@ impl<'a> Conflict<'a> {
         self.inner.as_ptr()
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn package1_hash(&self) -> u64 {
         #[allow(clippy::useless_conversion)]
         unsafe {
@@ -77,6 +84,7 @@ impl<'a> Conflict<'a> {
         }
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn package2_hash(&self) -> u64 {
         #[allow(clippy::useless_conversion)]
         unsafe {
@@ -84,12 +92,24 @@ impl<'a> Conflict<'a> {
         }
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn package1(&self) -> &'a str {
         unsafe { from_cstr((*self.as_ptr()).package1) }
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn package2(&self) -> &'a str {
         unsafe { from_cstr((*self.as_ptr()).package2) }
+    }
+
+    #[cfg(feature = "git")]
+    pub fn package1(&self) -> &'a str {
+        unsafe { from_cstr(alpm_pkg_get_name((*self.as_ptr()).package1)) }
+    }
+
+    #[cfg(feature = "git")]
+    pub fn package2(&self) -> &'a str {
+        unsafe { from_cstr(alpm_pkg_get_name((*self.as_ptr()).package2)) }
     }
 
     pub fn reason(&self) -> Dep<'a> {
