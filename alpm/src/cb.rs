@@ -7,8 +7,13 @@ use std::os::raw::{c_char, c_int};
 use std::{fmt, panic, ptr};
 
 extern "C" {
-    fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: *mut __va_list_tag) -> c_int;
+    fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: VaList) -> c_int;
 }
+
+#[cfg(not(target_os = "macos"))]
+pub type VaList = *mut __va_list_tag;
+#[cfg(target_os = "macos")]
+pub type VaList = va_list;
 
 type Cb<T> = UnsafeCell<Option<Box<T>>>;
 
@@ -475,7 +480,7 @@ extern "C" fn logcb<C: LogCbTrait>(
     ctx: *mut c_void,
     level: alpm_loglevel_t,
     fmt: *const c_char,
-    args: *mut __va_list_tag,
+    args: VaList,
 ) {
     let buff = ptr::null_mut();
     let n = unsafe { vasprintf(&buff, fmt, args) };
