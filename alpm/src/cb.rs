@@ -10,9 +10,9 @@ extern "C" {
     fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: VaList) -> c_int;
 }
 
-#[cfg(not(any(target_arch = "aarch64", target_arch = "aarch64")))]
+#[cfg(not(any(target_arch = "aarch64", target_arch = "arm")))]
 pub type VaList = *mut __va_list_tag;
-#[cfg(any(target_arch = "aarch64", target_arch = "aarch64"))]
+#[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
 pub type VaList = va_list;
 
 type Cb<T> = UnsafeCell<Option<Box<T>>>;
