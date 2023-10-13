@@ -51,7 +51,7 @@ pub struct Targ<'a> {
 
 impl<'a> Targ<'a> {
     /// Create a new Targ.
-    pub fn new<S: AsRef<str>>(repo: Option<&'a S>, pkg: &'a S) -> Targ<'a> {
+    pub fn new<S: AsRef<str>>(repo: Option<S>, pkg: S) -> Targ<'a> {
         Targ {
             repo: repo.map(AsRef::as_ref),
             pkg: pkg.as_ref(),
