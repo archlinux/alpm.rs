@@ -5,8 +5,8 @@ readme = "../README.md"
 authors = ["morganamilo <morganamilo@gmail.com>"]
 
 description = "Raw bindings for libalpm"
-homepage = "http://github.com/archlinux/alpm.rs"
-repository = "http://github.com/archlinux/alpm.rs"
+homepage = "https://github.com/archlinux/alpm.rs"
+repository = "https://github.com/archlinux/alpm.rs"
 documentation = "https://docs.rs/alpm_sys"
 license = "GPL-3.0"
 keywords = ["archlinux", "arch", "alpm", "pacman"]
