@@ -26,7 +26,7 @@ pub struct Target {
 
 impl AsTarg for Target {
     fn as_targ(&self) -> Targ {
-        Targ::new(self.repo.as_ref(), &self.pkg)
+        Targ::new(self.repo.as_deref(), &self.pkg)
     }
 }
 
@@ -51,11 +51,8 @@ pub struct Targ<'a> {
 
 impl<'a> Targ<'a> {
     /// Create a new Targ.
-    pub fn new<S: AsRef<str>>(repo: Option<S>, pkg: S) -> Targ<'a> {
-        Targ {
-            repo: repo.map(AsRef::as_ref),
-            pkg: pkg.as_ref(),
-        }
+    pub fn new(repo: Option<&'a str>, pkg: &'a str) -> Targ<'a> {
+        Targ { repo, pkg }
     }
 }
 
