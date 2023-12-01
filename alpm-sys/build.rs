@@ -19,7 +19,7 @@ fn main() {
     }
 
     #[allow(dead_code)]
-    let lib = pkg_config::Config::new()
+    let _lib = pkg_config::Config::new()
         .atleast_version("13.0.0")
         .statik(cfg!(feature = "static"))
         .probe("libalpm")
@@ -30,13 +30,13 @@ fn main() {
         let out_dir = env::var_os("OUT_DIR").unwrap();
         let dest_path = Path::new(&out_dir).join("ffi_generated.rs");
 
-        let header = lib
+        let header = _lib
             .include_paths
             .iter()
             .map(|i| i.join("alpm.h"))
             .find(|i| i.exists())
             .expect("could not find alpm.h");
-        let mut include = lib
+        let mut include = _lib
             .include_paths
             .iter()
             .map(|i| format!("-I{}", i.display().to_string()))
@@ -50,6 +50,7 @@ fn main() {
 
         let bindings = bindgen::builder()
             .clang_args(&include)
+            .array_pointers_in_arguments(true)
             .header(header.display().to_string())
             .allowlist_type("(alpm|ALPM).*")
             .allowlist_function("(alpm|ALPM).*")
