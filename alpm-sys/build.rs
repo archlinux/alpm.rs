@@ -50,7 +50,6 @@ fn main() {
 
         let bindings = bindgen::builder()
             .clang_args(&include)
-            .array_pointers_in_arguments(true)
             .header(header.display().to_string())
             .allowlist_type("(alpm|ALPM).*")
             .allowlist_function("(alpm|ALPM).*")
