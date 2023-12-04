@@ -1,5 +1,13 @@
 # Changelog
 
+## alpm v2.2.3 alpm-utils v1.1.3 alpm-sys v2.1.3 (2021-12-04)
+
+### Fixed
+
+- Fix check_signature being on wrong type
+- Fix Target having broken constructor
+- Update alpm-sys bindings
+
 ## alpm v2.2.2 (2023-05-07)
 
 ### Fixed
