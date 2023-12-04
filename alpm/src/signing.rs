@@ -1,5 +1,5 @@
-use crate::utils::*;
-use crate::{free, Alpm, AlpmListMut, Db, Package, Result};
+use crate::{free, Alpm, AlpmListMut, Db, Result};
+use crate::{utils::*, Pkg};
 
 use alpm_sys::_alpm_sigstatus_t::*;
 use alpm_sys::_alpm_sigvalidity_t::*;
@@ -190,7 +190,7 @@ impl SigList {
     }
 }
 
-impl Package {
+impl Pkg {
     pub fn check_signature(&self) -> Result<(bool, SigList)> {
         let mut siglist = SigList::new();
         let ret = unsafe { alpm_pkg_check_pgp_signature(self.as_ptr(), &mut siglist.inner) };
