@@ -1,22 +1,74 @@
-use crate::depends::satisfies_ver;
+//! Extension methods for the [`Alpm`] type.
 
-use alpm::{Alpm, Result, Package, Depend};
+use crate::DbListExt;
+use alpm::{Alpm, AlpmList, Db, IntoIter, Package};
 
+/// Extension methods for [`Alpm`] which aren't critical enough to live in the
+/// main crate, directly within `Alpm`.
 pub trait AlpmExt {
-    fn find_local_satisfier<S: Into<String>>(&self, pkg: S) -> Result<Option<Package>>;
+    /// An iterator of [`Package`]s that are found in "sync databases",
+    /// typically registered in one's `pacman.conf`.
+    fn native_packages(&self) -> NativePkgs<'_>;
+
+    /// The opposite of [`AlpmExt::native_packages`]; installed packages that
+    /// aren't found in any registered "sync database".
+    fn foreign_packages(&self) -> ForeignPkgs<'_>;
 }
 
 impl AlpmExt for Alpm {
-    fn find_local_satisfier<S: Into<String>>(&self, pkg: S) -> Result<Option<Package>> {
-        let localdb = self.localdb();
-        let pkg = pkg.into();
+    fn native_packages(&self) -> NativePkgs<'_> {
+        NativePkgs::new(self)
+    }
 
-        if let Ok(alpm_pkg) = localdb.pkg(&pkg) {
-            if satisfies_ver(&Depend::new(&pkg), alpm_pkg.version()) {
-                return Ok(Some(alpm_pkg));
-            }
-        }
+    fn foreign_packages(&self) -> ForeignPkgs<'_> {
+        ForeignPkgs::new(self)
+    }
+}
 
-        return Ok(localdb.pkgs()?.find_satisfier(pkg));
+/// [`Package`]s that are found in registered "sync databases".
+pub struct NativePkgs<'a> {
+    local: IntoIter<'a, Package<'a>>,
+    sync: AlpmList<'a, Db<'a>>,
+}
+
+impl<'a> NativePkgs<'a> {
+    fn new(alpm: &'a Alpm) -> NativePkgs<'a> {
+        let local = alpm.localdb().pkgs().into_iter();
+        let sync = alpm.syncdbs();
+
+        NativePkgs { local, sync }
+    }
+}
+
+impl<'a> Iterator for NativePkgs<'a> {
+    type Item = Package<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let s = self.sync;
+        self.local.find(|p| s.pkg(p.name()).is_ok())
+    }
+}
+
+/// Installed [`Package`]s that are _not_ found in registered "sync databases".
+pub struct ForeignPkgs<'a> {
+    local: IntoIter<'a, Package<'a>>,
+    sync: AlpmList<'a, Db<'a>>,
+}
+
+impl<'a> ForeignPkgs<'a> {
+    fn new(alpm: &'a Alpm) -> ForeignPkgs<'a> {
+        let local = alpm.localdb().pkgs().into_iter();
+        let sync = alpm.syncdbs();
+
+        ForeignPkgs { local, sync }
+    }
+}
+
+impl<'a> Iterator for ForeignPkgs<'a> {
+    type Item = Package<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let s = self.sync;
+        self.local.find(|p| s.pkg(p.name()).is_err())
     }
 }
