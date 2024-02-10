@@ -28,7 +28,7 @@ checkver = []
 docs-rs = ["alpm-sys/docs-rs"]
 
 [dependencies]
-bitflags = "1.3.2"
+bitflags = "2.4.2"
 libarchive = { version = "0.1.1", optional = true }
 libarchive3-sys = { version = "0.1.2", optional = true }
 alpm-sys = { path = "../alpm-sys", version = "2.1.3" }
@@ -37,7 +37,7 @@ alpm-sys = { path = "../alpm-sys", version = "2.1.3" }
 alpm-sys = { path = "../alpm-sys", version = "2.1.3" }
 
 [dev-dependencies]
-criterion = "0.3.5"
+criterion = "0.5.1"
 
 [[bench]]
 name = "list"
