@@ -30,10 +30,7 @@ unsafe impl<'l, T: Sync> Sync for AlpmList<'l, T> {}
 
 impl<'l, T> Clone for AlpmList<'l, T> {
     fn clone(&self) -> Self {
-        AlpmList {
-            list: self.list,
-            _marker: PhantomData,
-        }
+        *self
     }
 }
 

@@ -330,7 +330,7 @@ unsafe impl<'a> IntoAlpmListPtr for DbMut<'a> {
     }
 }
 
-unsafe impl<'a> IntoAlpmListPtr for DependMissing {
+unsafe impl IntoAlpmListPtr for DependMissing {
     type Output = Self;
     fn as_ptr(&self) -> *mut c_void {
         DepMissing::as_ptr(self) as _

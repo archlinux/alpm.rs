@@ -36,7 +36,7 @@ pub fn satisfies_provide(dep: impl AsRef<Dep>, provide: impl AsRef<Dep>) -> bool
 }
 
 /// Checks if a Dep is satisfied by a name + version + provides combo
-pub fn satisfies<'a, D: AsRef<Dep>, S: AsRef<str>, V: AsRef<Ver>>(
+pub fn satisfies<D: AsRef<Dep>, S: AsRef<str>, V: AsRef<Ver>>(
     dep: impl AsRef<Dep>,
     name: S,
     version: V,
@@ -47,7 +47,7 @@ pub fn satisfies<'a, D: AsRef<Dep>, S: AsRef<str>, V: AsRef<Ver>>(
 }
 
 /// Checks if a Dep is satisfied by a name + provides (ignoring version) combo
-pub fn satisfies_nover<'a, D: AsRef<Dep>, S: AsRef<str>>(
+pub fn satisfies_nover<D: AsRef<Dep>, S: AsRef<str>>(
     dep: impl AsRef<Dep>,
     name: S,
     mut provides: impl Iterator<Item = D>,
@@ -57,7 +57,7 @@ pub fn satisfies_nover<'a, D: AsRef<Dep>, S: AsRef<str>>(
 }
 
 /// Checks if a dependency is satisfied by a package (name only).
-pub fn satisfies_dep_nover<'a, S: AsRef<str>>(dep: impl AsRef<Dep>, name: S) -> bool {
+pub fn satisfies_dep_nover<S: AsRef<str>>(dep: impl AsRef<Dep>, name: S) -> bool {
     dep.as_ref().name() == name.as_ref()
 }
 
