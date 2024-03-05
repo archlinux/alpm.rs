@@ -3,6 +3,7 @@ use crate::{AlpmList, AlpmListMut, BorrowAlpmListItem, IntoAlpmListItem, IntoAlp
 use std::iter::FromIterator;
 
 pub trait AsAlpmList<T> {
+    #[doc(hidden)]
     fn with<R, F: FnOnce(AlpmList<T>) -> R>(self, f: F) -> R;
 }
 
