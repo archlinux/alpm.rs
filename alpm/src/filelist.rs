@@ -74,17 +74,12 @@ impl<'h> FileList<'h> {
         self.inner.get()
     }
 
-    pub fn files(&self) -> Option<&[File]> {
+    pub fn files(&self) -> &[File] {
         let files = unsafe { *self.as_ptr() };
         if files.files.is_null() {
-            None
+            &[]
         } else {
-            unsafe {
-                Some(slice::from_raw_parts(
-                    files.files as *const File,
-                    files.count,
-                ))
-            }
+            unsafe { slice::from_raw_parts(files.files as *const File, files.count) }
         }
     }
 
@@ -112,13 +107,13 @@ mod tests {
         let pkg = db.pkg("linux").unwrap();
         let files = pkg.files();
 
-        assert!(files.files().is_none());
+        assert!(files.files().is_empty());
 
         let db = handle.localdb();
         let pkg = db.pkg("linux").unwrap();
         let files = pkg.files();
 
-        assert!(!files.files().unwrap().is_empty());
+        assert!(!files.files().is_empty());
 
         let file = files.contains("boot/").unwrap();
         assert_eq!(file.name(), "boot/");

@@ -336,7 +336,7 @@ mod tests {
         let pkg = db.pkg("filesystem").unwrap();
         let files = pkg.files();
 
-        for file in files.files().unwrap() {
+        for file in files.files() {
             println!("{}", file.name());
         }
 
@@ -351,7 +351,7 @@ mod tests {
         let pkg = db.pkg("filesystem").unwrap();
         let files = pkg.files();
 
-        assert!(files.files().is_none());
+        assert!(files.files().is_empty());
     }
 
     #[test]
