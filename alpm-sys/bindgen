@@ -1,8 +1,8 @@
 #!/bin/sh
 
 bindgen /usr/include/alpm.h \
-    --whitelist-type '(alpm|ALPM).*' \
-    --whitelist-function '(alpm|ALPM).*' \
+    --allowlist-type '(alpm|ALPM).*' \
+    --allowlist-function '(alpm|ALPM).*' \
     --rustified-enum '_alpm_[a-z_]+_t' \
     --rustified-enum 'alpm_download_event_type_t' \
     --constified-enum-module '_alpm_siglevel_t' \
@@ -16,5 +16,4 @@ bindgen /usr/include/alpm.h \
     --opaque-type alpm_handle_t \
     --opaque-type alpm_db_t \
     --opaque-type alpm_pkg_t \
-    --opaque-type alpm_trans_t \
-    --size_t-is-usize \
+    --opaque-type alpm_trans_t
