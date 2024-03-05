@@ -5,7 +5,7 @@ use alpm_sys::*;
 use std::ptr;
 
 impl Alpm {
-    pub fn fetch_pkgurl<L: AsAlpmList<String>>(&self, urls: L) -> Result<AlpmListMut<String>> {
+    pub fn fetch_pkgurl<'a, L: AsAlpmList<&'a str>>(&self, urls: L) -> Result<AlpmListMut<String>> {
         urls.with(|url| {
             let mut out = ptr::null_mut();
             let ret = unsafe { alpm_fetch_pkgurl(self.as_ptr(), url.as_ptr(), &mut out) };
