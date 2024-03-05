@@ -100,6 +100,7 @@ pub fn version() -> &'static str {
 }
 
 bitflags! {
+    #[derive(Debug, PartialEq, Eq)]
     pub struct Capabilities: u32 {
         const NLS = alpm_caps::ALPM_CAPABILITY_NLS;
         const DOWNLOADER = alpm_caps::ALPM_CAPABILITY_DOWNLOADER;

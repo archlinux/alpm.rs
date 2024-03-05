@@ -9,4 +9,4 @@ edition = "2021"
 homepage = "http://github.com/archlinux/alpm.rs"
 repository = "http://github.com/archlinux/alpm.rs"
 license = "GPL-3.0"
-keywords = ["archlinux", "arch", "linux", "alpm", "pacman", "bindings"]
+keywords = ["archlinux", "arch", "alpm", "pacman", "bindings"]

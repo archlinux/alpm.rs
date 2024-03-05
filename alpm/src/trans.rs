@@ -12,6 +12,7 @@ use std::ptr;
 use bitflags::bitflags;
 
 bitflags! {
+    #[derive(Debug, PartialEq, Eq)]
     pub struct TransFlag: u32 {
         const NONE = 0;
         const NO_DEPS = ALPM_TRANS_FLAG_NODEPS;
