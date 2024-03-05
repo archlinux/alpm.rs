@@ -242,8 +242,8 @@ mod tests {
         let i3gaps = handle.syncdbs().find_satisfier("i3-gaps").unwrap();
         let conflicts = handle.check_conflicts(vec![i3, i3gaps].iter());
         let conflict = conflicts.first().unwrap();
-        assert_eq!(conflict.package1(), "i3-gaps");
-        assert_eq!(conflict.package2(), "i3-wm");
+        assert_eq!(conflict.package1().name(), "i3-gaps");
+        assert_eq!(conflict.package2().name(), "i3-wm");
 
         let xterm = handle.syncdbs().find_satisfier("xterm").unwrap();
         let systemd = handle.syncdbs().find_satisfier("systemd").unwrap();

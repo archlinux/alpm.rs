@@ -588,7 +588,11 @@ mod tests {
         match question.question() {
             Question::Conflict(x) => {
                 let c = x.conflict();
-                println!("CONFLICT BETWEEN {} AND {}", c.package1(), c.package2(),);
+                println!(
+                    "CONFLICT BETWEEN {} AND {}",
+                    c.package1().name(),
+                    c.package2().name()
+                );
                 println!("conflict: {}", c.reason());
             }
             _ => (),
