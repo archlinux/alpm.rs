@@ -191,30 +191,22 @@ impl SigList {
 }
 
 impl Pkg {
-    pub fn check_signature(&self) -> Result<(bool, SigList)> {
-        let mut siglist = SigList::new();
+    pub fn check_signature(&self, siglist: &mut SigList) -> Result<()> {
         let ret = unsafe { alpm_pkg_check_pgp_signature(self.as_ptr(), &mut siglist.inner) };
-        let valid = match ret {
-            0 => true,
-            1 => false,
-            _ => return Err(self.last_error()),
-        };
-
-        Ok((valid, siglist))
+        match ret {
+            0 => Ok(()),
+            _ => Err(self.last_error()),
+        }
     }
 }
 
 impl Db {
-    pub fn check_signature(&self) -> Result<(bool, SigList)> {
-        let mut siglist = SigList::new();
+    pub fn check_signature(&self, siglist: &mut SigList) -> Result<()> {
         let ret = unsafe { alpm_db_check_pgp_signature(self.as_ptr(), &mut siglist.inner) };
-        let valid = match ret {
-            0 => true,
-            1 => false,
-            _ => return Err(self.last_error()),
-        };
-
-        Ok((valid, siglist))
+        match ret {
+            0 => Ok(()),
+            _ => Err(self.last_error()),
+        }
     }
 }
 
