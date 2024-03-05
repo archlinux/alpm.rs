@@ -1,3 +1,12 @@
 [workspace]
 members = [ "alpm-sys", "alpm", "alpm-utils" ]
+resolver = "2"
 
+[workspace.package]
+readme = "README.md"
+authors = ["morganamilo <morganamilo@archlinux.org>"]
+edition = "2021"
+homepage = "http://github.com/archlinux/alpm.rs"
+repository = "http://github.com/archlinux/alpm.rs"
+license = "GPL-3.0"
+keywords = ["archlinux", "arch", "linux", "alpm", "pacman", "bindings"]

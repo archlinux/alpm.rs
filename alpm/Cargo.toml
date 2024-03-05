@@ -1,17 +1,17 @@
 [package]
 name = "alpm"
 version = "2.2.1"
-authors = ["morganamilo <morganamilo@gmail.com>"]
-readme = "../README.md"
-edition = "2018"
-
 description = "Rust bindings for libalpm"
-homepage = "https://github.com/archlinux/alpm.rs"
-repository = "https://github.com/archlinux/alpm.rs"
 documentation = "https://docs.rs/alpm"
-license = "GPL-3.0"
-keywords = ["archlinux", "arch", "alpm", "pacman"]
-categories = ["api-bindings"]
+
+authors.workspace = true
+readme.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+
 exclude = ["tests"]
 
 [package.metadata.docs.rs]
