@@ -225,7 +225,7 @@ impl<'a, T: IntoAlpmListItem + BorrowAlpmListItem<'a>> AlpmListMut<T> {
         self.list().last()
     }
 
-    pub fn iter(&'a self) -> Iter<T::Borrow> {
+    pub fn iter(&self) -> Iter<T::Borrow> {
         unsafe { AlpmList::from_ptr(self.list).into_iter() }
     }
 }
