@@ -1,5 +1,5 @@
 use crate::utils::*;
-use crate::{Alpm, AlpmList, AsAlpmList, Db, DbMut, Dep, Depend, Match, Result, SigLevel};
+use crate::{Alpm, AlpmList, AsAlpmList, Db, DbMut, Dep, Match, Result, SigLevel};
 
 use alpm_sys::*;
 use std::cmp::Ordering;
@@ -70,7 +70,7 @@ impl Alpm {
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn assume_installed(&self) -> AlpmList<'_, Depend> {
+    pub fn assume_installed(&self) -> AlpmList<'_, &Dep> {
         let list = unsafe { alpm_option_get_assumeinstalled(self.as_ptr()) };
         unsafe { AlpmList::from_ptr(list) }
     }
