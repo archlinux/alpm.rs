@@ -529,6 +529,14 @@ unsafe impl<'a> BorrowAlpmListItem<'a> for Depend {
     type Borrow = &'a Dep;
 }
 
+unsafe impl<'a> BorrowAlpmListItem<'a> for DbMut<'a> {
+    type Borrow = &'a Db;
+}
+
+unsafe impl<'a> BorrowAlpmListItem<'a> for &Db {
+    type Borrow = &'a Db;
+}
+
 unsafe impl<'a> BorrowAlpmListItem<'a> for &Dep {
     type Borrow = &'a Dep;
 }
