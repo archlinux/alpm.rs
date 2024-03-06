@@ -336,7 +336,7 @@ impl DepMissing {
     }
 }
 
-impl<'a> AlpmList<'a, &'a Db> {
+impl<'a> AlpmList<'_, &'a Db> {
     pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<&'a Package> {
         let dep = CString::new(dep).unwrap();
         let handle = self.first().map(|p| p.handle_ptr())?;
@@ -350,7 +350,7 @@ impl<'a> AlpmList<'a, &'a Db> {
     }
 }
 
-impl<'a> AlpmList<'a, &'a Package> {
+impl<'a> AlpmList<'_, &'a Package> {
     pub fn find_satisfier<S: Into<Vec<u8>>>(&self, dep: S) -> Option<&'a Package> {
         let dep = CString::new(dep).unwrap();
 

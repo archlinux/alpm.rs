@@ -26,7 +26,7 @@ impl<'a> DbListExt<'a> for AlpmListMut<&'a Db> {
     }
 }
 
-impl<'a> DbListExt<'a> for AlpmList<'a, &'a Db> {
+impl<'a> DbListExt<'a> for AlpmList<'_, &'a Db> {
     fn find_target_satisfier<T: AsTarg>(&self, target: T) -> Option<&'a Package> {
         let target = target.as_targ();
 
