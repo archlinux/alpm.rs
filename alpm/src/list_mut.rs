@@ -129,7 +129,7 @@ impl<T: IntoAlpmListPtr> Extend<T> for AlpmListMut<T::Output> {
 }
 
 impl<'a, T: IntoAlpmListItem + BorrowAlpmListItem<'a>> AlpmListMut<T> {
-    pub fn list(&self) -> AlpmList<T::Borrow> {
+    pub fn list(&self) -> AlpmList<'a, T::Borrow> {
         unsafe { AlpmList::from_ptr(self.list) }
     }
 }
@@ -530,7 +530,7 @@ unsafe impl<'a> BorrowAlpmListItem<'a> for Depend {
 }
 
 unsafe impl<'a> BorrowAlpmListItem<'a> for DbMut<'a> {
-    type Borrow = &'a Db;
+    type Borrow = DbMut<'a>;
 }
 
 unsafe impl<'a> BorrowAlpmListItem<'a> for &Db {
