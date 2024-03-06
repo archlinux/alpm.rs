@@ -1,4 +1,4 @@
-use alpm::{AlpmList, Db, Package, Result};
+use alpm::{AlpmList, AlpmListMut, Db, Package, Result};
 
 use crate::AsTarg;
 
@@ -10,6 +10,20 @@ pub trait DbListExt<'a> {
     fn find_target<T: AsTarg>(&self, target: T) -> Result<&'a Package>;
     /// The same as pkg() on Db but will try each Db in order return the first match.
     fn pkg<S: Into<Vec<u8>>>(&self, pkg: S) -> Result<&'a Package>;
+}
+
+impl<'a> DbListExt<'a> for AlpmListMut<&'a Db> {
+    fn find_target_satisfier<T: AsTarg>(&self, target: T) -> Option<&'a Package> {
+        self.list().find_target_satisfier(target)
+    }
+
+    fn find_target<T: AsTarg>(&self, target: T) -> Result<&'a Package> {
+        self.list().find_target(target)
+    }
+
+    fn pkg<S: Into<Vec<u8>>>(&self, pkg: S) -> Result<&'a Package> {
+        self.list().pkg(pkg)
+    }
 }
 
 impl<'a> DbListExt<'a> for AlpmList<'a, &'a Db> {
