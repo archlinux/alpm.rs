@@ -1,4 +1,10 @@
 use alpm::{Alpm, SigLevel, Usage};
+
+/// Re-export of pacmanconf.
+pub mod config {
+    pub use pacmanconf::*;
+}
+
 use pacmanconf::Config;
 
 /// Initiates and configures Alpm using a pacman config.
