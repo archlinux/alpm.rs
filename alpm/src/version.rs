@@ -93,6 +93,12 @@ impl PartialEq<Version> for &Ver {
 #[derive(Debug, Eq, Clone)]
 pub struct Version(CString);
 
+impl From<String> for Version {
+    fn from(value: String) -> Self {
+        Version::new(value.into_bytes())
+    }
+}
+
 impl Version {
     pub fn new<S: Into<Vec<u8>>>(s: S) -> Self {
         let s = CString::new(s).unwrap();
