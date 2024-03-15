@@ -1,6 +1,6 @@
 [package]
 name = "alpm"
-version = "3.0.4"
+version = "3.0.5"
 description = "Rust bindings for libalpm"
 documentation = "https://docs.rs/alpm"
 
