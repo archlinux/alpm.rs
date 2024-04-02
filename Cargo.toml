@@ -8,5 +8,5 @@ authors = ["morganamilo <morganamilo@archlinux.org>"]
 edition = "2021"
 homepage = "http://github.com/archlinux/alpm.rs"
 repository = "http://github.com/archlinux/alpm.rs"
-license = "GPL-3.0"
+license = "GPL-3.0-only"
 keywords = ["archlinux", "arch", "alpm", "pacman", "bindings"]
