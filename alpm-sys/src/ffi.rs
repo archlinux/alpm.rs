@@ -3546,6 +3546,18 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Returns the user to switch to for sensitive operations.\n @return the user name"]
+    pub fn alpm_option_get_sandboxuser(handle: *mut alpm_handle_t)
+        -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Sets the user to switch to for sensitive operations.\n @param handle the context handle\n @param sandboxuser the user to set"]
+    pub fn alpm_option_set_sandboxuser(
+        handle: *mut alpm_handle_t,
+        sandboxuser: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
     #[doc = " Returns whether to use syslog (0 is FALSE, TRUE otherwise).\n @param handle the context handle\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_option_get_usesyslog(handle: *mut alpm_handle_t) -> ::std::os::raw::c_int;
 }
@@ -3794,6 +3806,13 @@ extern "C" {
     pub fn alpm_option_set_parallel_downloads(
         handle: *mut alpm_handle_t,
         num_streams: ::std::os::raw::c_uint,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Enables/disables the sandbox.\n @param handle the context handle\n @param disable_sandbox 0 for enabled, 1 for disabled\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]
+    pub fn alpm_option_set_disable_sandbox(
+        handle: *mut alpm_handle_t,
+        disable_sandbox: ::std::os::raw::c_ushort,
     ) -> ::std::os::raw::c_int;
 }
 #[repr(u32)]
@@ -4220,6 +4239,14 @@ extern "C" {
 extern "C" {
     #[doc = " Get the capabilities of the library.\n @return a bitmask of the capabilities"]
     pub fn alpm_capabilities() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Drop privileges by switching to a different user.\n @param handle the context handle\n @param sandboxuser the user to switch to\n @param sandbox_path if non-NULL, restrict writes to this filesystem path\n @return 0 on success, -1 on failure"]
+    pub fn alpm_sandbox_setup_child(
+        handle: *mut alpm_handle_t,
+        sandboxuser: *const ::std::os::raw::c_char,
+        sandbox_path: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
 }
 pub type __builtin_va_list = [__va_list_tag; 1usize];
 #[repr(C)]
