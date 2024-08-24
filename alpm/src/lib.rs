@@ -25,6 +25,7 @@ mod log;
 mod mtree;
 mod package;
 mod remove;
+mod sandbox;
 mod signing;
 mod sync;
 mod trans;
@@ -49,6 +50,7 @@ pub use crate::list_with::*;
 #[cfg(feature = "mtree")]
 pub use crate::mtree::*;
 pub use crate::package::*;
+pub use crate::sandbox::*;
 pub use crate::signing::*;
 pub use crate::trans::*;
 pub use crate::types::*;

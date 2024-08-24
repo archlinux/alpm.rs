@@ -4,6 +4,7 @@ use crate::{Alpm, AlpmList, AsAlpmList, Db, DbMut, Dep, Match, Result, SigLevel}
 use alpm_sys::*;
 use std::cmp::Ordering;
 use std::ffi::CString;
+use std::ptr;
 
 impl Alpm {
     pub fn as_alpm_handle_t(&self) -> *mut alpm_handle_t {
@@ -43,6 +44,9 @@ impl Alpm {
 
     pub fn use_syslog(&self) -> bool {
         unsafe { alpm_option_get_usesyslog(self.as_ptr()) != 0 }
+    }
+    pub fn sandbox_user(&self) -> Option<&str> {
+        unsafe { from_cstr_optional(alpm_option_get_sandboxuser(self.as_ptr())) }
     }
 
     pub fn noupgrades(&self) -> AlpmList<'_, &str> {
@@ -153,6 +157,21 @@ impl Alpm {
     pub fn set_use_syslog(&self, b: bool) {
         let b = if b { 1 } else { 0 };
         unsafe { alpm_option_set_usesyslog(self.as_ptr(), b) };
+    }
+
+    pub fn set_sandbox_user<S: Into<Vec<u8>>>(&mut self, s: Option<S>) -> Result<()> {
+        let ret = if let Some(s) = s {
+            let s = CString::new(s).unwrap();
+            unsafe { alpm_option_set_sandboxuser(self.as_ptr(), s.as_ptr()) }
+        } else {
+            unsafe { alpm_option_set_sandboxuser(self.as_ptr(), ptr::null()) }
+        };
+        self.check_ret(ret)
+    }
+
+    pub fn set_disable_sandbox(&self, b: bool) {
+        let b = if b { 1 } else { 0 };
+        unsafe { alpm_option_set_disable_sandbox(self.as_ptr(), b) };
     }
 
     pub fn add_noupgrade<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
