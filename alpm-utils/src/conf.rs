@@ -57,6 +57,8 @@ pub fn configure_alpm(alpm: &mut Alpm, conf: &Config) -> alpm::Result<()> {
     alpm.set_check_space(conf.check_space);
     alpm.set_disable_dl_timeout(conf.disable_download_timeout);
     alpm.set_parallel_downloads(conf.parallel_downloads as u32);
+    alpm.set_disable_sandbox(conf.disable_sandbox);
+    alpm.set_sandbox_user(conf.download_user.clone())?;
 
     for repo in &conf.repos {
         register_db(alpm, repo)?;
