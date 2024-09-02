@@ -25,7 +25,7 @@ previous versions if the API was not changed.
 
 alpm.rs also supports the pacman git master via the git feature.
 
-Currently alpm.rs supports libalpm v13.x.x.
+Currently alpm.rs supports libalpm v15.x.x.
 
 **Note:** When using the git feature, alpm.rs is updated against the libalpm git master
 as commits happen. As the git version is not considered stable software, this is done
