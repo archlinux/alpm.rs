@@ -1,4 +1,7 @@
-use crate::{Alpm, AlpmList, AlpmListMut, DependMissing, Error, OwnedConflict, Package, Result};
+use crate::{
+    Alpm, AlpmList, AlpmListMut, DependMissing, Error, OwnedConflict, OwnedFileConflict, Package,
+    Result,
+};
 
 use alpm_sys::_alpm_transflag_t::*;
 use alpm_sys::*;
@@ -93,7 +96,7 @@ impl<'a> PrepareError<'a> {
 
 #[derive(Debug)]
 pub enum CommitData {
-    FileConflict(AlpmListMut<OwnedConflict>),
+    FileConflict(AlpmListMut<OwnedFileConflict>),
     PkgInvalid(AlpmListMut<String>),
 }
 
