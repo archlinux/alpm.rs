@@ -78,18 +78,24 @@ impl<'a> PrepareError<'a> {
         self.error
     }
 
-    pub fn data(&self) -> PrepareData {
+    pub fn data(&self) -> Option<PrepareData> {
         match self.error {
             Error::PkgInvalidArch => unsafe {
-                PrepareData::PkgInvalidArch(AlpmListMut::from_ptr(self.data))
+                Some(PrepareData::PkgInvalidArch(AlpmListMut::from_ptr(
+                    self.data,
+                )))
             },
             Error::UnsatisfiedDeps => unsafe {
-                PrepareData::UnsatisfiedDeps(AlpmListMut::from_ptr(self.data))
+                Some(PrepareData::UnsatisfiedDeps(AlpmListMut::from_ptr(
+                    self.data,
+                )))
             },
             Error::ConflictingDeps => unsafe {
-                PrepareData::ConflictingDeps(AlpmListMut::from_ptr(self.data))
+                Some(PrepareData::ConflictingDeps(AlpmListMut::from_ptr(
+                    self.data,
+                )))
             },
-            _ => unsafe { unreachable_unchecked() },
+            _ => None,
         }
     }
 }
@@ -133,15 +139,15 @@ impl CommitError {
         self.error
     }
 
-    pub fn data(&self) -> CommitData {
+    pub fn data(&self) -> Option<CommitData> {
         match self.error {
             Error::FileConflicts => unsafe {
-                CommitData::FileConflict(AlpmListMut::from_ptr(self.data))
+                Some(CommitData::FileConflict(AlpmListMut::from_ptr(self.data)))
             },
             Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => unsafe {
-                CommitData::PkgInvalid(AlpmListMut::from_ptr(self.data))
+                Some(CommitData::PkgInvalid(AlpmListMut::from_ptr(self.data)))
             },
-            _ => unsafe { unreachable_unchecked() },
+            _ => None,
         }
     }
 }
