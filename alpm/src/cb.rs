@@ -39,7 +39,6 @@ pub(crate) trait DlCbTrait {
 
 pub(crate) trait EventCbTrait {
     fn call(&self, event: AnyEvent);
-    fn handle(&self) -> *mut alpm_handle_t;
     fn assert_unlocked(&self);
 }
 
@@ -50,7 +49,6 @@ pub(crate) trait ProgressCbTrait {
 
 pub(crate) trait QuestionCbTrait {
     fn call(&self, question: AnyQuestion);
-    fn handle(&self) -> *mut alpm_handle_t;
     fn assert_unlocked(&self);
 }
 
@@ -85,7 +83,7 @@ impl<T, F: FnMut(&str, AnyDownloadEvent, &mut T)> DlCbTrait for DlCbImpl<T, F> {
     }
 }
 
-struct EventCbImpl<T, F>(RefCell<(F, T)>, *mut alpm_handle_t);
+struct EventCbImpl<T, F>(RefCell<(F, T)>);
 
 impl<T, F: FnMut(AnyEvent, &mut T)> EventCbTrait for EventCbImpl<T, F> {
     fn call(&self, event: AnyEvent) {
@@ -96,10 +94,6 @@ impl<T, F: FnMut(AnyEvent, &mut T)> EventCbTrait for EventCbImpl<T, F> {
 
     fn assert_unlocked(&self) {
         self.0.try_borrow_mut().expect("callback is in use");
-    }
-
-    fn handle(&self) -> *mut alpm_handle_t {
-        self.1
     }
 }
 
@@ -125,7 +119,7 @@ impl<T, F: FnMut(Progress, &str, i32, usize, usize, &mut T)> ProgressCbTrait
     }
 }
 
-struct QuestionCbImpl<T, F>(RefCell<(F, T)>, *mut alpm_handle_t);
+struct QuestionCbImpl<T, F>(RefCell<(F, T)>);
 
 impl<T, F: FnMut(AnyQuestion, &mut T)> QuestionCbTrait for QuestionCbImpl<T, F> {
     fn call(&self, question: AnyQuestion) {
@@ -135,10 +129,6 @@ impl<T, F: FnMut(AnyQuestion, &mut T)> QuestionCbTrait for QuestionCbImpl<T, F> 
     }
     fn assert_unlocked(&self) {
         self.0.try_borrow_mut().expect("callback is in use");
-    }
-
-    fn handle(&self) -> *mut alpm_handle_t {
-        self.1
     }
 }
 
@@ -270,7 +260,7 @@ impl Alpm {
         if let Some(cb) = c.as_ref() {
             cb.assert_unlocked()
         }
-        let ctx = EventCbImpl(RefCell::new((f, data)), self.as_ptr());
+        let ctx = EventCbImpl(RefCell::new((f, data)));
         let ctx = Box::new(ctx);
         let cb = eventcb::<EventCbImpl<T, F>>;
         unsafe { alpm_option_set_eventcb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
@@ -305,7 +295,7 @@ impl Alpm {
         if let Some(cb) = c.as_ref() {
             cb.assert_unlocked()
         }
-        let ctx = QuestionCbImpl(RefCell::new((f, data)), self.as_ptr());
+        let ctx = QuestionCbImpl(RefCell::new((f, data)));
         let ctx = Box::new(ctx);
         let cb = questioncb::<QuestionCbImpl<T, F>>;
         unsafe { alpm_option_set_questioncb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
