@@ -20,8 +20,8 @@ generate = ["bindgen"]
 docs-rs = []
 
 [build-dependencies]
-bindgen = { version = "0.66.1", optional = true, default-features = false, features = ["runtime"] }
-pkg-config = "0.3.30"
+bindgen = { version = "0.70.0", optional = true, default-features = false, features = ["runtime"] }
+pkg-config = "0.3.31"
 
 [package.metadata.docs.rs]
 features = [ "docs-rs" ]
