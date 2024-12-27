@@ -73,7 +73,6 @@ impl fmt::Debug for PgpKey {
             .field("expires", &self.expires())
             .field("length", &self.length())
             .field("revoked", &self.revoked())
-            .field("pubkey_algo", &self.pubkey_algo())
             .finish()
     }
 }
@@ -111,6 +110,7 @@ impl PgpKey {
         self.inner.revoked
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn pubkey_algo(&self) -> u8 {
         self.inner.pubkey_algo as u8
     }

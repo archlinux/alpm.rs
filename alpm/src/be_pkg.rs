@@ -40,7 +40,7 @@ impl<'a> LoadedPackage<'a> {
         }
     }
 
-    pub fn pkg(&'a self) -> &Pkg {
+    pub fn pkg(&'a self) -> &'a Pkg {
         self.pkg
     }
 }

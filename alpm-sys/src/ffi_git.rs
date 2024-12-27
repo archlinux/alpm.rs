@@ -524,12 +524,10 @@ pub struct _alpm_pgpkey_t {
     pub length: ::std::os::raw::c_uint,
     #[doc = " has the key been revoked"]
     pub revoked: ::std::os::raw::c_uint,
-    #[doc = " A character representing the  encryption algorithm used by the public key\n\n ? = unknown\n R = RSA\n D = DSA\n E = EDDSA"]
-    pub pubkey_algo: ::std::os::raw::c_char,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of _alpm_pgpkey_t"][::std::mem::size_of::<_alpm_pgpkey_t>() - 72usize];
+    ["Size of _alpm_pgpkey_t"][::std::mem::size_of::<_alpm_pgpkey_t>() - 64usize];
     ["Alignment of _alpm_pgpkey_t"][::std::mem::align_of::<_alpm_pgpkey_t>() - 8usize];
     ["Offset of field: _alpm_pgpkey_t::data"]
         [::std::mem::offset_of!(_alpm_pgpkey_t, data) - 0usize];
@@ -548,8 +546,6 @@ const _: () = {
         [::std::mem::offset_of!(_alpm_pgpkey_t, length) - 56usize];
     ["Offset of field: _alpm_pgpkey_t::revoked"]
         [::std::mem::offset_of!(_alpm_pgpkey_t, revoked) - 60usize];
-    ["Offset of field: _alpm_pgpkey_t::pubkey_algo"]
-        [::std::mem::offset_of!(_alpm_pgpkey_t, pubkey_algo) - 64usize];
 };
 #[doc = " A PGP key"]
 pub type alpm_pgpkey_t = _alpm_pgpkey_t;
@@ -566,14 +562,14 @@ pub struct _alpm_sigresult_t {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of _alpm_sigresult_t"][::std::mem::size_of::<_alpm_sigresult_t>() - 80usize];
+    ["Size of _alpm_sigresult_t"][::std::mem::size_of::<_alpm_sigresult_t>() - 72usize];
     ["Alignment of _alpm_sigresult_t"][::std::mem::align_of::<_alpm_sigresult_t>() - 8usize];
     ["Offset of field: _alpm_sigresult_t::key"]
         [::std::mem::offset_of!(_alpm_sigresult_t, key) - 0usize];
     ["Offset of field: _alpm_sigresult_t::status"]
-        [::std::mem::offset_of!(_alpm_sigresult_t, status) - 72usize];
+        [::std::mem::offset_of!(_alpm_sigresult_t, status) - 64usize];
     ["Offset of field: _alpm_sigresult_t::validity"]
-        [::std::mem::offset_of!(_alpm_sigresult_t, validity) - 76usize];
+        [::std::mem::offset_of!(_alpm_sigresult_t, validity) - 68usize];
 };
 #[doc = " Signature result. Contains the key, status, and validity of a given\n signature."]
 pub type alpm_sigresult_t = _alpm_sigresult_t;
