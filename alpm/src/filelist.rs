@@ -51,10 +51,10 @@ pub struct FileList<'h> {
 // it's never actually mutated
 // Upstream code should ask for a const pointer
 #[allow(clippy::non_send_fields_in_send_ty)]
-unsafe impl<'h> Send for FileList<'h> {}
-unsafe impl<'h> Sync for FileList<'h> {}
+unsafe impl Send for FileList<'_> {}
+unsafe impl Sync for FileList<'_> {}
 
-impl<'h> fmt::Debug for FileList<'h> {
+impl fmt::Debug for FileList<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("File")
             .field("files", &self.files())
@@ -62,7 +62,7 @@ impl<'h> fmt::Debug for FileList<'h> {
     }
 }
 
-impl<'h> FileList<'h> {
+impl FileList<'_> {
     pub(crate) unsafe fn new<'a>(files: alpm_filelist_t) -> FileList<'a> {
         FileList {
             inner: UnsafeCell::new(files),

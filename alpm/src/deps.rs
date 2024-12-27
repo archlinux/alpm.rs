@@ -180,7 +180,10 @@ impl Dep {
     }
 
     pub fn name_hash(&self) -> u64 {
-        unsafe { (*self.as_ptr()).name_hash as u64 }
+        #[allow(clippy::unnecessary_cast)]
+        unsafe {
+            (*self.as_ptr()).name_hash as u64
+        }
     }
 
     pub fn depmod(&self) -> DepMod {

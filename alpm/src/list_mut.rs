@@ -309,7 +309,7 @@ unsafe impl IntoAlpmListPtr for &Package {
     }
 }
 
-unsafe impl<'a> IntoAlpmListPtr for LoadedPackage<'a> {
+unsafe impl IntoAlpmListPtr for LoadedPackage<'_> {
     type Output = Self;
     fn as_ptr(&self) -> *mut c_void {
         Pkg::as_ptr(self) as _
@@ -323,7 +323,7 @@ unsafe impl IntoAlpmListPtr for &Db {
     }
 }
 
-unsafe impl<'a> IntoAlpmListPtr for DbMut<'a> {
+unsafe impl IntoAlpmListPtr for DbMut<'_> {
     type Output = Self;
     fn as_ptr(&self) -> *mut c_void {
         Db::as_ptr(self) as _

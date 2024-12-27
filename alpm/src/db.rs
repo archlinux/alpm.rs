@@ -27,13 +27,13 @@ pub struct DbMut<'h> {
     pub(crate) inner: &'h Db,
 }
 
-impl<'h> fmt::Debug for DbMut<'h> {
+impl fmt::Debug for DbMut<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&self.inner, f)
     }
 }
 
-impl<'h> Deref for DbMut<'h> {
+impl Deref for DbMut<'_> {
     type Target = Db;
 
     fn deref(&self) -> &Db {
@@ -66,7 +66,7 @@ impl Alpm {
     }
 }
 
-impl<'h> DbMut<'h> {
+impl DbMut<'_> {
     pub(crate) unsafe fn from_ptr<'a>(db: *mut alpm_db_t) -> DbMut<'a> {
         DbMut {
             inner: Db::from_ptr(db),

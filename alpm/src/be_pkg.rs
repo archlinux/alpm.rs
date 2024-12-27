@@ -11,7 +11,7 @@ pub struct LoadedPackage<'a> {
     pub(crate) pkg: &'a Pkg,
 }
 
-impl<'a> Drop for LoadedPackage<'a> {
+impl Drop for LoadedPackage<'_> {
     fn drop(&mut self) {
         unsafe {
             alpm_pkg_free(self.pkg.as_ptr());
@@ -19,7 +19,7 @@ impl<'a> Drop for LoadedPackage<'a> {
     }
 }
 
-impl<'a> std::ops::Deref for LoadedPackage<'a> {
+impl std::ops::Deref for LoadedPackage<'_> {
     type Target = Pkg;
 
     fn deref(&self) -> &Self::Target {
@@ -27,7 +27,7 @@ impl<'a> std::ops::Deref for LoadedPackage<'a> {
     }
 }
 
-impl<'a> AsRef<Pkg> for LoadedPackage<'a> {
+impl AsRef<Pkg> for LoadedPackage<'_> {
     fn as_ref(&self) -> &Pkg {
         self
     }

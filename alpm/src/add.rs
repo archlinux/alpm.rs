@@ -17,7 +17,7 @@ unsafe impl IntoPkgAdd for &Package {
     unsafe fn added(self) {}
 }
 
-unsafe impl<'a> IntoPkgAdd for LoadedPackage<'a> {
+unsafe impl IntoPkgAdd for LoadedPackage<'_> {
     unsafe fn as_alpm_pkg_t(&self) -> *mut alpm_pkg_t {
         self.as_ptr()
     }

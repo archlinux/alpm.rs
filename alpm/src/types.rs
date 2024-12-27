@@ -151,19 +151,19 @@ pub struct ChangeLog<'a> {
     stream: NonNull<c_void>,
 }
 
-impl<'a> fmt::Debug for ChangeLog<'a> {
+impl fmt::Debug for ChangeLog<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ChangeLog").field("pkg", &self.pkg).finish()
     }
 }
 
-impl<'a> Drop for ChangeLog<'a> {
+impl Drop for ChangeLog<'_> {
     fn drop(&mut self) {
         unsafe { alpm_pkg_changelog_close(self.pkg.as_ptr(), self.as_ptr()) };
     }
 }
 
-impl<'a> Read for ChangeLog<'a> {
+impl Read for ChangeLog<'_> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let ret = unsafe {
             alpm_pkg_changelog_read(
@@ -177,7 +177,7 @@ impl<'a> Read for ChangeLog<'a> {
     }
 }
 
-impl<'a> ChangeLog<'a> {
+impl ChangeLog<'_> {
     pub(crate) unsafe fn new(pkg: &Pkg, ptr: *mut c_void) -> ChangeLog {
         ChangeLog {
             pkg,
@@ -238,7 +238,7 @@ pub struct AnyDownloadEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for AnyDownloadEvent<'a> {
+impl fmt::Debug for AnyDownloadEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("AnyDownloadEvent")
             .field("event", &self.event())
@@ -269,7 +269,8 @@ impl<'a> AnyDownloadEvent<'a> {
 
     #[allow(clippy::useless_conversion)]
     pub fn event(&self) -> DownloadEvent {
-        let event = unsafe { transmute(self.event) };
+        let event =
+            unsafe { transmute::<alpm_download_event_type_t, DownloadEventType>(self.event) };
         match event {
             DownloadEventType::Init => {
                 let data = self.data as *const alpm_download_event_init_t;

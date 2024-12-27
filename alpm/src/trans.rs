@@ -50,7 +50,7 @@ pub struct PrepareError<'a> {
     _marker: PhantomData<&'a ()>,
 }
 
-impl<'a> Debug for PrepareError<'a> {
+impl Debug for PrepareError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PrepareError")
             .field("error", &self.error())
@@ -59,7 +59,7 @@ impl<'a> Debug for PrepareError<'a> {
     }
 }
 
-impl<'a> Display for PrepareError<'a> {
+impl Display for PrepareError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Display::fmt(&self.error, f)
     }
@@ -71,9 +71,9 @@ impl<'a> From<PrepareError<'a>> for Error {
     }
 }
 
-impl<'a> StdError for PrepareError<'a> {}
+impl StdError for PrepareError<'_> {}
 
-impl<'a> PrepareError<'a> {
+impl PrepareError<'_> {
     pub fn error(&self) -> Error {
         self.error
     }

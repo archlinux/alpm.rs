@@ -67,7 +67,7 @@ pub struct PackageOperationEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for PackageOperationEvent<'a> {
+impl fmt::Debug for PackageOperationEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PackageOperationEvent")
             .field("operation", &self.operation())
@@ -80,7 +80,7 @@ pub struct OptDepRemovalEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for OptDepRemovalEvent<'a> {
+impl fmt::Debug for OptDepRemovalEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("OptDepRemovalEvent")
             .field("pkg", &self.pkg())
@@ -94,7 +94,7 @@ pub struct ScriptletInfoEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for ScriptletInfoEvent<'a> {
+impl fmt::Debug for ScriptletInfoEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ScriptletInfoEvent")
             .field("line", &self.line())
@@ -107,7 +107,7 @@ pub struct DatabaseMissingEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for DatabaseMissingEvent<'a> {
+impl fmt::Debug for DatabaseMissingEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("DatabaseMissingEvent")
             .field("dbname", &self.dbname())
@@ -120,7 +120,7 @@ pub struct PkgDownloadEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for PkgDownloadEvent<'a> {
+impl fmt::Debug for PkgDownloadEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PkgDownloadEvent")
             .field("file", &self.file())
@@ -133,7 +133,7 @@ pub struct PacnewCreatedEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for PacnewCreatedEvent<'a> {
+impl fmt::Debug for PacnewCreatedEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PacnewCreatedEvent")
             .field("from_noupgrade", &self.from_noupgrade())
@@ -149,7 +149,7 @@ pub struct PacsaveCreatedEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for PacsaveCreatedEvent<'a> {
+impl fmt::Debug for PacsaveCreatedEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PacsaveCreatedEvent")
             .field("oldpkg", &self.oldpkg())
@@ -163,7 +163,7 @@ pub struct HookEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for HookEvent<'a> {
+impl fmt::Debug for HookEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("HookEvent")
             .field("when", &self.when())
@@ -176,7 +176,7 @@ pub struct HookRunEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for HookRunEvent<'a> {
+impl fmt::Debug for HookRunEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("HookRunEvent")
             .field("name", &self.name())
@@ -199,7 +199,7 @@ pub struct PkgRetrieveEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for PkgRetrieveEvent<'a> {
+impl fmt::Debug for PkgRetrieveEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PkgRetrieveEvent")
             .field("num", &self.num())
@@ -213,7 +213,7 @@ pub struct AnyEvent<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for AnyEvent<'a> {
+impl fmt::Debug for AnyEvent<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("AnyEvent")
             .field("event", &self.event())
@@ -365,7 +365,7 @@ impl<'a> AnyEvent<'a> {
     }
 }
 
-impl<'a> PackageOperationEvent<'a> {
+impl PackageOperationEvent<'_> {
     pub fn operation(&self) -> PackageOperation {
         let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
         let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
@@ -387,7 +387,7 @@ impl<'a> PackageOperationEvent<'a> {
     }
 }
 
-impl<'a> OptDepRemovalEvent<'a> {
+impl OptDepRemovalEvent<'_> {
     pub fn pkg(&self) -> &Package {
         unsafe { Package::from_ptr((*self.inner).pkg) }
     }
@@ -397,25 +397,25 @@ impl<'a> OptDepRemovalEvent<'a> {
     }
 }
 
-impl<'a> ScriptletInfoEvent<'a> {
+impl ScriptletInfoEvent<'_> {
     pub fn line(&self) -> &str {
         unsafe { from_cstr((*self.inner).line) }
     }
 }
 
-impl<'a> DatabaseMissingEvent<'a> {
+impl DatabaseMissingEvent<'_> {
     pub fn dbname(&self) -> &str {
         unsafe { from_cstr((*self.inner).dbname) }
     }
 }
 
-impl<'a> PkgDownloadEvent<'a> {
+impl PkgDownloadEvent<'_> {
     pub fn file(&self) -> &str {
         unsafe { from_cstr((*self.inner).file) }
     }
 }
 
-impl<'a> PacnewCreatedEvent<'a> {
+impl PacnewCreatedEvent<'_> {
     #[allow(clippy::wrong_self_convention)]
     pub fn from_noupgrade(&self) -> bool {
         unsafe { (*self.inner).from_noupgrade != 0 }
@@ -440,7 +440,7 @@ impl<'a> PacnewCreatedEvent<'a> {
     }
 }
 
-impl<'a> PacsaveCreatedEvent<'a> {
+impl PacsaveCreatedEvent<'_> {
     pub fn oldpkg(&self) -> Option<&Package> {
         unsafe {
             (*self.inner).oldpkg.as_ref()?;
@@ -453,13 +453,13 @@ impl<'a> PacsaveCreatedEvent<'a> {
     }
 }
 
-impl<'a> HookEvent<'a> {
+impl HookEvent<'_> {
     pub fn when(&self) -> HookWhen {
         unsafe { transmute::<alpm_hook_when_t, HookWhen>((*self.inner).when) }
     }
 }
 
-impl<'a> HookRunEvent<'a> {
+impl HookRunEvent<'_> {
     pub fn name(&self) -> &str {
         unsafe { from_cstr((*self.inner).name) }
     }
@@ -469,15 +469,21 @@ impl<'a> HookRunEvent<'a> {
     }
 
     pub fn position(&self) -> usize {
-        unsafe { (*self.inner).position as usize }
+        #[allow(clippy::unnecessary_cast)]
+        unsafe {
+            (*self.inner).position as usize
+        }
     }
 
     pub fn total(&self) -> usize {
-        unsafe { (*self.inner).total as usize }
+        #[allow(clippy::unnecessary_cast)]
+        unsafe {
+            (*self.inner).total as usize
+        }
     }
 }
 
-impl<'a> PkgRetrieveEvent<'a> {
+impl PkgRetrieveEvent<'_> {
     pub fn num(&self) -> usize {
         unsafe { (*self.inner).num }
     }
@@ -493,7 +499,7 @@ pub struct InstallIgnorepkgQuestion<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for InstallIgnorepkgQuestion<'a> {
+impl fmt::Debug for InstallIgnorepkgQuestion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("InstallIgnorepkgQuestion")
             .field("install", &self.install())
@@ -507,7 +513,7 @@ pub struct ReplaceQuestion<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for ReplaceQuestion<'a> {
+impl fmt::Debug for ReplaceQuestion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ReplaceQuestion")
             .field("replace", &self.replace())
@@ -523,7 +529,7 @@ pub struct ConflictQuestion<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for ConflictQuestion<'a> {
+impl fmt::Debug for ConflictQuestion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ConflictQuestion")
             .field("remove", &self.remove())
@@ -537,7 +543,7 @@ pub struct CorruptedQuestion<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for CorruptedQuestion<'a> {
+impl fmt::Debug for CorruptedQuestion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("CorruptedQuestion")
             .field("remove", &self.remove())
@@ -552,7 +558,7 @@ pub struct RemovePkgsQuestion<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for RemovePkgsQuestion<'a> {
+impl fmt::Debug for RemovePkgsQuestion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RemovePkgsQuestion")
             .field("skip", &self.skip())
@@ -566,7 +572,7 @@ pub struct SelectProviderQuestion<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for SelectProviderQuestion<'a> {
+impl fmt::Debug for SelectProviderQuestion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("SelectProviderQuestion")
             .field("index", &self.index())
@@ -581,7 +587,7 @@ pub struct ImportKeyQuestion<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for ImportKeyQuestion<'a> {
+impl fmt::Debug for ImportKeyQuestion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ImportKeyQuestion")
             .field("import", &self.import())
@@ -596,7 +602,7 @@ pub struct AnyQuestion<'a> {
     marker: PhantomData<&'a ()>,
 }
 
-impl<'a> fmt::Debug for AnyQuestion<'a> {
+impl fmt::Debug for AnyQuestion<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("AnyQuestion")
             .field("question", &self.question())
@@ -617,6 +623,7 @@ pub enum Question<'a> {
 
 #[repr(u32)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+#[allow(clippy::unnecessary_cast)]
 pub enum QuestionType {
     InstallIgnorepkg = ALPM_QUESTION_INSTALL_IGNOREPKG as u32,
     ReplacePkg = ALPM_QUESTION_REPLACE_PKG as u32,
@@ -682,7 +689,7 @@ impl<'a> AnyQuestion<'a> {
     }
 }
 
-impl<'a> InstallIgnorepkgQuestion<'a> {
+impl InstallIgnorepkgQuestion<'_> {
     pub fn set_install(&mut self, install: bool) {
         unsafe {
             if install {
@@ -702,7 +709,7 @@ impl<'a> InstallIgnorepkgQuestion<'a> {
     }
 }
 
-impl<'a> ReplaceQuestion<'a> {
+impl ReplaceQuestion<'_> {
     pub fn set_replace(&self, replace: bool) {
         unsafe {
             if replace {
@@ -730,7 +737,7 @@ impl<'a> ReplaceQuestion<'a> {
     }
 }
 
-impl<'a> ConflictQuestion<'a> {
+impl ConflictQuestion<'_> {
     pub fn set_remove(&mut self, remove: bool) {
         unsafe {
             if remove {
@@ -750,7 +757,7 @@ impl<'a> ConflictQuestion<'a> {
     }
 }
 
-impl<'a> CorruptedQuestion<'a> {
+impl CorruptedQuestion<'_> {
     pub fn set_remove(&mut self, remove: bool) {
         unsafe {
             if remove {
@@ -774,7 +781,7 @@ impl<'a> CorruptedQuestion<'a> {
     }
 }
 
-impl<'a> RemovePkgsQuestion<'a> {
+impl RemovePkgsQuestion<'_> {
     pub fn set_skip(&mut self, skip: bool) {
         unsafe {
             if skip {
@@ -795,7 +802,7 @@ impl<'a> RemovePkgsQuestion<'a> {
     }
 }
 
-impl<'a> SelectProviderQuestion<'a> {
+impl SelectProviderQuestion<'_> {
     pub fn set_index(&mut self, index: i32) {
         unsafe {
             (*self.inner).use_index = index;
@@ -816,7 +823,7 @@ impl<'a> SelectProviderQuestion<'a> {
     }
 }
 
-impl<'a> ImportKeyQuestion<'a> {
+impl ImportKeyQuestion<'_> {
     pub fn set_import(&mut self, import: bool) {
         unsafe {
             if import {

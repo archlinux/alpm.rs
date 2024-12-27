@@ -10,9 +10,15 @@ extern "C" {
     fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: VaList) -> c_int;
 }
 
-#[cfg(not(all(feature = "generate", any(target_arch = "arm", target_arch = "aarch64"))))]
+#[cfg(not(all(
+    feature = "generate",
+    any(target_arch = "arm", target_arch = "aarch64")
+)))]
 pub type VaList = *mut __va_list_tag;
-#[cfg(all(feature = "generate", any(target_arch = "arm", target_arch = "aarch64")))]
+#[cfg(all(
+    feature = "generate",
+    any(target_arch = "arm", target_arch = "aarch64")
+))]
 pub type VaList = va_list;
 
 type Cb<T> = UnsafeCell<Option<Box<T>>>;
@@ -553,6 +559,7 @@ extern "C" fn progresscb<C: ProgressCbTrait>(
         let pkgname = pkgname.to_str().unwrap();
         let progress = unsafe { transmute::<alpm_progress_t, Progress>(progress) };
         let cb = unsafe { &*(ctx as *const C) };
+        #[allow(clippy::unnecessary_cast)]
         cb.call(progress, pkgname, percent as i32, howmany, current);
     });
 }

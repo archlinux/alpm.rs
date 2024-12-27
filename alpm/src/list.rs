@@ -25,25 +25,25 @@ pub struct AlpmList<'l, T> {
     list: *mut alpm_list_t,
 }
 
-unsafe impl<'l, T: Send> Send for AlpmList<'l, T> {}
-unsafe impl<'l, T: Sync> Sync for AlpmList<'l, T> {}
+unsafe impl<T: Send> Send for AlpmList<'_, T> {}
+unsafe impl<T: Sync> Sync for AlpmList<'_, T> {}
 
-impl<'l, T> Clone for AlpmList<'l, T> {
+impl<T> Clone for AlpmList<'_, T> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'l, T> Copy for AlpmList<'l, T> {}
+impl<T> Copy for AlpmList<'_, T> {}
 
-impl<'a, T: IntoAlpmListItem + Debug> fmt::Debug for AlpmList<'a, T> {
+impl<T: IntoAlpmListItem + Debug> fmt::Debug for AlpmList<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("AlpmList ")?;
         f.debug_list().entries(self.iter()).finish()
     }
 }
 
-impl<'l, T> AlpmList<'l, T> {
+impl<T> AlpmList<'_, T> {
     pub(crate) unsafe fn from_ptr<'a>(list: *mut alpm_list_t) -> AlpmList<'a, T> {
         AlpmList {
             _marker: PhantomData,
@@ -108,10 +108,10 @@ pub struct Iter<'l, T> {
     list: *mut alpm_list_t,
 }
 
-unsafe impl<'l, T: Send> Send for Iter<'l, T> {}
-unsafe impl<'l, T: Sync> Sync for Iter<'l, T> {}
+unsafe impl<T: Send> Send for Iter<'_, T> {}
+unsafe impl<T: Sync> Sync for Iter<'_, T> {}
 
-impl<'l, T: IntoAlpmListItem + Debug> Debug for Iter<'l, T> {
+impl<T: IntoAlpmListItem + Debug> Debug for Iter<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         unsafe {
             f.debug_struct("Iter")
@@ -121,7 +121,7 @@ impl<'l, T: IntoAlpmListItem + Debug> Debug for Iter<'l, T> {
     }
 }
 
-impl<'l, T> Iter<'l, T> {
+impl<T> Iter<'_, T> {
     fn next_data(&mut self) -> Option<*mut c_void> {
         if self.list.is_null() {
             None
@@ -134,7 +134,7 @@ impl<'l, T> Iter<'l, T> {
     }
 }
 
-impl<'l, T: IntoAlpmListItem> Iterator for Iter<'l, T> {
+impl<T: IntoAlpmListItem> Iterator for Iter<'_, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -147,7 +147,7 @@ impl<'l, T: IntoAlpmListItem> Iterator for Iter<'l, T> {
     }
 }
 
-impl<'l, T: IntoAlpmListItem> ExactSizeIterator for Iter<'l, T> {}
+impl<T: IntoAlpmListItem> ExactSizeIterator for Iter<'_, T> {}
 
 unsafe impl IntoAlpmListItem for &Dep {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
@@ -218,13 +218,13 @@ unsafe impl IntoAlpmListItem for OwnedConflict {
     }
 }
 
-unsafe impl<'a> IntoAlpmListItem for LoadedPackage<'a> {
+unsafe impl IntoAlpmListItem for LoadedPackage<'_> {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
         LoadedPackage::from_ptr(ptr as _)
     }
 }
 
-unsafe impl<'a> IntoAlpmListItem for DbMut<'a> {
+unsafe impl IntoAlpmListItem for DbMut<'_> {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
         DbMut::from_ptr(ptr as _)
     }
