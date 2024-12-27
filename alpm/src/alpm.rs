@@ -143,9 +143,6 @@ mod tests {
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkg = db.pkg("linux").unwrap();
         let name = pkg.name();
-
-        drop(pkg);
-        drop(db);
         assert_eq!(name, "linux");
     }
 
@@ -154,8 +151,6 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("core", SigLevel::NONE).unwrap();
         let pkgs = db.pkgs();
-
-        drop(db);
         assert!(pkgs.len() > 10);
     }
 }

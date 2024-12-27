@@ -23,8 +23,7 @@ fn main() {
     // we can clone the list
     // but as this is akin to &[] it just clones the reference and the list still points to the
     // same underlying data
-    let clone = pkgs.clone();
-    drop(clone);
+    let _clone = pkgs.clone();
 
     // if we want a list we can actually mutate we need to call .to_list_mut()
     // this is akin to .to_vec()

@@ -407,7 +407,6 @@ mod tests {
         let handle = Alpm::new("/", "tests/db").unwrap();
         let db = handle.register_syncdb("extra", SigLevel::NONE).unwrap();
         let pkg = db.pkg("ostree").unwrap();
-        drop(db);
         //drop(handle);
         println!("{}", pkg.name());
     }

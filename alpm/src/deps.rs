@@ -414,8 +414,6 @@ mod tests {
         let pkg = db.pkg("linux").unwrap();
         let depends = pkg.depends();
         let vec = depends.iter().collect::<Vec<_>>();
-        drop(pkg);
-        drop(db);
         println!("{:?}", vec);
     }
 
@@ -434,7 +432,6 @@ mod tests {
 
         let pkgs1 = handle.localdb().pkgs();
         let pkgs = pkgs1.iter().collect::<Vec<_>>();
-        drop(pkgs1);
         let rem = handle.localdb().pkg("ncurses").unwrap();
         let missing = handle.check_deps(
             pkgs.iter(),
