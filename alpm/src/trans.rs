@@ -8,7 +8,6 @@ use alpm_sys::*;
 
 use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
-use std::hint::unreachable_unchecked;
 use std::marker::PhantomData;
 use std::ptr;
 
@@ -78,18 +77,27 @@ impl PrepareError<'_> {
         self.error
     }
 
+    #[doc(hidden)]
     pub fn data(&self) -> PrepareData {
+        self.try_data().expect("prepare error has no data")
+    }
+
+    // TODO replace data() with this on next major bump
+    pub fn try_data(&self) -> Option<PrepareData> {
         match self.error {
             Error::PkgInvalidArch => unsafe {
-                PrepareData::PkgInvalidArch(AlpmListMut::from_ptr(self.data))
+                let list = AlpmListMut::from_ptr(self.data);
+                Some(PrepareData::PkgInvalidArch(list))
             },
             Error::UnsatisfiedDeps => unsafe {
-                PrepareData::UnsatisfiedDeps(AlpmListMut::from_ptr(self.data))
+                let list = AlpmListMut::from_ptr(self.data);
+                Some(PrepareData::UnsatisfiedDeps(list))
             },
             Error::ConflictingDeps => unsafe {
-                PrepareData::ConflictingDeps(AlpmListMut::from_ptr(self.data))
+                let list = AlpmListMut::from_ptr(self.data);
+                Some(PrepareData::ConflictingDeps(list))
             },
-            _ => unsafe { unreachable_unchecked() },
+            _ => None,
         }
     }
 }
@@ -133,15 +141,23 @@ impl CommitError {
         self.error
     }
 
+    #[doc(hidden)]
     pub fn data(&self) -> CommitData {
+        self.try_data().expect("commit error has no data")
+    }
+
+    // TODO replace data() with this on next major bump
+    pub fn try_data(&self) -> Option<CommitData> {
         match self.error {
             Error::FileConflicts => unsafe {
-                CommitData::FileConflict(AlpmListMut::from_ptr(self.data))
+                let list = AlpmListMut::from_ptr(self.data);
+                Some(CommitData::FileConflict(list))
             },
             Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => unsafe {
-                CommitData::PkgInvalid(AlpmListMut::from_ptr(self.data))
+                let list = AlpmListMut::from_ptr(self.data);
+                Some(CommitData::PkgInvalid(list))
             },
-            _ => unsafe { unreachable_unchecked() },
+            _ => None,
         }
     }
 }
