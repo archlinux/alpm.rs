@@ -297,7 +297,7 @@ impl<'a> AnyEvent<'a> {
                 marker: PhantomData,
             }),
             EventType::IntegrityStart => Event::IntegrityStart,
-            EventType::IntegrityDone => Event::InterConflictsDone,
+            EventType::IntegrityDone => Event::IntegrityDone,
             EventType::LoadStart => Event::LoadStart,
             EventType::LoadDone => Event::LoadDone,
             EventType::ScriptletInfo => Event::ScriptletInfo(ScriptletInfoEvent {
@@ -333,7 +333,7 @@ impl<'a> AnyEvent<'a> {
                 inner: unsafe { &(*event).hook },
                 marker: PhantomData,
             }),
-            EventType::HookDone => Event::HookStart(HookEvent {
+            EventType::HookDone => Event::HookDone(HookEvent {
                 inner: unsafe { &(*event).hook },
                 marker: PhantomData,
             }),
@@ -341,7 +341,7 @@ impl<'a> AnyEvent<'a> {
                 inner: unsafe { &(*event).hook_run },
                 marker: PhantomData,
             }),
-            EventType::HookRunDone => Event::HookRunStart(HookRunEvent {
+            EventType::HookRunDone => Event::HookRunDone(HookRunEvent {
                 inner: unsafe { &(*event).hook_run },
                 marker: PhantomData,
             }),
