@@ -1,0 +1,76 @@
+name: Alpm
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-arm:
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: lopsided/archlinux-arm64v8
+    steps:
+      - name: Install Packages
+        run: pacman -Syu rust clang gcc libarchive pkgconf tar --noconfirm --needed
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Format
+        run: cargo fmt -- --check
+        working-directory: alpm
+
+      - name: Test
+        run: cargo test --features generate,mtree
+        working-directory: alpm
+
+  test-arm-no-generate:
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: lopsided/archlinux-arm64v8
+    steps:
+      - name: Install Packages
+        run: pacman -Syu rust clang gcc libarchive pkgconf tar --noconfirm --needed
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Format
+        run: cargo fmt -- --check
+        working-directory: alpm
+
+      - name: Test
+        run: cargo test --features mtree
+        working-directory: alpm
+
+  test-arm-git:
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: lopsided/archlinux-arm64v8
+    steps:
+      - name: Install Packages
+        run: pacman -Syu rust curl clang git base-devel libarchive meson asciidoc doxygen pkgconf fakechroot tar --noconfirm --needed
+
+      - name: Install Pacman-git
+        run: |
+          git clone https://aur.archlinux.org/pacman-git
+          chown -R nobody pacman-git
+          cd pacman-git
+          sudo -u nobody makepkg --nocheck
+          sudo -u nobody makepkg --packagelist > list
+          yes | pacman -U $(cat list)
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Format
+        run: cargo fmt -- --check
+        working-directory: alpm
+
+      - name: Test
+        run: cargo test --features generate,git,mtree
+        working-directory: alpm
+
