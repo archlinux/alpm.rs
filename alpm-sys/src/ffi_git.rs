@@ -2359,6 +2359,10 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Get the download timeout state\n @param handle the context handle\n @return 0 for enabled, 1 for disabled"]
+    pub fn alpm_option_get_disable_dl_timeout(handle: *mut alpm_handle_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
     #[doc = " Enables/disables the download timeout.\n @param handle the context handle\n @param disable_dl_timeout 0 for enabled, 1 for disabled\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]
     pub fn alpm_option_set_disable_dl_timeout(
         handle: *mut alpm_handle_t,
@@ -2375,6 +2379,10 @@ extern "C" {
         handle: *mut alpm_handle_t,
         num_streams: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Get the sandbox state\n @param handle the context handle\n @return 0 for enabled, 1 for disabled"]
+    pub fn alpm_option_get_disable_sandbox(handle: *mut alpm_handle_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
     #[doc = " Enables/disables the sandbox.\n @param handle the context handle\n @param disable_sandbox 0 for enabled, 1 for disabled\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]

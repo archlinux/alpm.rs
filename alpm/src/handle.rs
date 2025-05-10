@@ -415,6 +415,12 @@ impl Alpm {
         unsafe { alpm_option_set_disable_dl_timeout(self.as_ptr(), b) };
     }
 
+    #[cfg(feature = "git")]
+    #[doc(alias = "disable_dl_timeout")]
+    pub fn dl_timeout_disabled(&self) -> bool {
+        unsafe { alpm_option_get_disable_dl_timeout(self.as_ptr()) != 0 }
+    }
+
     pub fn set_parallel_downloads(&self, n: u32) {
         unsafe { alpm_option_set_parallel_downloads(self.as_ptr(), n) };
     }
