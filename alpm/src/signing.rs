@@ -7,6 +7,7 @@ use alpm_sys::*;
 
 use std::ffi::{c_void, CString};
 use std::mem::transmute;
+use std::ptr::NonNull;
 use std::{fmt, ptr, slice};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
@@ -181,7 +182,7 @@ impl SigList {
 
     pub fn results(&self) -> &[SigResult] {
         if self.inner.results.is_null() {
-            unsafe { slice::from_raw_parts(1 as *const SigResult, 0) }
+            unsafe { slice::from_raw_parts(NonNull::dangling().as_ptr(), 0) }
         } else {
             unsafe {
                 slice::from_raw_parts(self.inner.results as *const SigResult, self.inner.count)
