@@ -68,7 +68,7 @@ impl fmt::Debug for PgpKey {
         f.debug_struct("PgpKey")
             .field("name", &self.name())
             .field("email", &self.email())
-            .field("uid", &self.uid())
+            .field("uid", &self.uid_optional())
             .field("fingerprint", &self.fingerprint())
             .field("created", &self.created())
             .field("expires", &self.expires())
@@ -83,8 +83,13 @@ impl PgpKey {
         unsafe { from_cstr(self.inner.fingerprint) }
     }
 
+    pub fn uid_optional(&self) -> Option<&str> {
+        unsafe { from_cstr_optional(self.inner.uid) }
+    }
+
+    #[deprecated = "uid may be none. Use uid_optional() instead. This function will return an option instead in the next major release."]
     pub fn uid(&self) -> &str {
-        unsafe { from_cstr(self.inner.uid) }
+        unsafe { from_cstr_optional(self.inner.uid).unwrap_or("") }
     }
 
     pub fn name(&self) -> Option<&str> {
