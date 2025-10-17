@@ -169,9 +169,34 @@ impl Alpm {
         self.check_ret(ret)
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn set_disable_sandbox(&self, b: bool) {
         let b = if b { 1 } else { 0 };
         unsafe { alpm_option_set_disable_sandbox(self.as_ptr(), b) };
+    }
+
+    #[cfg(feature = "git")]
+    pub fn set_disable_sandbox_filesystem(&self, b: bool) {
+        let b = if b { 1 } else { 0 };
+        unsafe { alpm_option_set_disable_sandbox_filesystem(self.as_ptr(), b) };
+    }
+
+    #[cfg(feature = "git")]
+    #[doc(alias = "disable_sandbox_filesystem")]
+    pub fn sandbox_filesystem_disabled(&self) -> bool {
+        unsafe { alpm_option_get_disable_sandbox_filesystem(self.as_ptr()) != 0 }
+    }
+
+    #[cfg(feature = "git")]
+    pub fn set_disable_sandbox_syscalls(&self, b: bool) {
+        let b = if b { 1 } else { 0 };
+        unsafe { alpm_option_set_disable_sandbox_syscalls(self.as_ptr(), b) };
+    }
+
+    #[cfg(feature = "git")]
+    #[doc(alias = "disable_sandbox_syscalls")]
+    pub fn sandbox_syscalls_disabled(&self) -> bool {
+        unsafe { alpm_option_get_disable_sandbox_syscalls(self.as_ptr()) != 0 }
     }
 
     pub fn add_noupgrade<S: Into<Vec<u8>>>(&mut self, s: S) -> Result<()> {
