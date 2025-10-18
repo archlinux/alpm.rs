@@ -31,12 +31,6 @@ impl Alpm {
         };
         self.check_ret(ret)
     }
-
-    #[cfg(feature = "git")]
-    #[doc(alias = "disable_sandbox")]
-    pub fn sandbox_disabled(&self) -> bool {
-        unsafe { alpm_option_get_disable_sandbox(self.as_ptr()) != 0 }
-    }
 }
 
 #[cfg(test)]
@@ -46,14 +40,11 @@ mod tests {
     #[test]
     fn test_sandbox() {
         let mut handle = Alpm::new("/", "tests/db/").unwrap();
-        if cfg!(feature = "git") {
-            assert_eq!(handle.sandbox_user(), Some("root"));
-        } else {
+        assert_eq!(handle.sandbox_user(), None);
+        if handle.set_sandbox_user(Some("foo")).is_ok() {
+            assert_eq!(handle.sandbox_user(), Some("foo"));
+            handle.set_sandbox_user(Option::<&str>::None).unwrap();
             assert_eq!(handle.sandbox_user(), None);
         }
-        handle.set_sandbox_user(Some("foo")).unwrap();
-        assert_eq!(handle.sandbox_user(), Some("foo"));
-        handle.set_sandbox_user(Option::<&str>::None).unwrap();
-        assert_eq!(handle.sandbox_user(), None);
     }
 }

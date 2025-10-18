@@ -61,6 +61,8 @@ pub enum Error {
     UnsatisfiedDeps = ALPM_ERR_UNSATISFIED_DEPS as u32,
     ConflictingDeps = ALPM_ERR_CONFLICTING_DEPS as u32,
     FileConflicts = ALPM_ERR_FILE_CONFLICTS as u32,
+    #[cfg(feature = "git")]
+    RetrievePrepare = ALPM_ERR_RETRIEVE_PREPARE as u32,
     Retrieve = ALPM_ERR_RETRIEVE as u32,
     InvalidRegex = ALPM_ERR_INVALID_REGEX as u32,
     Libarchive = ALPM_ERR_LIBARCHIVE as u32,
