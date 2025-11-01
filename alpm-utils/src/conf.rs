@@ -59,8 +59,10 @@ pub fn configure_alpm(alpm: &mut Alpm, conf: &Config) -> alpm::Result<()> {
     alpm.set_parallel_downloads(conf.parallel_downloads as u32);
     #[cfg(feature = "git")]
     {
-        alpm.set_disable_sandbox_filesystem(conf.disable_sandbox);
-        alpm.set_disable_sandbox_syscalls(conf.disable_sandbox);
+        alpm.set_disable_sandbox_filesystem(
+            conf.disable_sandbox_filesystem || conf.disable_sandbox,
+        );
+        alpm.set_disable_sandbox_syscalls(conf.disable_sandbox_syscalls || conf.disable_sandbox);
     }
     #[cfg(not(feature = "git"))]
     alpm.set_disable_sandbox(conf.disable_sandbox);
