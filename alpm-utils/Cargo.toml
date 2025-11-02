@@ -25,4 +25,4 @@ docs-rs = ["alpm/docs-rs"]
 
 [dependencies]
 alpm = { version = "4.0.0", path = "../alpm", optional = true }
-pacmanconf = { version = "3.0.0", optional = true }
+pacmanconf = { version = "3.1.0", optional = true }
