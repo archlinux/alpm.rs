@@ -134,6 +134,12 @@ impl<'a, T: IntoAlpmListItem + BorrowAlpmListItem<'a>> AlpmListMut<T> {
     }
 }
 
+impl<T: IntoAlpmListItem> Default for AlpmListMut<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: IntoAlpmListItem> AlpmListMut<T> {
     pub(crate) unsafe fn from_ptr(list: *mut alpm_list_t) -> AlpmListMut<T> {
         AlpmListMut {

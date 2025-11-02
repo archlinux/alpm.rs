@@ -3,6 +3,7 @@
 //! See [`Alpm`] as the base type to interact with alpm.
 //!
 #![doc = include_str!("../README.md")]
+#![allow(mismatched_lifetime_syntaxes)]
 
 mod add;
 mod alpm;

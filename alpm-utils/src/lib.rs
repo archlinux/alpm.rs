@@ -3,6 +3,7 @@
 //! A utility library that provides some common functionality an alpm user may requre.
 
 #![warn(missing_docs)]
+#![allow(mismatched_lifetime_syntaxes)]
 
 #[cfg(feature = "conf")]
 mod conf;
