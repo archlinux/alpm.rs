@@ -45,19 +45,11 @@ unsafe impl Sync for Conflict {}
 
 impl fmt::Debug for Conflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        #[cfg(not(feature = "git"))]
-        {
             f.debug_struct("Conflict")
                 .field("package1", &self.package1())
                 .field("package2", &self.package2())
                 .field("reason", &self.reason())
                 .finish()
-        }
-        // Implement properly when we merge the no handle code
-        #[cfg(feature = "git")]
-        {
-            f.debug_struct("Conflict").finish()
-        }
     }
 }
 

@@ -20,7 +20,7 @@ fn main() {
             let current = parts[0];
             let age = parts[2];
 
-            let supported_current = 15;
+            let supported_current = 16;
 
             assert!(
                 supported_current == current
