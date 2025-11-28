@@ -367,22 +367,31 @@ impl<'a> AnyEvent<'a> {
 
 impl PackageOperationEvent<'_> {
     pub fn operation(&self) -> PackageOperation {
-        let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
-        let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
-
         let op = unsafe { (*self.inner).operation };
         match op {
-            alpm_package_operation_t::ALPM_PACKAGE_INSTALL => PackageOperation::Install(newpkg),
+            alpm_package_operation_t::ALPM_PACKAGE_INSTALL => {
+                let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
+                PackageOperation::Install(newpkg)
+        },
             alpm_package_operation_t::ALPM_PACKAGE_UPGRADE => {
+                let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
+                let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
                 PackageOperation::Upgrade(newpkg, oldpkg)
             }
             alpm_package_operation_t::ALPM_PACKAGE_REINSTALL => {
+                let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
+                let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
                 PackageOperation::Reinstall(newpkg, oldpkg)
             }
             alpm_package_operation_t::ALPM_PACKAGE_DOWNGRADE => {
+                let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
+                let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
                 PackageOperation::Downgrade(newpkg, oldpkg)
             }
-            alpm_package_operation_t::ALPM_PACKAGE_REMOVE => PackageOperation::Remove(oldpkg),
+            alpm_package_operation_t::ALPM_PACKAGE_REMOVE => {
+                let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
+                PackageOperation::Remove(oldpkg)
+            },
         }
     }
 }
