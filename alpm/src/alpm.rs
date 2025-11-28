@@ -60,10 +60,6 @@ impl Alpm {
         }
     }
 
-    pub fn new2(root: &str, db_path: &str) -> Result<Alpm> {
-        Alpm::new(root, db_path)
-    }
-
     pub fn release(self) -> std::result::Result<(), ReleaseError> {
         if unsafe { alpm_release(self.as_ptr()) } == 0 {
             std::mem::forget(self);
