@@ -27,6 +27,7 @@ impl std::fmt::Debug for Alpm {
 
 impl Drop for Alpm {
     fn drop(&mut self) {
+        unsafe { alpm_trans_release(self.as_ptr()) };
         unsafe { alpm_release(self.as_ptr()) };
     }
 }
@@ -61,6 +62,7 @@ impl Alpm {
     }
 
     pub fn release(self) -> std::result::Result<(), ReleaseError> {
+        unsafe { alpm_trans_release(self.as_ptr()) };
         if unsafe { alpm_release(self.as_ptr()) } == 0 {
             std::mem::forget(self);
             Ok(())
