@@ -244,8 +244,8 @@ impl Pkg {
         unsafe { AlpmList::from_ptr(list) }
     }
 
-    pub fn files(&self) -> FileList {
-        let files = unsafe { *alpm_pkg_get_files(self.as_ptr()) };
+    pub fn files(&self) -> &FileList {
+        let files = unsafe { alpm_pkg_get_files(self.as_ptr()) };
         unsafe { FileList::new(files) }
     }
 
@@ -337,10 +337,11 @@ mod tests {
         let files = pkg.files();
 
         for file in files.files() {
-            println!("{}", file.name());
+            println!("{}", String::from_utf8_lossy(file.name()));
         }
 
         assert!(files.contains("etc/").is_some());
+        assert!(files.contains("etc/foo").is_none());
         assert!(pkg.filename().is_none());
     }
 
@@ -352,6 +353,7 @@ mod tests {
         let files = pkg.files();
 
         assert!(files.files().is_empty());
+        assert!(files.contains("foo").is_none());
     }
 
     #[test]

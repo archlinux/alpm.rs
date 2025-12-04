@@ -74,10 +74,10 @@ impl<'l, T: IntoAlpmListItem> AlpmList<'l, T> {
     }
 
     pub fn last(self) -> Option<T> {
-        if self.list.is_null() {
-            None
-        } else {
+        if !self.list.is_null() && unsafe { !(*self.list).prev.is_null() } {
             unsafe { Some(T::into_list_item((*(*self.list).prev).data)) }
+        } else {
+            None
         }
     }
 

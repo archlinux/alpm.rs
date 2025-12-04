@@ -1,22 +1,20 @@
-use crate::utils::*;
-
 use alpm_sys::*;
 
-use std::cell::UnsafeCell;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::fmt;
 use std::marker::PhantomData;
 use std::slice;
 
 #[repr(transparent)]
-pub struct File {
+pub struct File<'h> {
     inner: alpm_file_t,
+    _marker: PhantomData<&'h ()>,
 }
 
-unsafe impl Send for File {}
-unsafe impl Sync for File {}
+unsafe impl<'h> Send for File<'h> {}
+unsafe impl<'h> Sync for File<'h> {}
 
-impl fmt::Debug for File {
+impl<'h> fmt::Debug for File<'h> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("File")
             .field("name", &self.name())
@@ -26,9 +24,9 @@ impl fmt::Debug for File {
     }
 }
 
-impl File {
-    pub fn name(&self) -> &str {
-        unsafe { from_cstr(self.inner.name) }
+impl<'h> File<'h> {
+    pub fn name(&self) -> &'h [u8] {
+        unsafe { CStr::from_ptr(self.inner.name).to_bytes() }
     }
 
     pub fn size(&self) -> i64 {
@@ -42,8 +40,9 @@ impl File {
     }
 }
 
+#[repr(transparent)]
 pub struct FileList<'h> {
-    inner: UnsafeCell<alpm_filelist_t>,
+    inner: alpm_filelist_t,
     _marker: PhantomData<&'h ()>,
 }
 
@@ -63,35 +62,34 @@ impl fmt::Debug for FileList<'_> {
 }
 
 impl FileList<'_> {
-    pub(crate) unsafe fn new<'a>(files: alpm_filelist_t) -> FileList<'a> {
-        FileList {
-            inner: UnsafeCell::new(files),
-            _marker: PhantomData,
+    pub(crate) unsafe fn new<'a>(files: *mut alpm_filelist_t) -> &'a FileList<'a> {
+        unsafe {
+            &*(files as *const FileList)
         }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_filelist_t {
-        self.inner.get()
+        self as *const _ as *mut _
     }
 
-    pub fn files(&self) -> &[File] {
-        let files = unsafe { *self.as_ptr() };
-        if files.files.is_null() {
+    pub fn files(&self) -> &'_ [File<'_>] {
+        if self.inner.files.is_null() {
             &[]
         } else {
-            unsafe { slice::from_raw_parts(files.files as *const File, files.count) }
+            unsafe { slice::from_raw_parts(self.inner.files as *const File, self.inner.count) }
         }
     }
 
-    pub fn contains<S: Into<Vec<u8>>>(&self, path: S) -> Option<File> {
+    pub fn contains<S: Into<Vec<u8>>>(&self, path: S) -> Option<&'_ File> {
         let path = CString::new(path).unwrap();
         let file = unsafe { alpm_filelist_contains(self.as_ptr(), path.as_ptr()) };
 
         if file.is_null() {
             None
         } else {
-            let file = unsafe { *file };
-            Some(File { inner: file })
+            unsafe {
+                Some(&*(file as *const File))
+            }
         }
     }
 }
@@ -116,7 +114,8 @@ mod tests {
         assert!(!files.files().is_empty());
 
         let file = files.contains("boot/").unwrap();
-        assert_eq!(file.name(), "boot/");
+        assert_eq!(file.name(), b"boot/");
+        assert!(files.contains(b"aaaaa/").is_none());
         assert!(files.contains("aaaaa/").is_none());
     }
 }
