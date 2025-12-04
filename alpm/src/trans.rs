@@ -1,6 +1,5 @@
 use crate::{
-    Alpm, AlpmList, AlpmListMut, DependMissing, Error, OwnedConflict, OwnedFileConflict, Package,
-    Result,
+    Alpm, AlpmList, AlpmListMut, Conflict, DepMissing, DependMissing, Error, OwnedConflict, OwnedFileConflict, Package, Result
 };
 
 use alpm_sys::_alpm_transflag_t::*;
@@ -37,16 +36,33 @@ bitflags! {
 }
 
 #[derive(Debug)]
-pub enum PrepareData<'a> {
-    PkgInvalidArch(AlpmListMut<&'a Package>),
-    UnsatisfiedDeps(AlpmListMut<DependMissing>),
-    ConflictingDeps(AlpmListMut<OwnedConflict>),
+pub enum PrepareData<'a, 'h> {
+    PkgInvalidArch(AlpmList<'a, &'h Package>),
+    UnsatisfiedDeps(AlpmList<'a, &'a DepMissing>),
+    ConflictingDeps(AlpmList<'a, &'a Conflict>),
 }
 
-pub struct PrepareError<'a> {
+impl<'h> Drop for PrepareError<'h> {
+    fn drop(&mut self) {
+        match self.error {
+            Error::PkgInvalidArch => unsafe {
+                drop(AlpmListMut::<String>::from_ptr(self.data));
+            },
+            Error::UnsatisfiedDeps => unsafe {
+                drop(AlpmListMut::<DependMissing>::from_ptr(self.data));
+            },
+            Error::ConflictingDeps => unsafe {
+                drop(AlpmListMut::<OwnedConflict>::from_ptr(self.data));
+            },
+            _ => (),
+        }
+    }
+}
+
+pub struct PrepareError<'h> {
     error: Error,
     data: *mut alpm_list_t,
-    _marker: PhantomData<&'a ()>,
+    _marker: PhantomData<&'h ()>,
 }
 
 impl Debug for PrepareError<'_> {
@@ -72,29 +88,23 @@ impl<'a> From<PrepareError<'a>> for Error {
 
 impl StdError for PrepareError<'_> {}
 
-impl PrepareError<'_> {
+impl<'h> PrepareError<'h> {
     pub fn error(&self) -> Error {
         self.error
     }
 
-    #[doc(hidden)]
-    pub fn data(&self) -> PrepareData {
-        self.try_data().expect("prepare error has no data")
-    }
-
-    // TODO replace data() with this on next major bump
-    pub fn try_data(&self) -> Option<PrepareData> {
+    pub fn data<'a>(&'a self) -> Option<PrepareData<'a, 'h>> {
         match self.error {
             Error::PkgInvalidArch => unsafe {
-                let list = AlpmListMut::from_ptr(self.data);
+                let list = AlpmList::from_ptr(self.data);
                 Some(PrepareData::PkgInvalidArch(list))
             },
             Error::UnsatisfiedDeps => unsafe {
-                let list = AlpmListMut::from_ptr(self.data);
+                let list = AlpmList::from_ptr(self.data);
                 Some(PrepareData::UnsatisfiedDeps(list))
             },
             Error::ConflictingDeps => unsafe {
-                let list = AlpmListMut::from_ptr(self.data);
+                let list = AlpmList::from_ptr(self.data);
                 Some(PrepareData::ConflictingDeps(list))
             },
             _ => None,
@@ -103,15 +113,18 @@ impl PrepareError<'_> {
 }
 
 #[derive(Debug)]
-pub enum CommitData {
-    FileConflict(AlpmListMut<OwnedFileConflict>),
-    PkgInvalid(AlpmListMut<String>),
+pub enum CommitData<'a> {
+    FileConflict(AlpmList<'a, &'a Conflict>),
+    PkgInvalid(AlpmList<'a, &'a str>),
 }
 
 pub struct CommitError {
     error: Error,
     data: *mut alpm_list_t,
 }
+
+unsafe impl Send for CommitError {}
+unsafe impl Sync for CommitError {}
 
 impl Debug for CommitError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -136,25 +149,35 @@ impl From<CommitError> for Error {
 
 impl StdError for CommitError {}
 
+impl Drop for CommitError {
+    fn drop(&mut self) {
+        match self.error {
+            Error::FileConflicts => unsafe {
+                drop(AlpmListMut::<OwnedFileConflict>::from_ptr(self.data));
+            },
+            Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => unsafe {
+                drop(AlpmListMut::<String>::from_ptr(self.data));
+            },
+            _ => (),
+        }
+
+
+    }
+}
+
 impl CommitError {
     pub fn error(&self) -> Error {
         self.error
     }
 
-    #[doc(hidden)]
-    pub fn data(&self) -> CommitData {
-        self.try_data().expect("commit error has no data")
-    }
-
-    // TODO replace data() with this on next major bump
-    pub fn try_data(&self) -> Option<CommitData> {
+    pub fn data(&self) -> Option<CommitData> {
         match self.error {
             Error::FileConflicts => unsafe {
-                let list = AlpmListMut::from_ptr(self.data);
+                let list = AlpmList::from_ptr(self.data);
                 Some(CommitData::FileConflict(list))
             },
             Error::PkgInvalid | Error::PkgInvalidSig | Error::PkgInvalidChecksum => unsafe {
-                let list = AlpmListMut::from_ptr(self.data);
+                let list = AlpmList::from_ptr(self.data);
                 Some(CommitData::PkgInvalid(list))
             },
             _ => None,
@@ -268,5 +291,68 @@ mod tests {
         // Due to age the mirror now returns 404 for the package.
         // But we're only testing that the function is called correctly anyway.
         assert!(handle.trans_commit().unwrap_err().error() == Error::Retrieve);
+    }
+
+
+    #[test]
+    fn test_trans_deps() {
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
+        let flags = TransFlag::DB_ONLY| TransFlag::NO_LOCK;
+
+        handle.set_log_cb((), logcb);
+        handle.set_event_cb((), eventcb);
+
+        let pkg = handle.localdb().pkg("curl").unwrap();
+
+        handle.trans_init(flags).unwrap();
+        handle.trans_remove_pkg(pkg).unwrap();
+        let err = handle.trans_prepare().unwrap_err();
+        let err = err.data().unwrap();
+
+        let PrepareData::UnsatisfiedDeps(deps) = err else {
+            panic!("error is not UnsatisfiedDeps");
+        };
+
+        assert_eq!(deps.len(), 1);
+        let deps = deps.first().unwrap();
+
+        assert_eq!(deps.depend().name(), "curl");
+        assert_eq!(deps.target(), "pacman");
+        assert_eq!(deps.causing_pkg().unwrap(), "curl");
+    }
+
+    #[test]
+    fn test_trans_conflict() {
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
+        let flags = TransFlag::DB_ONLY |  TransFlag::NO_DEPS | TransFlag::NO_LOCK;
+
+        handle.set_log_cb((), logcb);
+        handle.set_event_cb((), eventcb);
+
+        let db = handle.register_syncdb_mut("extra", SigLevel::NONE).unwrap();
+        db.add_server("https://ftp.rnl.tecnico.ulisboa.pt/pub/archlinux/extra/os/x86_64")
+            .unwrap();
+        let db = handle
+            .syncdbs()
+            .iter()
+            .find(|db| db.name() == "extra")
+            .unwrap();
+        let pkg = db.pkg("gvim").unwrap();
+
+        handle.trans_init(flags).unwrap();
+        handle.trans_add_pkg(pkg).unwrap();
+        let err = handle.trans_prepare().unwrap_err();
+        let err = err.data().unwrap();
+
+        let PrepareData::ConflictingDeps(deps) = err else {
+            panic!("error is not ConflictingDeps");
+        };
+
+        assert_eq!(deps.len(), 1);
+        let deps = deps.first().unwrap();
+
+        assert_eq!(deps.package1().name(), "gvim");
+        assert_eq!(deps.package2().name(), "vim");
+
     }
 }
