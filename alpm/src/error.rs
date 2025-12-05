@@ -73,7 +73,7 @@ pub enum Error {
 
 impl Error {
     pub(crate) unsafe fn new(err: alpm_errno_t) -> Error {
-        transmute::<alpm_errno_t, Error>(err)
+        unsafe { transmute::<alpm_errno_t, Error>(err) }
     }
 }
 

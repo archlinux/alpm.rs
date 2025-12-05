@@ -1,9 +1,9 @@
 use crate::{
-    free, AlpmListMut, Backup, Conflict, Db, DbMut, Dep, DepMissing, Depend, DependMissing,
-    FileConflict, Group, LoadedPackage, OwnedConflict, OwnedFileConflict, Package, Pkg,
+    AlpmListMut, Backup, Conflict, Db, DbMut, Dep, DepMissing, Depend, DependMissing, FileConflict,
+    Group, LoadedPackage, OwnedConflict, OwnedFileConflict, Package, Pkg, free,
 };
 
-use std::ffi::{c_void, CStr};
+use std::ffi::{CStr, c_void};
 use std::fmt;
 use std::fmt::Debug;
 use std::iter::{ExactSizeIterator, Iterator};
@@ -16,7 +16,7 @@ use alpm_sys::*;
 pub unsafe trait IntoAlpmListItem: Sized {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self;
     unsafe fn drop_item(ptr: *mut c_void) {
-        Self::into_list_item(ptr);
+        unsafe { Self::into_list_item(ptr) };
     }
 }
 
@@ -151,55 +151,55 @@ impl<T: IntoAlpmListItem> ExactSizeIterator for Iter<'_, T> {}
 
 unsafe impl IntoAlpmListItem for &Dep {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        Dep::from_ptr(ptr as _)
+        unsafe { Dep::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &Conflict {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        Conflict::from_ptr(ptr as _)
+        unsafe { Conflict::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &Pkg {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        Pkg::from_ptr(ptr as _)
+        unsafe { Pkg::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &Package {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        Package::from_ptr(ptr as _)
+        unsafe { Package::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &Db {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        Db::from_ptr(ptr as _)
+        unsafe { Db::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &Group {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        Group::from_ptr(ptr as _)
+        unsafe { Group::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &DepMissing {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        DepMissing::from_ptr(ptr as _)
+        unsafe { DepMissing::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &FileConflict {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        FileConflict::from_ptr(ptr as _)
+        unsafe { FileConflict::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &str {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        let s = CStr::from_ptr(ptr as *mut c_char);
+        let s = unsafe { CStr::from_ptr(ptr as *mut c_char) };
         s.to_str().unwrap()
     }
 }
@@ -208,54 +208,54 @@ unsafe impl IntoAlpmListItem for &str {
 
 unsafe impl IntoAlpmListItem for Depend {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        Depend::from_ptr(ptr as _)
+        unsafe { Depend::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for OwnedConflict {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        OwnedConflict::from_ptr(ptr as _)
+        unsafe { OwnedConflict::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for LoadedPackage<'_> {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        LoadedPackage::from_ptr(ptr as _)
+        unsafe { LoadedPackage::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for DbMut<'_> {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        DbMut::from_ptr(ptr as _)
+        unsafe { DbMut::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for DependMissing {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        DependMissing::from_ptr(ptr as _)
+        unsafe { DependMissing::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for &Backup {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        Backup::from_ptr(ptr as _)
+        unsafe { Backup::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for OwnedFileConflict {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        OwnedFileConflict::from_ptr(ptr as _)
+        unsafe { OwnedFileConflict::from_ptr(ptr as _) }
     }
 }
 
 unsafe impl IntoAlpmListItem for String {
     unsafe fn into_list_item(ptr: *mut c_void) -> Self {
-        let s = CStr::from_ptr(ptr as *mut c_char);
+        let s = unsafe { CStr::from_ptr(ptr as *mut c_char) };
         let ret = s.to_str().unwrap().to_string();
-        free(ptr);
+        unsafe { free(ptr) };
         ret
     }
     unsafe fn drop_item(ptr: *mut c_void) {
-        free(ptr)
+        unsafe { free(ptr) }
     }
 }

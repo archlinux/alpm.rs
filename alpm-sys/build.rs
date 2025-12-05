@@ -1,22 +1,14 @@
 fn main() {
     use std::env;
-    use std::path::Path;
+    
 
     if cfg!(feature = "docs-rs") {
         return;
     }
 
-    println!("cargo::rerun-if-changed=build.rs");
-    #[cfg(feature = "static")]
-    println!("cargo::rerun-if-changed=/usr/lib/pacman/lib/pkgconfig");
-
     let mut includes = Vec::new();
 
-    println!("cargo::rerun-if-env-changed=PKG_CONFIG_LIBDIR");
-    if cfg!(feature = "static") && Path::new("/usr/lib/pacman/lib/pkgconfig").exists() {
-        env::set_var("PKG_CONFIG_LIBDIR", "/usr/lib/pacman/lib/pkgconfig");
-    }
-
+    println!("cargo::rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed=ALPM_INCLUDE_DIR");
     if let Ok(dirs) = env::var("ALPM_INCLUDE_DIR") {
         includes.extend(dirs.split(':').map(|s| s.to_string()))

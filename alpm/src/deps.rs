@@ -1,10 +1,10 @@
 use crate::utils::*;
-use crate::{free, Alpm, AlpmList, AlpmListMut, AsAlpmList, Db, Package, Pkg, Ver};
+use crate::{Alpm, AlpmList, AlpmListMut, AsAlpmList, Db, Package, Pkg, Ver, free};
 
 use alpm_sys::alpm_depmod_t::*;
 use alpm_sys::*;
 
-use std::ffi::{c_void, CString};
+use std::ffi::{CString, c_void};
 use std::fmt;
 use std::mem::transmute;
 use std::ptr::NonNull;
@@ -131,7 +131,7 @@ impl Depend {
 
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depend_t) -> Depend {
         Depend {
-            dep: NonNull::new_unchecked(ptr),
+            dep: unsafe { NonNull::new_unchecked(ptr) },
         }
     }
 
@@ -148,7 +148,7 @@ impl AsRef<Dep> for Depend {
 
 impl Dep {
     pub(crate) unsafe fn from_ptr<'a>(ptr: *const alpm_depend_t) -> &'a Dep {
-        &*(ptr as *const Dep)
+        unsafe { &*(ptr as *const Dep) }
     }
 
     pub(crate) fn as_ptr(&self) -> *const alpm_depend_t {
@@ -172,7 +172,7 @@ impl Dep {
     }
 
     unsafe fn version_unchecked(&self) -> &Ver {
-        Ver::from_ptr((*self.as_ptr()).version)
+        unsafe { Ver::from_ptr((*self.as_ptr()).version) }
     }
 
     pub fn desc(&self) -> Option<&str> {
@@ -304,14 +304,14 @@ impl Drop for DependMissing {
 impl DependMissing {
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_depmissing_t) -> DependMissing {
         DependMissing {
-            inner: NonNull::new_unchecked(ptr),
+            inner: unsafe { NonNull::new_unchecked(ptr) },
         }
     }
 }
 
 impl DepMissing {
     pub(crate) unsafe fn from_ptr<'a>(ptr: *mut alpm_depmissing_t) -> &'a DepMissing {
-        &*(ptr as *mut DepMissing)
+        unsafe { &*(ptr as *mut DepMissing) }
     }
 
     pub(crate) fn as_ptr(&self) -> *const alpm_depmissing_t {

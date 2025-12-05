@@ -129,7 +129,7 @@ impl fmt::Debug for Group {
 
 impl Group {
     pub(crate) unsafe fn from_ptr<'a>(ptr: *mut alpm_group_t) -> &'a Group {
-        &*(ptr as *mut Group)
+        unsafe { &*(ptr as *mut Group) }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_group_t {
@@ -181,7 +181,7 @@ impl ChangeLog<'_> {
     pub(crate) unsafe fn new(pkg: &Pkg, ptr: *mut c_void) -> ChangeLog {
         ChangeLog {
             pkg,
-            stream: NonNull::new_unchecked(ptr),
+            stream: unsafe { NonNull::new_unchecked(ptr) },
         }
     }
 
@@ -216,7 +216,7 @@ impl fmt::Debug for Backup {
 
 impl Backup {
     pub(crate) unsafe fn from_ptr<'a>(ptr: *mut alpm_backup_t) -> &'a Backup {
-        &*(ptr as *mut Backup)
+        unsafe { &*(ptr as *mut Backup) }
     }
 
     pub(crate) fn as_ptr(&self) -> *const alpm_backup_t {
@@ -357,7 +357,7 @@ pub struct Signature {
 impl Signature {
     pub(crate) unsafe fn new(sig: *mut c_uchar, len: usize) -> Signature {
         Signature {
-            sig: NonNull::new_unchecked(sig),
+            sig: unsafe { NonNull::new_unchecked(sig) },
             len,
         }
     }

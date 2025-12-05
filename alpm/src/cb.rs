@@ -6,8 +6,8 @@ use std::mem::transmute;
 use std::os::raw::{c_char, c_int};
 use std::{fmt, panic, ptr};
 
-extern "C" {
-    fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: *mut c_void) -> c_int;
+unsafe extern "C" {
+    unsafe fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: *mut c_void) -> c_int;
 }
 
 type Cb<T> = UnsafeCell<Option<Box<T>>>;

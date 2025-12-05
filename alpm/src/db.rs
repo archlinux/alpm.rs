@@ -69,7 +69,7 @@ impl Alpm {
 impl DbMut<'_> {
     pub(crate) unsafe fn from_ptr<'a>(db: *mut alpm_db_t) -> DbMut<'a> {
         DbMut {
-            inner: Db::from_ptr(db),
+            inner: unsafe { Db::from_ptr(db) },
         }
     }
 
@@ -99,7 +99,7 @@ impl DbMut<'_> {
 
 impl Db {
     pub(crate) unsafe fn from_ptr<'a>(db: *mut alpm_db_t) -> &'a Db {
-        &*(db as *mut Db)
+        unsafe { &*(db as *mut Db) }
     }
 
     pub(crate) fn handle_ptr(&self) -> *mut alpm_handle_t {

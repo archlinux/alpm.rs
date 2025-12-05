@@ -1,9 +1,8 @@
 use alpm_sys::*;
 
 use crate::{
-    free, AlpmList, Backup, Conflict, Db, DbMut, Dep, DepMissing, Depend, DependMissing,
-    FileConflict, IntoAlpmListItem, Iter, LoadedPackage, OwnedConflict, OwnedFileConflict, Package,
-    Pkg,
+    AlpmList, Backup, Conflict, Db, DbMut, Dep, DepMissing, Depend, DependMissing, FileConflict,
+    IntoAlpmListItem, Iter, LoadedPackage, OwnedConflict, OwnedFileConflict, Package, Pkg, free,
 };
 
 use std::ffi::c_void;
@@ -15,8 +14,8 @@ use std::mem::ManuallyDrop;
 use std::os::raw::c_char;
 use std::ptr;
 
-extern "C" {
-    fn strndup(cs: *const c_char, n: usize) -> *mut c_char;
+unsafe extern "C" {
+    unsafe fn strndup(cs: *const c_char, n: usize) -> *mut c_char;
 }
 
 #[doc(hidden)]

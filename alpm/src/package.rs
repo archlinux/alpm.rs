@@ -64,13 +64,13 @@ impl AsRef<Pkg> for Package {
 
 impl Package {
     pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> &'a Package {
-        &*(pkg as *mut Package)
+        unsafe { &*(pkg as *mut Package) }
     }
 }
 
 impl Pkg {
     pub(crate) unsafe fn from_ptr<'a>(pkg: *mut alpm_pkg_t) -> &'a Pkg {
-        &*(pkg as *mut Pkg)
+        unsafe { &*(pkg as *mut Pkg) }
     }
 
     pub(crate) fn handle_ptr(&self) -> *mut alpm_handle_t {
@@ -152,11 +152,7 @@ impl Pkg {
 
     pub fn install_date(&self) -> Option<i64> {
         let date = unsafe { alpm_pkg_get_installdate(self.as_ptr()) };
-        if date == 0 {
-            None
-        } else {
-            Some(date as i64)
-        }
+        if date == 0 { None } else { Some(date as i64) }
     }
 
     pub fn packager(&self) -> Option<&str> {

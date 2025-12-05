@@ -5,7 +5,7 @@ resolver = "2"
 [workspace.package]
 readme = "README.md"
 authors = ["morganamilo <morganamilo@archlinux.org>"]
-edition = "2021"
+edition = "2024"
 homepage = "https://github.com/archlinux/alpm.rs"
 repository = "https://github.com/archlinux/alpm.rs"
 license = "GPL-3.0"

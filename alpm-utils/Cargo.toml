@@ -20,7 +20,7 @@ git = ["alpm/git"]
 pkg-config = ["alpm/pkg-config"]
 generate = ["alpm/generate"]
 static = ["alpm/static"]
-default = ["alpm", "conf", "pkg-conf"]
+default = ["alpm", "conf", "pkg-config"]
 conf = ["pacmanconf", "alpm"]
 docs-rs = ["alpm/docs-rs"]
 

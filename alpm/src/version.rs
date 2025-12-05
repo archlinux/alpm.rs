@@ -31,7 +31,7 @@ impl Ver {
     }
 
     pub(crate) unsafe fn from_ptr<'a>(s: *const c_char) -> &'a Ver {
-        Ver::new(CStr::from_ptr(s))
+        unsafe { Ver::new(CStr::from_ptr(s)) }
     }
 }
 

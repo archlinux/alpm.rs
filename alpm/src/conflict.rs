@@ -1,5 +1,5 @@
-use crate::{utils::*, Package};
 use crate::{Alpm, AlpmListMut, AsAlpmList, Dep, Pkg};
+use crate::{Package, utils::*};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
@@ -18,7 +18,7 @@ unsafe impl Sync for OwnedConflict {}
 impl OwnedConflict {
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_conflict_t) -> OwnedConflict {
         OwnedConflict {
-            inner: NonNull::new_unchecked(ptr),
+            inner: unsafe { NonNull::new_unchecked(ptr) },
         }
     }
 }
@@ -45,11 +45,11 @@ unsafe impl Sync for Conflict {}
 
 impl fmt::Debug for Conflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.debug_struct("Conflict")
-                .field("package1", &self.package1())
-                .field("package2", &self.package2())
-                .field("reason", &self.reason())
-                .finish()
+        f.debug_struct("Conflict")
+            .field("package1", &self.package1())
+            .field("package2", &self.package2())
+            .field("reason", &self.reason())
+            .finish()
     }
 }
 
@@ -75,7 +75,7 @@ impl Drop for OwnedConflict {
 
 impl Conflict {
     pub(crate) unsafe fn from_ptr<'a>(ptr: *mut alpm_conflict_t) -> &'a Conflict {
-        &*(ptr as *mut Conflict)
+        unsafe { &*(ptr as *mut Conflict) }
     }
 
     pub(crate) fn as_ptr(&self) -> *const alpm_conflict_t {
@@ -151,7 +151,7 @@ unsafe impl Send for OwnedFileConflict {}
 impl OwnedFileConflict {
     pub(crate) unsafe fn from_ptr(ptr: *mut alpm_fileconflict_t) -> OwnedFileConflict {
         OwnedFileConflict {
-            inner: NonNull::new_unchecked(ptr),
+            inner: unsafe { NonNull::new_unchecked(ptr) },
         }
     }
 
@@ -168,7 +168,7 @@ impl fmt::Debug for OwnedFileConflict {
 
 impl FileConflict {
     pub(crate) unsafe fn from_ptr<'a>(ptr: *mut alpm_fileconflict_t) -> &'a FileConflict {
-        &*(ptr as *mut FileConflict)
+        unsafe { &*(ptr as *mut FileConflict) }
     }
 
     pub(crate) fn as_ptr(&self) -> *const alpm_fileconflict_t {
@@ -192,11 +192,7 @@ impl FileConflict {
     pub fn conflicting_target(&self) -> Option<&str> {
         let s = unsafe { from_cstr((*self.as_ptr()).target) };
 
-        if s.is_empty() {
-            None
-        } else {
-            Some(s)
-        }
+        if s.is_empty() { None } else { Some(s) }
     }
 }
 

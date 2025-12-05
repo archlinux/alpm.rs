@@ -36,7 +36,7 @@ impl AsRef<Pkg> for LoadedPackage<'_> {
 impl<'a> LoadedPackage<'a> {
     pub(crate) unsafe fn from_ptr<'b>(pkg: *mut alpm_pkg_t) -> LoadedPackage<'b> {
         LoadedPackage {
-            pkg: Pkg::from_ptr(pkg),
+            pkg: unsafe { Pkg::from_ptr(pkg) },
         }
     }
 
