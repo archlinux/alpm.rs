@@ -1,6 +1,6 @@
 [package]
 name = "alpm"
-version = "4.0.3"
+version = "5.0.0"
 description = "Rust bindings for libalpm"
 documentation = "https://docs.rs/alpm"
 
@@ -32,10 +32,10 @@ docs-rs = ["alpm-sys/docs-rs"]
 bitflags = "2.10.0"
 libarchive = { version = "0.1.1", optional = true }
 libarchive3-sys = { version = "0.1.2", optional = true }
-alpm-sys = { path = "../alpm-sys", version = "4.0.3", default-features = false }
+alpm-sys = { path = "../alpm-sys", version = "5.0.0", default-features = false }
 
 [build-dependencies]
-alpm-sys = { path = "../alpm-sys", version = "4.0.3", default-feature = false }
+alpm-sys = { path = "../alpm-sys", version = "5.0.0", default-feature = false }
 
 [dev-dependencies]
 criterion = "0.8.0"
