@@ -17,9 +17,10 @@ features = ["docs-rs", "pacmanconf"]
 
 [features]
 git = ["alpm/git"]
+pkg-config = ["alpm/pkg-config"]
 generate = ["alpm/generate"]
 static = ["alpm/static"]
-default = ["alpm", "conf"]
+default = ["alpm", "conf", "pkg-conf"]
 conf = ["pacmanconf", "alpm"]
 docs-rs = ["alpm/docs-rs"]
 

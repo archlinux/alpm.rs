@@ -19,9 +19,10 @@ no-default-features = true
 features = [ "docs-rs" ]
 
 [features]
-default = ["checkver"]
+default = ["checkver", "pkg-config"]
 mtree = ["libarchive", "libarchive3-sys"]
 git = ["alpm-sys/git"]
+pkg-config = ["alpm-sys/pkg-config"]
 static = ["alpm-sys/static"]
 generate = ["alpm-sys/generate"]
 checkver = []
@@ -31,10 +32,10 @@ docs-rs = ["alpm-sys/docs-rs"]
 bitflags = "2.6.0"
 libarchive = { version = "0.1.1", optional = true }
 libarchive3-sys = { version = "0.1.2", optional = true }
-alpm-sys = { path = "../alpm-sys", version = "4.0.3" }
+alpm-sys = { path = "../alpm-sys", version = "4.0.3", default-features = false }
 
 [build-dependencies]
-alpm-sys = { path = "../alpm-sys", version = "4.0.3" }
+alpm-sys = { path = "../alpm-sys", version = "4.0.3", default-feature = false }
 
 [dev-dependencies]
 criterion = "0.5.1"

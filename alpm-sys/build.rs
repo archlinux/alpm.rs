@@ -6,51 +6,69 @@ fn main() {
         return;
     }
 
+    println!("cargo::rerun-if-changed=build.rs");
     #[cfg(feature = "static")]
-    println!("cargo:rerun-if-changed=/usr/lib/pacman/lib/pkgconfig");
-    println!("cargo:rerun-if-env-changed=ALPM_LIB_DIR");
+    println!("cargo::rerun-if-changed=/usr/lib/pacman/lib/pkgconfig");
 
+    let mut includes = Vec::new();
+
+    println!("cargo::rerun-if-env-changed=PKG_CONFIG_LIBDIR");
     if cfg!(feature = "static") && Path::new("/usr/lib/pacman/lib/pkgconfig").exists() {
         env::set_var("PKG_CONFIG_LIBDIR", "/usr/lib/pacman/lib/pkgconfig");
     }
 
-    if let Ok(dir) = env::var("ALPM_LIB_DIR") {
-        println!("cargo:rustc-link-search={}", dir);
+    println!("cargo:rerun-if-env-changed=ALPM_INCLUDE_DIR");
+    if let Ok(dirs) = env::var("ALPM_INCLUDE_DIR") {
+        includes.extend(dirs.split(':').map(|s| s.to_string()))
+    } else if !cfg!(feature = "pkg-config") {
+        includes.push("/usr/include".into());
     }
 
-    #[allow(dead_code)]
-    #[allow(unused_variables)]
-    let lib = pkg_config::Config::new()
-        .atleast_version("13.0.0")
-        .statik(cfg!(feature = "static"))
-        .probe("libalpm")
-        .unwrap();
+    println!("cargo:rerun-if-env-changed=ALPM_LIB_DIR");
+    if let Ok(dirs) = env::var("ALPM_LIB_DIR") {
+        println!("cargo::rustc-link-lib=libalpm");
+        for dir in dirs.split(':') {
+            println!("cargo::rustc-link-search=native={}", dir);
+        }
+    } else if !cfg!(feature = "pkg-config") {
+        println!("cargo::rustc-link-lib=alpm");
+        println!("cargo::rustc-link-search=native=/usr/lib");
+    }
+
+    #[cfg(feature = "pkg-config")]
+    {
+        let pkgconf = pkg_config::Config::new()
+            .atleast_version("16.0.0")
+            .statik(cfg!(feature = "static"))
+            .probe("libalpm")
+            .expect("failed to run pkgconf for libalpm");
+
+        includes.extend(
+            pkgconf
+                .include_paths
+                .iter()
+                .map(|d| d.display().to_string()),
+        );
+    }
 
     #[cfg(feature = "generate")]
     {
         let out_dir = env::var_os("OUT_DIR").unwrap();
         let dest_path = Path::new(&out_dir).join("ffi_generated.rs");
 
-        let header = lib
-            .include_paths
+        let header = includes
             .iter()
-            .map(|i| i.join("alpm.h"))
-            .find(|i| i.exists())
-            .expect("could not find alpm.h");
-        let mut include = lib
-            .include_paths
+            .map(|s| Path::new(s).join("alpm.h"))
+            .find(|p| p.exists())
+            .expect("failed to find alpm.h");
+
+        let includes = includes
             .iter()
-            .map(|i| format!("-I{}", i.display().to_string()))
+            .map(|i| format!("-I{i}"))
             .collect::<Vec<_>>();
 
-        println!("cargo:rerun-if-env-changed=ALPM_INCLUDE_DIR");
-        if let Ok(path) = env::var("ALPM_INCLUDE_DIR") {
-            include.clear();
-            include.insert(0, path);
-        }
-
         let bindings = bindgen::builder()
-            .clang_args(&include)
+            .clang_args(&includes)
             .header(header.display().to_string())
             .allowlist_type("(alpm|ALPM).*")
             .allowlist_function("(alpm|ALPM).*")
