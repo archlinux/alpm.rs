@@ -1,5 +1,7 @@
+use std::hint::black_box;
+
 use alpm::{Alpm, SigLevel};
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 
 fn benchmark_list(c: &mut Criterion) {
     c.bench_function("list", |b| {
