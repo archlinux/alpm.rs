@@ -1,25 +1,14 @@
-use crate::{free, Alpm, AnyDownloadEvent, AnyEvent, AnyQuestion, FetchResult, LogLevel, Progress};
+use crate::{Alpm, AnyDownloadEvent, AnyEvent, AnyQuestion, FetchResult, LogLevel, Progress, free};
 use alpm_sys::*;
 use std::cell::{RefCell, UnsafeCell};
-use std::ffi::{c_void, CStr};
+use std::ffi::{CStr, c_void};
 use std::mem::transmute;
 use std::os::raw::{c_char, c_int};
 use std::{fmt, panic, ptr};
 
 extern "C" {
-    fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: VaList) -> c_int;
+    fn vasprintf(str: *const *mut c_char, fmt: *const c_char, args: *mut c_void) -> c_int;
 }
-
-#[cfg(not(all(
-    feature = "generate",
-    any(target_arch = "arm", target_arch = "aarch64")
-)))]
-pub type VaList = *mut __va_list_tag;
-#[cfg(all(
-    feature = "generate",
-    any(target_arch = "arm", target_arch = "aarch64")
-))]
-pub type VaList = va_list;
 
 type Cb<T> = UnsafeCell<Option<Box<T>>>;
 
@@ -237,6 +226,7 @@ impl Alpm {
         let ctx = LogCbImpl(RefCell::new((f, data)));
         let ctx = Box::new(ctx);
         let cb = logcb::<LogCbImpl<T, F>>;
+        let cb: unsafe extern "C" fn(_, _, _, _) = unsafe { transmute(cb as *mut c_void) };
         unsafe { alpm_option_set_logcb(self.as_ptr(), Some(cb), &*ctx as *const _ as *mut _) };
         c.replace(ctx);
     }
@@ -476,7 +466,7 @@ extern "C" fn logcb<C: LogCbTrait>(
     ctx: *mut c_void,
     level: alpm_loglevel_t,
     fmt: *const c_char,
-    args: VaList,
+    args: *mut c_void,
 ) {
     let buff = ptr::null_mut();
     let n = unsafe { vasprintf(&buff, fmt, args) };
@@ -568,8 +558,8 @@ extern "C" fn progresscb<C: ProgressCbTrait>(
 mod tests {
     use super::*;
     use crate::{
-        log_action, version, AnyDownloadEvent, AnyEvent, AnyQuestion, Capabilities, DownloadEvent,
-        Event, FetchResult, Progress, Question, SigLevel,
+        AnyDownloadEvent, AnyEvent, AnyQuestion, Capabilities, DownloadEvent, Event, FetchResult,
+        Progress, Question, SigLevel, log_action, version,
     };
     use std::cell::Cell;
     use std::rc::Rc;
