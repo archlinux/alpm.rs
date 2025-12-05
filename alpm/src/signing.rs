@@ -1,11 +1,11 @@
-use crate::{free, Alpm, AlpmListMut, Db, Result};
-use crate::{utils::*, Pkg};
+use crate::{Alpm, AlpmListMut, Db, Result, free};
+use crate::{Pkg, utils::*};
 
 use alpm_sys::_alpm_sigstatus_t::*;
 use alpm_sys::_alpm_sigvalidity_t::*;
 use alpm_sys::*;
 
-use std::ffi::{c_void, CString};
+use std::ffi::{CString, c_void};
 use std::mem::transmute;
 use std::{fmt, ptr, slice};
 

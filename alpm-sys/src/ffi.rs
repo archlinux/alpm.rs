@@ -2118,7 +2118,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " Returns the user to switch to for sensitive operations.\n @return the user name"]
     pub fn alpm_option_get_sandboxuser(handle: *mut alpm_handle_t)
-        -> *const ::std::os::raw::c_char;
+    -> *const ::std::os::raw::c_char;
 }
 unsafe extern "C" {
     #[doc = " Sets the user to switch to for sensitive operations.\n @param handle the context handle\n @param sandboxuser the user to set"]
@@ -2338,7 +2338,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " Get the configured local file siglevel.\n @param handle the context handle\n @return a \\link alpm_siglevel_t \\endlink bitfield of the siglevel"]
     pub fn alpm_option_get_local_file_siglevel(handle: *mut alpm_handle_t)
-        -> ::std::os::raw::c_int;
+    -> ::std::os::raw::c_int;
 }
 unsafe extern "C" {
     #[doc = " Set the local file siglevel.\n @param handle the context handle\n @param level a \\link alpm_siglevel_t \\endlink bitfield of the level to set\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]

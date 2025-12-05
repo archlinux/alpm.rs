@@ -1,6 +1,5 @@
 fn main() {
     use std::env;
-    
 
     if cfg!(feature = "docs-rs") {
         return;

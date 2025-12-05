@@ -106,6 +106,7 @@ impl Pkg {
         unsafe { from_cstr(name) }
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn check_md5sum(&self) -> Result<()> {
         self.check_ret(unsafe { alpm_pkg_checkmd5sum(self.as_ptr()) })
     }
@@ -160,6 +161,7 @@ impl Pkg {
         unsafe { from_cstr_optional(packager) }
     }
 
+    #[cfg(not(feature = "git"))]
     pub fn md5sum(&self) -> Option<&str> {
         let md5sum = unsafe { alpm_pkg_get_md5sum(self.as_ptr()) };
         unsafe { from_cstr_optional(md5sum) }

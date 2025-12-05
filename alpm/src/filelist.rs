@@ -63,9 +63,7 @@ impl fmt::Debug for FileList<'_> {
 
 impl FileList<'_> {
     pub(crate) unsafe fn new<'a>(files: *mut alpm_filelist_t) -> &'a FileList<'a> {
-        unsafe {
-            &*(files as *const FileList)
-        }
+        unsafe { &*(files as *const FileList) }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut alpm_filelist_t {
@@ -87,9 +85,7 @@ impl FileList<'_> {
         if file.is_null() {
             None
         } else {
-            unsafe {
-                Some(&*(file as *const File))
-            }
+            unsafe { Some(&*(file as *const File)) }
         }
     }
 }

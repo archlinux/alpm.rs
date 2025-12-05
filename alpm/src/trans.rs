@@ -1,5 +1,6 @@
 use crate::{
-    Alpm, AlpmList, AlpmListMut, Conflict, DepMissing, DependMissing, Error, OwnedConflict, OwnedFileConflict, Package, Result
+    Alpm, AlpmList, AlpmListMut, Conflict, DepMissing, DependMissing, Error, OwnedConflict,
+    OwnedFileConflict, Package, Result,
 };
 
 use alpm_sys::_alpm_transflag_t::*;
@@ -160,8 +161,6 @@ impl Drop for CommitError {
             },
             _ => (),
         }
-
-
     }
 }
 
@@ -293,11 +292,10 @@ mod tests {
         assert!(handle.trans_commit().unwrap_err().error() == Error::Retrieve);
     }
 
-
     #[test]
     fn test_trans_deps() {
         let mut handle = Alpm::new("/", "tests/db").unwrap();
-        let flags = TransFlag::DB_ONLY| TransFlag::NO_LOCK;
+        let flags = TransFlag::DB_ONLY | TransFlag::NO_LOCK;
 
         handle.set_log_cb((), logcb);
         handle.set_event_cb((), eventcb);
@@ -324,7 +322,7 @@ mod tests {
     #[test]
     fn test_trans_conflict() {
         let mut handle = Alpm::new("/", "tests/db").unwrap();
-        let flags = TransFlag::DB_ONLY |  TransFlag::NO_DEPS | TransFlag::NO_LOCK;
+        let flags = TransFlag::DB_ONLY | TransFlag::NO_DEPS | TransFlag::NO_LOCK;
 
         handle.set_log_cb((), logcb);
         handle.set_event_cb((), eventcb);
@@ -353,6 +351,5 @@ mod tests {
 
         assert_eq!(deps.package1().name(), "gvim");
         assert_eq!(deps.package2().name(), "vim");
-
     }
 }

@@ -372,7 +372,7 @@ impl PackageOperationEvent<'_> {
             alpm_package_operation_t::ALPM_PACKAGE_INSTALL => {
                 let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
                 PackageOperation::Install(newpkg)
-        },
+            }
             alpm_package_operation_t::ALPM_PACKAGE_UPGRADE => {
                 let newpkg = unsafe { Package::from_ptr((*self.inner).newpkg) };
                 let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
@@ -391,7 +391,7 @@ impl PackageOperationEvent<'_> {
             alpm_package_operation_t::ALPM_PACKAGE_REMOVE => {
                 let oldpkg = unsafe { Package::from_ptr((*self.inner).oldpkg) };
                 PackageOperation::Remove(oldpkg)
-            },
+            }
         }
     }
 }

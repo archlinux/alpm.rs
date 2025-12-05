@@ -2118,7 +2118,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " Returns the user to switch to for sensitive operations.\n @return the user name"]
     pub fn alpm_option_get_sandboxuser(handle: *mut alpm_handle_t)
-        -> *const ::std::os::raw::c_char;
+    -> *const ::std::os::raw::c_char;
 }
 unsafe extern "C" {
     #[doc = " Sets the user to switch to for sensitive operations.\n @param handle the context handle\n @param sandboxuser the user to set"]
@@ -2338,7 +2338,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " Get the configured local file siglevel.\n @param handle the context handle\n @return a \\link alpm_siglevel_t \\endlink bitfield of the siglevel"]
     pub fn alpm_option_get_local_file_siglevel(handle: *mut alpm_handle_t)
-        -> ::std::os::raw::c_int;
+    -> ::std::os::raw::c_int;
 }
 unsafe extern "C" {
     #[doc = " Set the local file siglevel.\n @param handle the context handle\n @param level a \\link alpm_siglevel_t \\endlink bitfield of the level to set\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]
@@ -2380,6 +2380,17 @@ unsafe extern "C" {
     pub fn alpm_option_set_parallel_downloads(
         handle: *mut alpm_handle_t,
         num_streams: ::std::os::raw::c_uint,
+    ) -> ::std::os::raw::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Get the state of the sandbox\n @param handle the context handle\n @return 0 for enabled, 1 if any component is disabled, 2 if completely disabled"]
+    pub fn alpm_option_get_disable_sandbox(handle: *mut alpm_handle_t) -> ::std::os::raw::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Enables/disables all components of the sandbox.\n @param handle the context handle\n @param disable_sandbox 0 for enabled, 1 for disabled\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]
+    pub fn alpm_option_set_disable_sandbox(
+        handle: *mut alpm_handle_t,
+        disable_sandbox: ::std::os::raw::c_ushort,
     ) -> ::std::os::raw::c_int;
 }
 unsafe extern "C" {
@@ -2480,10 +2491,6 @@ unsafe extern "C" {
     pub fn alpm_pkg_free(pkg: *mut alpm_pkg_t) -> ::std::os::raw::c_int;
 }
 unsafe extern "C" {
-    #[doc = " Check the integrity (with md5) of a package from the sync cache.\n @param pkg package pointer\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]
-    pub fn alpm_pkg_checkmd5sum(pkg: *mut alpm_pkg_t) -> ::std::os::raw::c_int;
-}
-unsafe extern "C" {
     #[doc = " Compare two version strings and determine which one is 'newer'.\n Returns a value comparable to the way strcmp works. Returns 1\n if a is newer than b, 0 if a and b are the same version, or -1\n if b is newer than a.\n\n Different epoch values for version strings will override any further\n comparison. If no epoch is provided, 0 is assumed.\n\n Keep in mind that the pkgrel is only compared if it is available\n on both versions handed to this function. For example, comparing\n 1.5-1 and 1.5 will yield 0; comparing 1.5-1 and 1.5-2 will yield\n -1 as expected. This is mainly for supporting versioned dependencies\n that do not include the pkgrel."]
     pub fn alpm_pkg_vercmp(
         a: *const ::std::os::raw::c_char,
@@ -2548,10 +2555,6 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = " Returns the packager's name.\n @param pkg a pointer to package\n @return a reference to an internal string"]
     pub fn alpm_pkg_get_packager(pkg: *mut alpm_pkg_t) -> *const ::std::os::raw::c_char;
-}
-unsafe extern "C" {
-    #[doc = " Returns the package's MD5 checksum as a string.\n The returned string is a sequence of 32 lowercase hexadecimal digits.\n @param pkg a pointer to package\n @return a reference to an internal string"]
-    pub fn alpm_pkg_get_md5sum(pkg: *mut alpm_pkg_t) -> *const ::std::os::raw::c_char;
 }
 unsafe extern "C" {
     #[doc = " Returns the package's SHA256 checksum as a string.\n The returned string is a sequence of 64 lowercase hexadecimal digits.\n @param pkg a pointer to package\n @return a reference to an internal string"]

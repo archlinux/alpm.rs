@@ -94,7 +94,10 @@ mod tests {
         assert_eq!(pkg.url(), Some("https://www.archlinux.org/pacman/"));
         assert_eq!(pkg.packager(), Some("Allan McRae <allan@archlinux.org>"));
         assert_eq!(pkg.arch(), Some("x86_64"));
+
+        #[cfg(not(feature = "git"))]
         assert_eq!(pkg.md5sum(), None);
+
         assert_eq!(pkg.sha256sum(), None);
         assert_eq!(pkg.base64_sig(), None);
 
@@ -118,7 +121,10 @@ mod tests {
         assert_eq!(pkg.url(), None);
         assert_eq!(pkg.packager(), None);
         assert_eq!(pkg.arch(), None);
+
+        #[cfg(not(feature = "git"))]
         assert_eq!(pkg.md5sum(), None);
+
         assert_eq!(pkg.sha256sum(), None);
         assert_eq!(pkg.base64_sig(), None);
     }
