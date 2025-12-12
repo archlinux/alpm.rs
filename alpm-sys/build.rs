@@ -18,13 +18,22 @@ fn main() {
         println!("cargo:rustc-link-search={}", dir);
     }
 
-    #[allow(dead_code)]
-    #[allow(unused_variables)]
     let lib = pkg_config::Config::new()
         .atleast_version("13.0.0")
         .statik(cfg!(feature = "static"))
         .probe("libalpm")
         .unwrap();
+
+    println!("cargo::metadata=libalpm_version={}", lib.version);
+
+    println!("cargo::rustc-check-cfg=cfg(alpm15,alpm16)");
+    if lib.version == "15.0.0" {
+        println!("cargo::rustc-cfg=alpm15");
+    }
+    if lib.version == "16.0.0" || cfg!(feature = "git") {
+        println!("cargo::rustc-cfg=alpm15");
+        println!("cargo::rustc-cfg=alpm16");
+    }
 
     #[cfg(feature = "generate")]
     {

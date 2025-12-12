@@ -1,5 +1,5 @@
-use crate::{utils::*, Package};
 use crate::{Alpm, AlpmListMut, AsAlpmList, Dep, Pkg};
+use crate::{Package, utils::*};
 
 use alpm_sys::alpm_fileconflicttype_t::*;
 use alpm_sys::*;
@@ -45,7 +45,7 @@ unsafe impl Sync for Conflict {}
 
 impl fmt::Debug for Conflict {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        #[cfg(not(feature = "git"))]
+        #[cfg(not(alpm16))]
         {
             f.debug_struct("Conflict")
                 .field("package1", &self.package1())
@@ -54,7 +54,7 @@ impl fmt::Debug for Conflict {
                 .finish()
         }
         // Implement properly when we merge the no handle code
-        #[cfg(feature = "git")]
+        #[cfg(alpm16)]
         {
             f.debug_struct("Conflict").finish()
         }
@@ -200,11 +200,7 @@ impl FileConflict {
     pub fn conflicting_target(&self) -> Option<&str> {
         let s = unsafe { from_cstr((*self.as_ptr()).target) };
 
-        if s.is_empty() {
-            None
-        } else {
-            Some(s)
-        }
+        if s.is_empty() { None } else { Some(s) }
     }
 }
 

@@ -3,6 +3,7 @@ name = "alpm-sys"
 version = "4.0.3"
 description = "Raw bindings for libalpm"
 documentation = "https://docs.rs/alpm_sys"
+links = "alpm"
 
 authors.workspace = true
 readme.workspace = true
@@ -11,7 +12,6 @@ homepage.workspace = true
 repository.workspace = true
 license.workspace = true
 keywords.workspace = true
-
 
 [features]
 git = []

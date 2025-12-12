@@ -1,11 +1,11 @@
-use crate::{free, Alpm, AlpmListMut, Db, Result};
-use crate::{utils::*, Pkg};
+use crate::{Alpm, AlpmListMut, Db, Result, free};
+use crate::{Pkg, utils::*};
 
 use alpm_sys::_alpm_sigstatus_t::*;
 use alpm_sys::_alpm_sigvalidity_t::*;
 use alpm_sys::*;
 
-use std::ffi::{c_void, CString};
+use std::ffi::{CString, c_void};
 use std::mem::transmute;
 use std::ptr::NonNull;
 use std::{fmt, ptr, slice};
@@ -116,7 +116,13 @@ impl PgpKey {
         self.inner.revoked
     }
 
-    #[cfg(not(feature = "git"))]
+    #[cfg(alpm16)]
+    #[deprecated = "removed in libalpm 16.0.0"]
+    pub fn pubkey_algo(&self) -> u8 {
+        b'?'
+    }
+
+    #[cfg(not(alpm16))]
     pub fn pubkey_algo(&self) -> u8 {
         self.inner.pubkey_algo as u8
     }

@@ -4,31 +4,14 @@ use std::ffi::CString;
 use crate::{Alpm, Result};
 
 impl Alpm {
-    #[cfg(not(feature = "git"))]
     pub fn sandbox_setup_child<S: Into<Vec<u8>>>(&mut self, user: S, path: S) -> Result<()> {
         let user = CString::new(user).unwrap();
         let path = CString::new(path).unwrap();
+        #[cfg(not(alpm16))]
         let ret = unsafe { alpm_sandbox_setup_child(self.as_ptr(), user.as_ptr(), path.as_ptr()) };
-        self.check_ret(ret)
-    }
-
-    #[cfg(feature = "git")]
-    pub fn sandbox_setup_child<S: Into<Vec<u8>>>(
-        &mut self,
-        user: S,
-        path: S,
-        restrict_syscalls: bool,
-    ) -> Result<()> {
-        let user = CString::new(user).unwrap();
-        let path = CString::new(path).unwrap();
-        let ret = unsafe {
-            alpm_sandbox_setup_child(
-                self.as_ptr(),
-                user.as_ptr(),
-                path.as_ptr(),
-                restrict_syscalls,
-            )
-        };
+        #[cfg(alpm16)]
+        let ret =
+            unsafe { alpm_sandbox_setup_child(self.as_ptr(), user.as_ptr(), path.as_ptr(), false) };
         self.check_ret(ret)
     }
 }
