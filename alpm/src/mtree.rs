@@ -51,7 +51,7 @@ impl<'h> MTree<'h> {
     pub(crate) unsafe fn new<'a>(pkg: &'a Pkg, archive: *mut archive) -> MTree<'a> {
         MTree {
             pkg,
-            archive: NonNull::new_unchecked(archive),
+            archive: unsafe { NonNull::new_unchecked(archive) },
         }
     }
 
