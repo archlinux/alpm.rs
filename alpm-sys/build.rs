@@ -44,6 +44,8 @@ fn main() {
 
     #[cfg(feature = "generate")]
     {
+        use std::path::Path;
+
         let out_dir = env::var_os("OUT_DIR").unwrap();
         let dest_path = Path::new(&out_dir).join("ffi_generated.rs");
 
