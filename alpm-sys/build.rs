@@ -27,10 +27,10 @@ fn main() {
     println!("cargo::metadata=libalpm_version={}", lib.version);
 
     println!("cargo::rustc-check-cfg=cfg(alpm15,alpm16)");
-    if lib.version == "15.0.0" {
+    if lib.version.starts_with("15.") {
         println!("cargo::rustc-cfg=alpm15");
     }
-    if lib.version == "16.0.0" || cfg!(feature = "git") {
+    if lib.version.starts_with("16.") || cfg!(feature = "git") {
         println!("cargo::rustc-cfg=alpm15");
         println!("cargo::rustc-cfg=alpm16");
     }
