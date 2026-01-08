@@ -1,6 +1,6 @@
 [package]
 name = "alpm-sys"
-version = "5.0.0"
+version = "5.0.1"
 description = "Raw bindings for libalpm"
 documentation = "https://docs.rs/alpm_sys"
 
