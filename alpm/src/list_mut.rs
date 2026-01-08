@@ -11,11 +11,19 @@ use std::fmt::Debug;
 use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
-use std::os::raw::c_char;
 use std::ptr;
 
 unsafe extern "C" {
-    unsafe fn strndup(cs: *const c_char, n: usize) -> *mut c_char;
+    unsafe fn calloc(n: usize, s: usize) -> *mut c_void;
+    unsafe fn memcpy(dst: *mut c_void, src: *const c_void, n: usize);
+}
+
+fn alloc_str(s: &str) -> *mut c_void {
+    let buf = unsafe { calloc(s.len() + 1, 1) };
+    unsafe {
+        memcpy(buf, s.as_ptr() as _, s.len());
+    }
+    buf as _
 }
 
 #[doc(hidden)]
@@ -209,7 +217,7 @@ impl<T: IntoAlpmListItem> AlpmListMut<T> {
 
 impl AlpmListMut<String> {
     pub fn push_str(&mut self, s: &str) {
-        let s = unsafe { strndup(s.as_bytes().as_ptr() as _, s.len()) };
+        let s = alloc_str(s);
         unsafe { self.list = alpm_list_add(self.list, s as *mut c_void) };
     }
 }
@@ -387,30 +395,30 @@ unsafe impl IntoAlpmListPtr for &Backup {
 unsafe impl IntoAlpmListPtr for String {
     type Output = Self;
     fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+        alloc_str(self)
     }
     fn into_ptr(self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+        alloc_str(&self)
     }
 }
 
 unsafe impl IntoAlpmListPtr for &String {
     type Output = String;
     fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+        alloc_str(self)
     }
     fn into_ptr(self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+        alloc_str(&self)
     }
 }
 
 unsafe impl IntoAlpmListPtr for &str {
     type Output = String;
     fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+        alloc_str(&self)
     }
     fn into_ptr(self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+        alloc_str(&self)
     }
 }
 
@@ -419,10 +427,10 @@ unsafe impl IntoAlpmListPtr for &str {
 unsafe impl IntoAlpmListPtr for &&str {
     type Output = String;
     fn as_ptr(&self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+        alloc_str(self)
     }
     fn into_ptr(self) -> *mut c_void {
-        unsafe { strndup(self.as_bytes().as_ptr() as _, self.len()) as *mut c_void }
+        alloc_str(&self)
     }
 }
 
