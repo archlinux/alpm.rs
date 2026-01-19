@@ -320,6 +320,31 @@ mod tests {
     }
 
     #[test]
+    fn test_trans_remove_by_name() {
+        let mut handle = Alpm::new("/", "tests/db").unwrap();
+        let flags = TransFlag::DB_ONLY | TransFlag::NO_LOCK;
+
+        handle.set_log_cb((), logcb);
+        handle.set_event_cb((), eventcb);
+
+        handle.trans_init(flags).unwrap();
+        handle.trans_remove_pkg_by_name("curl").unwrap();
+        let err = handle.trans_prepare().unwrap_err();
+        let err = err.data().unwrap();
+
+        let PrepareData::UnsatisfiedDeps(deps) = err else {
+            panic!("error is not UnsatisfiedDeps");
+        };
+
+        assert_eq!(deps.len(), 1);
+        let deps = deps.first().unwrap();
+
+        assert_eq!(deps.depend().name(), "curl");
+        assert_eq!(deps.target(), "pacman");
+        assert_eq!(deps.causing_pkg().unwrap(), "curl");
+    }
+
+    #[test]
     fn test_trans_conflict() {
         let mut handle = Alpm::new("/", "tests/db").unwrap();
         let flags = TransFlag::DB_ONLY | TransFlag::NO_DEPS | TransFlag::NO_LOCK;
