@@ -1,0 +1,13 @@
+%NAME%
+explicit-app
+
+%VERSION%
+1.0-1
+
+%DEPENDS%
+needed-lib
+virtual-dep
+
+%OPTDEPENDS%
+opt-dep: optional feature
+
