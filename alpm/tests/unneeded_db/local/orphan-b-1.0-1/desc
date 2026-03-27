@@ -1,0 +1,12 @@
+%NAME%
+orphan-b
+
+%VERSION%
+1.0-1
+
+%REASON%
+1
+
+%DEPENDS%
+orphan-c
+

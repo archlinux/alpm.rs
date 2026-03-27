@@ -1,0 +1,12 @@
+%NAME%
+provider-pkg
+
+%VERSION%
+1.0-1
+
+%REASON%
+1
+
+%PROVIDES%
+virtual-dep
+
