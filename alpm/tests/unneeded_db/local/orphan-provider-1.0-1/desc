@@ -1,0 +1,12 @@
+%NAME%
+orphan-provider
+
+%VERSION%
+1.0-1
+
+%REASON%
+1
+
+%PROVIDES%
+orphan-virtual
+

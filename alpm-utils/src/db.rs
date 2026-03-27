@@ -1,5 +1,5 @@
 use std::collections::hash_map::Entry;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::mem::take;
 
 use alpm::{Alpm, AlpmList, AlpmListMut, Db, Dep, Package, PackageReason, Result};
@@ -14,31 +14,32 @@ pub fn is_orphan(pkg: &Package) -> bool {
         && pkg.optional_for().is_empty()
 }
 
-/// Find all recursively unneeded packages
-/// If `keep_optional` is true, optional dependencies are also followed.
-pub fn find_unneeded(handle: &Alpm, keep_optional: bool) -> Vec<&Package> {
+struct UnneededState<'a> {
+    unneeded: Vec<&'a Package>,
+    all_pkgs: HashMap<&'a str, &'a Package>,
+    all_provides: HashMap<&'a str, Vec<(&'a Package, &'a Dep)>>,
+}
+
+fn find_unneeded_inner<'a>(handle: &'a Alpm, keep_optional: bool) -> UnneededState<'a> {
     let db = handle.localdb();
 
-    let mut next: Vec<&Package> = db
-        .pkgs()
-        .iter()
-        .filter(|p| p.reason() == PackageReason::Explicit)
-        .collect();
+    let mut next = Vec::new();
+    let mut deps: HashMap<&str, &Package> = HashMap::new();
+    let mut all_pkgs: HashMap<&str, &Package> = HashMap::new();
+    let mut all_provides: HashMap<&str, Vec<(&Package, &Dep)>> = HashMap::new();
 
-    let mut deps: HashMap<&str, &Package> = db
-        .pkgs()
-        .iter()
-        .filter(|p| p.reason() != PackageReason::Explicit)
-        .map(|p| (p.name(), p))
-        .collect();
-
-    let mut provides: HashMap<&str, Vec<(&Package, &Dep)>> = HashMap::new();
-    for pkg in deps.values() {
+    for pkg in db.pkgs().iter() {
+        all_pkgs.insert(pkg.name(), pkg);
         for prov in pkg.provides() {
-            provides
+            all_provides
                 .entry(prov.name())
                 .or_default()
-                .push((*pkg, prov));
+                .push((pkg, prov));
+        }
+        if pkg.reason() == PackageReason::Explicit {
+            next.push(pkg);
+        } else {
+            deps.insert(pkg.name(), pkg);
         }
     }
 
@@ -55,23 +56,112 @@ pub fn find_unneeded(handle: &Alpm, keep_optional: bool) -> Vec<&Package> {
                     }
                 }
 
-                if let Entry::Occupied(mut entry) = provides.entry(dep.name()) {
-                    let found: Vec<&Package> = entry
-                        .get_mut()
-                        .extract_if(.., |(_, prov)| satisfies_provide(dep, *prov))
-                        .filter_map(|(pkg, _)| deps.remove(pkg.name()))
-                        .collect();
-                    next.extend(found);
-
-                    if entry.get().is_empty() {
-                        entry.remove();
+                if let Some(provs) = all_provides.get(dep.name()) {
+                    for &(prov_pkg, prov) in provs {
+                        if satisfies_provide(dep, prov)
+                            && let Some(removed) = deps.remove(prov_pkg.name())
+                        {
+                            next.push(removed);
+                        }
                     }
                 }
             }
         }
     }
 
-    deps.into_values().collect()
+    UnneededState {
+        unneeded: deps.into_values().collect(),
+        all_pkgs,
+        all_provides,
+    }
+}
+
+/// Find all recursively unneeded packages.
+/// If `keep_optional` is true, optional dependencies are also followed.
+pub fn find_unneeded(handle: &Alpm, keep_optional: bool) -> Vec<&Package> {
+    find_unneeded_inner(handle, keep_optional).unneeded
+}
+
+/// An unneeded package with classification.
+#[derive(Debug)]
+pub struct UnneededPackage<'a> {
+    /// The package.
+    pub pkg: &'a Package,
+    /// True if this is a direct orphan (no installed package depends on it).
+    /// False if only other unneeded packages depend on it.
+    pub direct: bool,
+}
+
+/// Like [`find_unneeded`], but classifies each result as a direct or indirect orphan.
+pub fn find_unneeded_classified<'a>(
+    handle: &'a Alpm,
+    keep_optional: bool,
+) -> Vec<UnneededPackage<'a>> {
+    find_unneeded(handle, keep_optional)
+        .into_iter()
+        .map(|pkg| UnneededPackage {
+            direct: is_orphan(pkg),
+            pkg,
+        })
+        .collect()
+}
+
+/// Compute the minimal set of unneeded packages that must be removed together
+/// with `targets` to avoid broken dependencies.
+///
+/// Given target package names to remove from the unneeded set, returns the
+/// targets plus any unneeded packages whose hard dependencies would become
+/// unsatisfied. Targets not in the unneeded set are silently ignored.
+pub fn removal_closure<'a>(
+    handle: &'a Alpm,
+    targets: &[&str],
+    keep_optional: bool,
+) -> Vec<&'a Package> {
+    let state = find_unneeded_inner(handle, keep_optional);
+
+    let unneeded_set: HashSet<&str> = state.unneeded.iter().map(|p| p.name()).collect();
+
+    let mut removal: HashSet<&str> = targets
+        .iter()
+        .copied()
+        .filter(|t| unneeded_set.contains(t))
+        .collect();
+
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for pkg in &state.unneeded {
+            if removal.contains(pkg.name()) {
+                continue;
+            }
+            let has_broken_dep = pkg.depends().into_iter().any(|dep| {
+                let direct_ok = state.all_pkgs.get(dep.name()).is_some_and(|p| {
+                    !removal.contains(p.name())
+                        && satisfies_dep(dep, p.name(), p.version())
+                });
+                if direct_ok {
+                    return false;
+                }
+                let provide_ok =
+                    state.all_provides.get(dep.name()).is_some_and(|provs| {
+                        provs.iter().any(|(p, prov)| {
+                            !removal.contains(p.name()) && satisfies_provide(dep, *prov)
+                        })
+                    });
+                !provide_ok
+            });
+            if has_broken_dep {
+                removal.insert(pkg.name());
+                changed = true;
+            }
+        }
+    }
+
+    state
+        .unneeded
+        .into_iter()
+        .filter(|p| removal.contains(p.name()))
+        .collect()
 }
 
 /// Orphan and unneeded package detection for [`Alpm`].
@@ -80,6 +170,10 @@ pub trait OrphanExt {
     fn find_orphans(&self) -> impl Iterator<Item = &Package>;
     /// See [`find_unneeded`].
     fn find_unneeded(&self, keep_optional: bool) -> Vec<&Package>;
+    /// See [`find_unneeded_classified`].
+    fn find_unneeded_classified(&self, keep_optional: bool) -> Vec<UnneededPackage<'_>>;
+    /// See [`removal_closure`].
+    fn removal_closure(&self, targets: &[&str], keep_optional: bool) -> Vec<&Package>;
 }
 
 impl OrphanExt for Alpm {
@@ -89,6 +183,14 @@ impl OrphanExt for Alpm {
 
     fn find_unneeded(&self, keep_optional: bool) -> Vec<&Package> {
         find_unneeded(self, keep_optional)
+    }
+
+    fn find_unneeded_classified(&self, keep_optional: bool) -> Vec<UnneededPackage<'_>> {
+        find_unneeded_classified(self, keep_optional)
+    }
+
+    fn removal_closure(&self, targets: &[&str], keep_optional: bool) -> Vec<&Package> {
+        removal_closure(self, targets, keep_optional)
     }
 }
 
@@ -182,7 +284,7 @@ mod tests {
         let handle = test_handle();
         let mut names: Vec<_> = handle.find_orphans().map(|p| p.name()).collect();
         names.sort();
-        assert_eq!(names, ["orphan-a"]);
+        assert_eq!(names, ["orphan-a", "orphan-consumer"]);
     }
 
     #[test]
@@ -190,7 +292,17 @@ mod tests {
         let handle = test_handle();
         let mut names = unneeded_names(&handle, false);
         names.sort();
-        assert_eq!(names, ["opt-dep", "orphan-a", "orphan-b", "orphan-c"]);
+        assert_eq!(
+            names,
+            [
+                "opt-dep",
+                "orphan-a",
+                "orphan-b",
+                "orphan-c",
+                "orphan-consumer",
+                "orphan-provider"
+            ]
+        );
     }
 
     #[test]
@@ -198,6 +310,105 @@ mod tests {
         let handle = test_handle();
         let mut names = unneeded_names(&handle, true);
         names.sort();
+        assert_eq!(
+            names,
+            [
+                "orphan-a",
+                "orphan-b",
+                "orphan-c",
+                "orphan-consumer",
+                "orphan-provider"
+            ]
+        );
+    }
+
+    fn closure_names<'a>(handle: &'a Alpm, targets: &[&str]) -> Vec<&'a str> {
+        let mut names: Vec<_> = removal_closure(handle, targets, true)
+            .iter()
+            .map(|p| p.name())
+            .collect();
+        names.sort();
+        names
+    }
+
+    #[test]
+    fn test_removal_closure_leaf() {
+        let handle = test_handle();
+        assert_eq!(closure_names(&handle, &["orphan-c"]), ["orphan-a", "orphan-b", "orphan-c"]);
+    }
+
+    #[test]
+    fn test_removal_closure_root() {
+        let handle = test_handle();
+        assert_eq!(closure_names(&handle, &["orphan-a"]), ["orphan-a"]);
+    }
+
+    #[test]
+    fn test_removal_closure_middle() {
+        let handle = test_handle();
+        assert_eq!(closure_names(&handle, &["orphan-b"]), ["orphan-a", "orphan-b"]);
+    }
+
+    #[test]
+    fn test_removal_closure_empty() {
+        let handle = test_handle();
+        assert!(closure_names(&handle, &[]).is_empty());
+    }
+
+    #[test]
+    fn test_removal_closure_not_unneeded() {
+        let handle = test_handle();
+        assert!(closure_names(&handle, &["needed-lib"]).is_empty());
+    }
+
+    #[test]
+    fn test_removal_closure_multiple_targets() {
+        let handle = test_handle();
+        assert_eq!(
+            closure_names(&handle, &["orphan-a", "orphan-provider"]),
+            ["orphan-a", "orphan-consumer", "orphan-provider"]
+        );
+    }
+
+    #[test]
+    fn test_removal_closure_keep_optional_false() {
+        let handle = test_handle();
+        let mut names: Vec<_> = removal_closure(&handle, &["orphan-c"], false)
+            .iter()
+            .map(|p| p.name())
+            .collect();
+        names.sort();
         assert_eq!(names, ["orphan-a", "orphan-b", "orphan-c"]);
+    }
+
+    #[test]
+    fn test_removal_closure_virtual_dep() {
+        let handle = test_handle();
+        assert_eq!(
+            closure_names(&handle, &["orphan-provider"]),
+            ["orphan-consumer", "orphan-provider"]
+        );
+    }
+
+    #[test]
+    fn test_find_unneeded_classified() {
+        let handle = test_handle();
+        let mut classified = find_unneeded_classified(&handle, true);
+        classified.sort_by_key(|u| u.pkg.name());
+
+        let result: Vec<_> = classified
+            .iter()
+            .map(|u| (u.pkg.name(), u.direct))
+            .collect();
+        assert_eq!(
+            result,
+            [
+                ("orphan-a", true),
+                ("orphan-b", false),
+                ("orphan-c", false),
+                ("orphan-consumer", true),
+                ("orphan-provider", false),
+            ]
+        );
     }
 }
