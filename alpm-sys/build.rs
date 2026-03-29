@@ -85,8 +85,6 @@ fn main() {
             .derive_copy(true)
             .derive_hash(true)
             .derive_debug(true)
-            .derive_partialeq(true)
-            .derive_debug(true)
             .generate()
             .unwrap();
 
