@@ -16,7 +16,7 @@ pub struct archive_entry {
     _unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_list_t {
     pub data: *mut ::std::os::raw::c_void,
     pub prev: *mut _alpm_list_t,
@@ -195,7 +195,7 @@ pub type alpm_db_t = u8;
 pub type alpm_pkg_t = u8;
 #[doc = " The extended data type used to store non-standard package data fields\n @ingroup libalpm_packages"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_pkg_xdata_t {
     pub name: *mut ::std::os::raw::c_char,
     pub value: *mut ::std::os::raw::c_char,
@@ -215,7 +215,7 @@ pub type alpm_pkg_xdata_t = _alpm_pkg_xdata_t;
 pub type alpm_time_t = i64;
 #[doc = " File in a package"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_file_t {
     #[doc = " Name of the file"]
     pub name: *mut ::std::os::raw::c_char,
@@ -236,7 +236,7 @@ const _: () = {
 pub type alpm_file_t = _alpm_file_t;
 #[doc = " Package filelist container"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_filelist_t {
     #[doc = " Amount of files in the array"]
     pub count: usize,
@@ -256,7 +256,7 @@ const _: () = {
 pub type alpm_filelist_t = _alpm_filelist_t;
 #[doc = " Local package or package file backup entry"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_backup_t {
     #[doc = " Name of the file (without .pacsave extension)"]
     pub name: *mut ::std::os::raw::c_char,
@@ -283,7 +283,7 @@ unsafe extern "C" {
 }
 #[doc = " Package group"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_group_t {
     #[doc = " group name"]
     pub name: *mut ::std::os::raw::c_char,
@@ -309,7 +309,7 @@ unsafe extern "C" {
 }
 #[repr(u32)]
 #[doc = " libalpm's error type"]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_errno_t {
     #[doc = " No error"]
     ALPM_ERR_OK = 0,
@@ -472,7 +472,7 @@ pub mod _alpm_siglevel_t {
 pub use self::_alpm_siglevel_t::Type as alpm_siglevel_t;
 #[repr(u32)]
 #[doc = " PGP signature verification status return codes"]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_sigstatus_t {
     #[doc = " Signature is valid"]
     ALPM_SIGSTATUS_VALID = 0,
@@ -491,7 +491,7 @@ pub enum _alpm_sigstatus_t {
 pub use self::_alpm_sigstatus_t as alpm_sigstatus_t;
 #[repr(u32)]
 #[doc = " The trust level of a PGP key"]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_sigvalidity_t {
     #[doc = " The signature is fully trusted"]
     ALPM_SIGVALIDITY_FULL = 0,
@@ -506,7 +506,7 @@ pub enum _alpm_sigvalidity_t {
 pub use self::_alpm_sigvalidity_t as alpm_sigvalidity_t;
 #[doc = " A PGP key"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_pgpkey_t {
     #[doc = " The actual key data"]
     pub data: *mut ::std::os::raw::c_void,
@@ -553,7 +553,7 @@ const _: () = {
 pub type alpm_pgpkey_t = _alpm_pgpkey_t;
 #[doc = " Signature result. Contains the key, status, and validity of a given\n signature."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_sigresult_t {
     #[doc = " The key of the signature"]
     pub key: alpm_pgpkey_t,
@@ -577,7 +577,7 @@ const _: () = {
 pub type alpm_sigresult_t = _alpm_sigresult_t;
 #[doc = " Signature list. Contains the number of signatures found and a pointer to an\n array of results. The array is of size count."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_siglist_t {
     #[doc = " The amount of results in the array"]
     pub count: usize,
@@ -633,7 +633,7 @@ unsafe extern "C" {
 }
 #[repr(u32)]
 #[doc = " Types of version constraints in dependency specs."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_depmod_t {
     #[doc = " No version constraint"]
     ALPM_DEP_MOD_ANY = 1,
@@ -652,7 +652,7 @@ pub enum _alpm_depmod_t {
 pub use self::_alpm_depmod_t as alpm_depmod_t;
 #[repr(u32)]
 #[doc = " File conflict type.\n Whether the conflict results from a file existing on the filesystem, or with\n another target in the transaction."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_fileconflicttype_t {
     #[doc = " The conflict results with a another target in the transaction"]
     ALPM_FILECONFLICT_TARGET = 1,
@@ -663,7 +663,7 @@ pub enum _alpm_fileconflicttype_t {
 pub use self::_alpm_fileconflicttype_t as alpm_fileconflicttype_t;
 #[doc = " The basic dependency type.\n\n This type is used throughout libalpm, not just for dependencies\n but also conflicts and providers."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_depend_t {
     #[doc = "  Name of the provider to satisfy this dependency"]
     pub name: *mut ::std::os::raw::c_char,
@@ -695,7 +695,7 @@ const _: () = {
 pub type alpm_depend_t = _alpm_depend_t;
 #[doc = " Missing dependency."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_depmissing_t {
     #[doc = " Name of the package that has the dependency"]
     pub target: *mut ::std::os::raw::c_char,
@@ -719,7 +719,7 @@ const _: () = {
 pub type alpm_depmissing_t = _alpm_depmissing_t;
 #[doc = " A conflict that has occurred between two packages."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_conflict_t {
     #[doc = " The first package"]
     pub package1: *mut alpm_pkg_t,
@@ -743,7 +743,7 @@ const _: () = {
 pub type alpm_conflict_t = _alpm_conflict_t;
 #[doc = " File conflict.\n\n A conflict that has happened due to a two packages containing the same file,\n or a package contains a file that is already on the filesystem and not owned\n by that package."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_fileconflict_t {
     #[doc = " The name of the package that caused the conflict"]
     pub target: *mut ::std::os::raw::c_char,
@@ -827,7 +827,7 @@ unsafe extern "C" {
 }
 #[repr(u32)]
 #[doc = " Type of events."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_event_type_t {
     #[doc = " Dependencies will be computed for a package."]
     ALPM_EVENT_CHECKDEPS_START = 1,
@@ -908,7 +908,7 @@ pub enum _alpm_event_type_t {
 pub use self::_alpm_event_type_t as alpm_event_type_t;
 #[doc = " An event that may represent any event."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_any_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -924,7 +924,7 @@ const _: () = {
 pub type alpm_event_any_t = _alpm_event_any_t;
 #[repr(u32)]
 #[doc = " An enum over the kind of package operations."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_package_operation_t {
     #[doc = " Package (to be) installed. (No oldpkg)"]
     ALPM_PACKAGE_INSTALL = 1,
@@ -941,7 +941,7 @@ pub enum _alpm_package_operation_t {
 pub use self::_alpm_package_operation_t as alpm_package_operation_t;
 #[doc = " A package operation event occurred."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_package_operation_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -971,7 +971,7 @@ const _: () = {
 pub type alpm_event_package_operation_t = _alpm_event_package_operation_t;
 #[doc = " An optional dependency was removed."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_optdep_removal_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -997,7 +997,7 @@ const _: () = {
 pub type alpm_event_optdep_removal_t = _alpm_event_optdep_removal_t;
 #[doc = " A scriptlet was ran."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_scriptlet_info_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -1019,7 +1019,7 @@ const _: () = {
 pub type alpm_event_scriptlet_info_t = _alpm_event_scriptlet_info_t;
 #[doc = " A database is missing.\n\n The database is registered but has not been downloaded"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_database_missing_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -1041,7 +1041,7 @@ const _: () = {
 pub type alpm_event_database_missing_t = _alpm_event_database_missing_t;
 #[doc = " A package was downloaded."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_pkgdownload_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -1063,7 +1063,7 @@ const _: () = {
 pub type alpm_event_pkgdownload_t = _alpm_event_pkgdownload_t;
 #[doc = " A pacnew file was created."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_pacnew_created_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -1097,7 +1097,7 @@ const _: () = {
 pub type alpm_event_pacnew_created_t = _alpm_event_pacnew_created_t;
 #[doc = " A pacsave file was created."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_pacsave_created_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -1123,7 +1123,7 @@ const _: () = {
 pub type alpm_event_pacsave_created_t = _alpm_event_pacsave_created_t;
 #[repr(u32)]
 #[doc = " Kind of hook."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_hook_when_t {
     ALPM_HOOK_PRE_TRANSACTION = 1,
     ALPM_HOOK_POST_TRANSACTION = 2,
@@ -1132,7 +1132,7 @@ pub enum _alpm_hook_when_t {
 pub use self::_alpm_hook_when_t as alpm_hook_when_t;
 #[doc = " pre/post transaction hooks are to be ran."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_hook_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -1152,7 +1152,7 @@ const _: () = {
 pub type alpm_event_hook_t = _alpm_event_hook_t;
 #[doc = " A pre/post transaction hook was ran."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_hook_run_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -1185,7 +1185,7 @@ const _: () = {
 pub type alpm_event_hook_run_t = _alpm_event_hook_run_t;
 #[doc = " Packages downloading about to start."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_event_pkg_retrieve_t {
     #[doc = " Type of event"]
     pub type_: alpm_event_type_t,
@@ -1293,7 +1293,7 @@ pub mod _alpm_question_type_t {
 pub use self::_alpm_question_type_t::Type as alpm_question_type_t;
 #[doc = " A question that can represent any other question."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_question_any_t {
     #[doc = " Type of question"]
     pub type_: alpm_question_type_t,
@@ -1313,7 +1313,7 @@ const _: () = {
 pub type alpm_question_any_t = _alpm_question_any_t;
 #[doc = " Should target in ignorepkg be installed anyway?"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_question_install_ignorepkg_t {
     #[doc = " Type of question"]
     pub type_: alpm_question_type_t,
@@ -1339,7 +1339,7 @@ const _: () = {
 pub type alpm_question_install_ignorepkg_t = _alpm_question_install_ignorepkg_t;
 #[doc = " Should a package be replaced?"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_question_replace_t {
     #[doc = " Type of question"]
     pub type_: alpm_question_type_t,
@@ -1373,7 +1373,7 @@ const _: () = {
 pub type alpm_question_replace_t = _alpm_question_replace_t;
 #[doc = " Should a conflicting package be removed?"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_question_conflict_t {
     #[doc = " Type of question"]
     pub type_: alpm_question_type_t,
@@ -1399,7 +1399,7 @@ const _: () = {
 pub type alpm_question_conflict_t = _alpm_question_conflict_t;
 #[doc = " Should a corrupted package be deleted?"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_question_corrupted_t {
     #[doc = " Type of question"]
     pub type_: alpm_question_type_t,
@@ -1429,7 +1429,7 @@ const _: () = {
 pub type alpm_question_corrupted_t = _alpm_question_corrupted_t;
 #[doc = " Should unresolvable targets be removed from the transaction?"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_question_remove_pkgs_t {
     #[doc = " Type of question"]
     pub type_: alpm_question_type_t,
@@ -1455,7 +1455,7 @@ const _: () = {
 pub type alpm_question_remove_pkgs_t = _alpm_question_remove_pkgs_t;
 #[doc = " Provider selection"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_question_select_provider_t {
     #[doc = " Type of question"]
     pub type_: alpm_question_type_t,
@@ -1485,7 +1485,7 @@ const _: () = {
 pub type alpm_question_select_provider_t = _alpm_question_select_provider_t;
 #[doc = " Should a key be imported?"]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_question_import_key_t {
     #[doc = " Type of question"]
     pub type_: alpm_question_type_t,
@@ -1567,7 +1567,7 @@ pub type alpm_cb_question = ::std::option::Option<
 >;
 #[repr(u32)]
 #[doc = " An enum over different kinds of progress alerts."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_progress_t {
     #[doc = " Package install"]
     ALPM_PROGRESS_ADD_START = 0,
@@ -1605,7 +1605,7 @@ pub type alpm_cb_progress = ::std::option::Option<
 >;
 #[repr(u32)]
 #[doc = " File download events.\n These events are reported by ALPM via download callback."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_download_event_type_t {
     #[doc = " A download was started"]
     ALPM_DOWNLOAD_INIT = 0,
@@ -1620,7 +1620,7 @@ pub enum _alpm_download_event_type_t {
 pub use self::_alpm_download_event_type_t as alpm_download_event_type_t;
 #[doc = " Context struct for when a download starts."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_download_event_init_t {
     #[doc = " whether this file is optional and thus the errors could be ignored"]
     pub optional: ::std::os::raw::c_int,
@@ -1638,7 +1638,7 @@ const _: () = {
 pub type alpm_download_event_init_t = _alpm_download_event_init_t;
 #[doc = " Context struct for when a download progresses."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_download_event_progress_t {
     #[doc = " Amount of data downloaded"]
     pub downloaded: off_t,
@@ -1660,7 +1660,7 @@ const _: () = {
 pub type alpm_download_event_progress_t = _alpm_download_event_progress_t;
 #[doc = " Context struct for when a download retries."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_download_event_retry_t {
     #[doc = " If the download will resume or start over"]
     pub resume: ::std::os::raw::c_int,
@@ -1678,7 +1678,7 @@ const _: () = {
 pub type alpm_download_event_retry_t = _alpm_download_event_retry_t;
 #[doc = " Context struct for when a download completes."]
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct _alpm_download_event_completed_t {
     #[doc = " Total bytes in file"]
     pub total: off_t,
@@ -2383,6 +2383,17 @@ unsafe extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 unsafe extern "C" {
+    #[doc = " Get the state of the sandbox\n @param handle the context handle\n @return 0 for enabled, 1 if any component is disabled, 2 if completely disabled"]
+    pub fn alpm_option_get_disable_sandbox(handle: *mut alpm_handle_t) -> ::std::os::raw::c_int;
+}
+unsafe extern "C" {
+    #[doc = " Enables/disables all components of the sandbox.\n @param handle the context handle\n @param disable_sandbox 0 for enabled, 1 for disabled\n @return 0 on success, -1 on error (pm_errno is set accordingly)"]
+    pub fn alpm_option_set_disable_sandbox(
+        handle: *mut alpm_handle_t,
+        disable_sandbox: ::std::os::raw::c_ushort,
+    ) -> ::std::os::raw::c_int;
+}
+unsafe extern "C" {
     #[doc = " Get the state of the filesystem part of the sandbox\n @param handle the context handle\n @return 0 for enabled, 1 for disabled"]
     pub fn alpm_option_get_disable_sandbox_filesystem(
         handle: *mut alpm_handle_t,
@@ -2410,7 +2421,7 @@ unsafe extern "C" {
 }
 #[repr(u32)]
 #[doc = " Package install reasons."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_pkgreason_t {
     #[doc = " Explicitly requested by the user."]
     ALPM_PKG_REASON_EXPLICIT = 0,
@@ -2423,7 +2434,7 @@ pub enum _alpm_pkgreason_t {
 pub use self::_alpm_pkgreason_t as alpm_pkgreason_t;
 #[repr(u32)]
 #[doc = " Location a package object was loaded from."]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub enum _alpm_pkgfrom_t {
     #[doc = " Loaded from a file via \\link alpm_pkg_load \\endlink"]
     ALPM_PKG_FROM_FILE = 1,
@@ -2844,7 +2855,7 @@ unsafe extern "C" {
 }
 pub type __builtin_va_list = [__va_list_tag; 1usize];
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 pub struct __va_list_tag {
     pub gp_offset: ::std::os::raw::c_uint,
     pub fp_offset: ::std::os::raw::c_uint,
