@@ -1,0 +1,52 @@
+name: Bindings
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux
+    steps:
+      - name: Install Packages
+        run: pacman -Syu rust clang gcc libarchive pkgconf diffutils --noconfirm --needed
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: build
+        run: cargo build --features generate --target-dir target
+
+      - name: Check committed bindings are up to date
+        run: diff --color=always -u alpm-sys/src/ffi.rs target/debug/build/alpm-sys-*/out/ffi_generated.rs
+
+  generate-git:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux
+    steps:
+      - name: Install Packages
+        run: pacman -Syu rust curl clang git base-devel libarchive meson asciidoc doxygen pkgconf fakechroot --noconfirm --needed
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Pacman-git
+        run: |
+          git clone https://aur.archlinux.org/pacman-git
+          chown -R nobody pacman-git
+          cd pacman-git
+          sudo -u nobody makepkg --nocheck
+          sudo -u nobody makepkg --packagelist > list
+          yes | pacman -U $(cat list)
+
+      - name: build
+        run: cargo build --features generate,git
+
+      - name: Check committed git bindings are up to date
+        run: diff --color=always -u alpm-sys/src/ffi_git.rs target/debug/build/alpm-sys-*/out/ffi_generated.rs

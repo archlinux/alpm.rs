@@ -16,4 +16,7 @@ bindgen "${1:-/usr/include/alpm.h}" \
     --opaque-type alpm_handle_t \
     --opaque-type alpm_db_t \
     --opaque-type alpm_pkg_t \
-    --opaque-type alpm_trans_t
+    --opaque-type alpm_trans_t \
+    --with-derive-eq \
+    --with-derive-ord \
+    --with-derive-hash
