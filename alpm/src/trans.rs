@@ -1,6 +1,6 @@
 use crate::{
-    Alpm, AlpmList, AlpmListMut, Conflict, DepMissing, DependMissing, Error, OwnedConflict,
-    OwnedFileConflict, Package, Result,
+    Alpm, AlpmList, AlpmListMut, Conflict, DepMissing, DependMissing, Error, FileConflict,
+    OwnedConflict, OwnedFileConflict, Package, Result,
 };
 
 use alpm_sys::_alpm_transflag_t::*;
@@ -37,8 +37,8 @@ bitflags! {
 }
 
 #[derive(Debug)]
-pub enum PrepareData<'a, 'h> {
-    PkgInvalidArch(AlpmList<'a, &'h Package>),
+pub enum PrepareData<'a> {
+    PkgInvalidArch(AlpmList<'a, &'a str>),
     UnsatisfiedDeps(AlpmList<'a, &'a DepMissing>),
     ConflictingDeps(AlpmList<'a, &'a Conflict>),
 }
@@ -94,7 +94,7 @@ impl<'h> PrepareError<'h> {
         self.error
     }
 
-    pub fn data<'a>(&'a self) -> Option<PrepareData<'a, 'h>> {
+    pub fn data<'a>(&'a self) -> Option<PrepareData<'a>> {
         match self.error {
             Error::PkgInvalidArch => unsafe {
                 let list = AlpmList::from_ptr(self.data);
@@ -115,7 +115,7 @@ impl<'h> PrepareError<'h> {
 
 #[derive(Debug)]
 pub enum CommitData<'a> {
-    FileConflict(AlpmList<'a, &'a Conflict>),
+    FileConflict(AlpmList<'a, &'a FileConflict>),
     PkgInvalid(AlpmList<'a, &'a str>),
 }
 
