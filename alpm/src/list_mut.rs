@@ -15,7 +15,7 @@ use std::ptr;
 
 unsafe extern "C" {
     unsafe fn calloc(n: usize, s: usize) -> *mut c_void;
-    unsafe fn memcpy(dst: *mut c_void, src: *const c_void, n: usize);
+    unsafe fn memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
 }
 
 fn alloc_str(s: &str) -> *mut c_void {
